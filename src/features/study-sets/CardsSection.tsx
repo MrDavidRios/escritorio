@@ -49,7 +49,13 @@ export function CardsSection({ studySetId }: { studySetId: string }) {
             >
               <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted/50">
                 {imageUrl ? (
-                  <img src={imageUrl} alt="" className="size-full object-cover" />
+                  <img
+                    src={imageUrl}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="size-full object-cover"
+                  />
                 ) : (
                   <ImageIcon className="size-5 text-muted-foreground" />
                 )}
