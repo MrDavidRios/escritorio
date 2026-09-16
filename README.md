@@ -20,13 +20,14 @@ outside this repo for now).
 
 1. Copy `.env.local.example` to `.env.local` and fill in your Supabase
    project's URL and anon key.
-2. `npm install`
-3. `npm run dev`
+2. `bun install`
+3. `bun run dev`
 
 ## Scripts
 
-- `npm run dev` — start the dev server
-- `npm run build` — typecheck and build for production
-- `npm run test` — run the unit test suite (Vitest)
-- `npm run lint` — lint with oxlint
-- `npm run preview` — preview the production build locally
+- `bun run dev` — start the dev server
+- `bun run build` — typecheck and build for production
+- `bun run test` — run the unit test suite (Vitest)
+- `bun run lint` — lint with oxlint
+- `bun run format` — format with Prettier
+- `bun run preview` — preview the production build locally
