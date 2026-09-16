@@ -52,42 +52,46 @@ export function StudySetThumbnail({ studySet }: { studySet: StudySet }) {
         {url ? (
           <FadeImage src={url} alt="" className="size-full object-cover" />
         ) : (
-          <ImageIcon className="size-6 text-muted-foreground" />
+          <ImageIcon className="text-muted-foreground size-6" />
         )}
       </div>
     )
   }
 
   const paths = fallbackPaths.data ?? []
-  const urls = paths.map((path) => fallbackImages.data?.[path]).filter((url): url is string => !!url)
+  const urls = paths
+    .map((path) => fallbackImages.data?.[path])
+    .filter((url): url is string => !!url)
 
   if (urls.length === 0) {
     return (
       <div className={PLACEHOLDER_BOX}>
-        <ImageIcon className="size-6 text-muted-foreground" />
+        <ImageIcon className="text-muted-foreground size-6" />
       </div>
     )
   }
 
   return (
-    <div className="relative size-16 shrink-0">
-      {urls
-        .slice(0, 3)
-        .map((url, i) => (
-          <FadeImage
-            key={url}
-            src={url}
-            alt=""
-            className={cn(
-              'absolute inset-0 size-16 rounded-lg border border-input object-cover',
-              // Darken the cards further back so the stack reads as
-              // receding, not just offset.
-              i === 1 && 'translate-x-1.5 translate-y-1 rotate-3 brightness-60 saturate-75',
-              i === 2 && '-translate-x-1 translate-y-2 -rotate-3 brightness-35 saturate-50',
-            )}
-            style={{ zIndex: 3 - i }}
-          />
-        ))}
+    <div className="relative size-16 shrink-0 -translate-y-1">
+      {urls.slice(0, 3).map((url, i) => (
+        <FadeImage
+          key={url}
+          src={url}
+          alt=""
+          className={cn(
+            'border-input ease-out-strong absolute inset-0 size-16 rounded-lg border object-cover transition-[opacity,translate,rotate] duration-200',
+            // Darken the cards further back so the stack reads as
+            // receding, not just offset. On row hover they fan out
+            // further, as if the stack were spreading like a hand of
+            // cards.
+            i === 1 &&
+              'translate-x-1.5 translate-y-1 rotate-3 brightness-60 saturate-75 motion-safe:group-hover/row:translate-x-2 motion-safe:group-hover/row:translate-y-1.5 motion-safe:group-hover/row:rotate-6',
+            i === 2 &&
+              '-translate-x-1 translate-y-2 -rotate-3 brightness-35 saturate-50 motion-safe:group-hover/row:-translate-x-1.5 motion-safe:group-hover/row:translate-y-2 motion-safe:group-hover/row:-rotate-6',
+          )}
+          style={{ zIndex: 3 - i }}
+        />
+      ))}
     </div>
   )
 }
