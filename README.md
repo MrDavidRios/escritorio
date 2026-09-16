@@ -1,4 +1,4 @@
-# Flashcards
+# Escritorio
 
 A Quizlet-like flashcard study app. Each card shows an image and an optional
 hint; you type the answer. Study sets are created, saved, and edited by
