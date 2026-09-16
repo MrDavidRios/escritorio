@@ -15,7 +15,7 @@ export function AccentedCharPad({ onInsert }: { onInsert: (char: string) => void
           // they insert into -- mousedown normally would.
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => onInsert(char)}
-          className="flex size-7 items-center justify-center rounded-md border border-input text-sm hover:bg-muted"
+          className="border-input hover:bg-muted flex size-7 items-center justify-center rounded-md border text-sm"
         >
           {char}
         </button>

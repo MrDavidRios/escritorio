@@ -10,11 +10,7 @@ function extensionOf(filename: string): string {
   return match ? match[1].toLowerCase() : 'bin'
 }
 
-export function studySetImagePath(
-  ownerId: string,
-  studySetId: string,
-  filename: string,
-): string {
+export function studySetImagePath(ownerId: string, studySetId: string, filename: string): string {
   return `${ownerId}/sets/${studySetId}.${extensionOf(filename)}`
 }
 

@@ -13,10 +13,7 @@ export async function listCards(studySetId: string): Promise<Card[]> {
 
 // Lightweight query for study-set thumbnail fallbacks: just the first few
 // image paths by position, without pulling full card rows.
-export async function listCardImagePaths(
-  studySetId: string,
-  limit: number,
-): Promise<string[]> {
+export async function listCardImagePaths(studySetId: string, limit: number): Promise<string[]> {
   const { data, error } = await supabase
     .from('cards')
     .select('image_path')
@@ -27,11 +24,7 @@ export async function listCardImagePaths(
   return data.map((row) => row.image_path)
 }
 
-export async function createCard(
-  id: string,
-  studySetId: string,
-  input: CardInput,
-): Promise<Card> {
+export async function createCard(id: string, studySetId: string, input: CardInput): Promise<Card> {
   const { data, error } = await supabase
     .from('cards')
     .insert({ id, study_set_id: studySetId, ...input })
@@ -41,10 +34,7 @@ export async function createCard(
   return data
 }
 
-export async function updateCard(
-  id: string,
-  input: Partial<CardInput>,
-): Promise<Card> {
+export async function updateCard(id: string, input: Partial<CardInput>): Promise<Card> {
   const { data, error } = await supabase
     .from('cards')
     .update(input)

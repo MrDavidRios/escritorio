@@ -41,14 +41,14 @@ export function ImageUploadField({
           type="button"
           onClick={() => inputRef.current?.click()}
           className={cn(
-            'flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-input bg-muted/50',
+            'border-input bg-muted/50 flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border',
             error && 'border-destructive',
           )}
         >
           {displayUrl ? (
             <img src={displayUrl} alt="" className="size-full object-cover" />
           ) : (
-            <ImageIcon className="size-6 text-muted-foreground" />
+            <ImageIcon className="text-muted-foreground size-6" />
           )}
         </button>
         <div className="flex flex-col gap-1">
@@ -63,13 +63,13 @@ export function ImageUploadField({
           {value && (
             <button
               type="button"
-              className="text-left text-xs text-muted-foreground underline underline-offset-2"
+              className="text-muted-foreground text-left text-xs underline underline-offset-2"
               onClick={() => onChange(null)}
             >
               Cancel change
             </button>
           )}
-          <p className="text-xs text-muted-foreground">or paste from clipboard</p>
+          <p className="text-muted-foreground text-xs">or paste from clipboard</p>
         </div>
         <input
           ref={inputRef}
@@ -79,7 +79,7 @@ export function ImageUploadField({
           onChange={(e) => onChange(e.target.files?.[0] ?? null)}
         />
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <p className="text-destructive text-sm">{error}</p>}
     </div>
   )
 }

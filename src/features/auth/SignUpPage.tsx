@@ -46,7 +46,7 @@ export function SignUpPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {confirmationSent ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Check your email to confirm your account, then sign in.
             </p>
           ) : (
@@ -54,9 +54,7 @@ export function SignUpPage() {
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" type="email" autoComplete="email" {...register('email')} />
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email.message}</p>
-                )}
+                {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="password">Password</Label>
@@ -67,17 +65,17 @@ export function SignUpPage() {
                   {...register('password')}
                 />
                 {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password.message}</p>
+                  <p className="text-destructive text-sm">{errors.password.message}</p>
                 )}
               </div>
-              {formError && <p className="text-sm text-destructive">{formError}</p>}
+              {formError && <p className="text-destructive text-sm">{formError}</p>}
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? 'Creating account…' : 'Sign up'}
               </Button>
             </form>
           )}
 
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-center text-sm">
             Already have an account?{' '}
             <Link to="/login" className="text-foreground underline underline-offset-4">
               Sign in

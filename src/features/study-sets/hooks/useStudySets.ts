@@ -8,11 +8,7 @@ import {
   listStudySets,
   updateStudySet,
 } from '@/api/studySets'
-import {
-  deleteStudySetImages,
-  studySetImagePath,
-  uploadStudySetImage,
-} from '@/api/studySetImages'
+import { deleteStudySetImages, studySetImagePath, uploadStudySetImage } from '@/api/studySetImages'
 import { useAuth } from '@/features/auth/AuthContext'
 import type { StudySetInput } from '@/types/studySet'
 
@@ -63,12 +59,7 @@ export function useUpdateStudySet(id: string) {
   const { user } = useAuth()
 
   return useMutation({
-    mutationFn: async ({
-      title,
-      description,
-      image,
-      currentImagePath,
-    }: StudySetFormInput) => {
+    mutationFn: async ({ title, description, image, currentImagePath }: StudySetFormInput) => {
       let imagePath = currentImagePath
 
       if (image) {

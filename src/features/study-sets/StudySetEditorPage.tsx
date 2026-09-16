@@ -61,14 +61,14 @@ export function StudySetEditorPage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-4">
-      <Link to="/" className="text-sm text-muted-foreground underline underline-offset-4">
+      <Link to="/" className="text-muted-foreground text-sm underline underline-offset-4">
         ← Back to study sets
       </Link>
 
       {isLoading && <p className="text-muted-foreground">Loading…</p>}
 
       {isError && (
-        <p className="text-sm text-destructive">
+        <p className="text-destructive text-sm">
           Failed to load study set: {(error as Error).message}
         </p>
       )}
@@ -93,18 +93,14 @@ export function StudySetEditorPage() {
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="title">Title</Label>
               <Input id="title" {...register('title')} />
-              {errors.title && (
-                <p className="text-sm text-destructive">{errors.title.message}</p>
-              )}
+              {errors.title && <p className="text-destructive text-sm">{errors.title.message}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="description">Description</Label>
               <Textarea id="description" {...register('description')} />
             </div>
             {updateStudySet.isError && (
-              <p className="text-sm text-destructive">
-                {(updateStudySet.error as Error).message}
-              </p>
+              <p className="text-destructive text-sm">{(updateStudySet.error as Error).message}</p>
             )}
             <div>
               <Button type="submit" disabled={isSubmitting || (!isDirty && !image)}>

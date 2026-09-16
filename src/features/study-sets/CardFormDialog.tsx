@@ -126,16 +126,14 @@ export function CardFormDialog({
                 answerCursor.setRef(el)
               }}
             />
-            {errors.answer && (
-              <p className="text-sm text-destructive">{errors.answer.message}</p>
-            )}
+            {errors.answer && <p className="text-destructive text-sm">{errors.answer.message}</p>}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="hint">Hint (optional)</Label>
             <Input id="hint" {...register('hint')} />
           </div>
           {mutation.isError && (
-            <p className="text-sm text-destructive">{(mutation.error as Error).message}</p>
+            <p className="text-destructive text-sm">{(mutation.error as Error).message}</p>
           )}
           <DialogFooter>
             <Button type="submit" disabled={isSubmitting}>

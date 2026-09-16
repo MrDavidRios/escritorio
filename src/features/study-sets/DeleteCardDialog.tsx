@@ -14,13 +14,7 @@ import { Button } from '@/components/ui/button'
 import type { Card } from '@/types/card'
 import { useDeleteCard } from './hooks/useCards'
 
-export function DeleteCardDialog({
-  studySetId,
-  card,
-}: {
-  studySetId: string
-  card: Card
-}) {
+export function DeleteCardDialog({ studySetId, card }: { studySetId: string; card: Card }) {
   const deleteCard = useDeleteCard(studySetId)
 
   return (
@@ -35,8 +29,7 @@ export function DeleteCardDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete this card?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently delete the card and its image. This action
-            cannot be undone.
+            This will permanently delete the card and its image. This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

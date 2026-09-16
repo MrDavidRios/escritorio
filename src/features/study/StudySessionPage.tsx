@@ -30,16 +30,14 @@ export function StudySessionPage() {
 
   return (
     <div className="mx-auto flex max-w-md flex-col gap-6 p-4">
-      <Link to="/" className="text-sm text-muted-foreground underline underline-offset-4">
+      <Link to="/" className="text-muted-foreground text-sm underline underline-offset-4">
         ← Back to study sets
       </Link>
 
       {isLoading && <p className="text-muted-foreground">Loading…</p>}
 
       {isError && (
-        <p className="text-sm text-destructive">
-          Failed to load cards: {(error as Error).message}
-        </p>
+        <p className="text-destructive text-sm">Failed to load cards: {(error as Error).message}</p>
       )}
 
       {cards && cards.length === 0 && (
@@ -54,7 +52,7 @@ export function StudySessionPage() {
 
       {currentCard && (
         <>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Card {index + 1} of {cards!.length}
           </p>
           <QuizCard

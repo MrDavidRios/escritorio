@@ -57,9 +57,7 @@ export function SignInPage() {
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" autoComplete="email" {...register('email')} />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
-              )}
+              {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="password">Password</Label>
@@ -70,19 +68,19 @@ export function SignInPage() {
                 {...register('password')}
               />
               {errors.password && (
-                <p className="text-sm text-destructive">{errors.password.message}</p>
+                <p className="text-destructive text-sm">{errors.password.message}</p>
               )}
             </div>
-            {formError && <p className="text-sm text-destructive">{formError}</p>}
+            {formError && <p className="text-destructive text-sm">{formError}</p>}
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Signing in…' : 'Sign in'}
             </Button>
           </form>
 
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-border" />
+          <div className="text-muted-foreground flex items-center gap-2 text-xs">
+            <div className="bg-border h-px flex-1" />
             or
-            <div className="h-px flex-1 bg-border" />
+            <div className="bg-border h-px flex-1" />
           </div>
 
           <Button
@@ -94,7 +92,7 @@ export function SignInPage() {
             {googleLoading ? 'Redirecting…' : 'Continue with Google'}
           </Button>
 
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-center text-sm">
             Don't have an account?{' '}
             <Link to="/signup" className="text-foreground underline underline-offset-4">
               Sign up

@@ -66,16 +66,14 @@ export function CreateStudySetDialog() {
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="title">Title</Label>
             <Input id="title" {...register('title')} />
-            {errors.title && (
-              <p className="text-sm text-destructive">{errors.title.message}</p>
-            )}
+            {errors.title && <p className="text-destructive text-sm">{errors.title.message}</p>}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="description">Description</Label>
             <Textarea id="description" {...register('description')} />
           </div>
           {createStudySet.isError && (
-            <p className="text-sm text-destructive">
+            <p className="text-destructive text-sm">
               Couldn't create the study set. Please try again.
             </p>
           )}

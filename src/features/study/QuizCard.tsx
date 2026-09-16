@@ -65,26 +65,21 @@ export function QuizCard({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="flex min-h-48 items-center justify-center overflow-hidden rounded-lg border bg-muted/30">
+      <div className="bg-muted/30 flex min-h-48 items-center justify-center overflow-hidden rounded-lg border">
         {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt=""
-            decoding="async"
-            className="max-h-72 w-full object-contain"
-          />
+          <img src={imageUrl} alt="" decoding="async" className="max-h-72 w-full object-contain" />
         ) : (
-          <p className="p-8 text-sm text-muted-foreground">Loading image…</p>
+          <p className="text-muted-foreground p-8 text-sm">Loading image…</p>
         )}
       </div>
 
       {card.hint &&
         (hintShown ? (
-          <p className="text-sm text-muted-foreground">Hint: {card.hint}</p>
+          <p className="text-muted-foreground text-sm">Hint: {card.hint}</p>
         ) : (
           <button
             type="button"
-            className="self-start text-sm text-muted-foreground underline underline-offset-2"
+            className="text-muted-foreground self-start text-sm underline underline-offset-2"
             onClick={() => setHintShown(true)}
           >
             Show hint
@@ -110,12 +105,13 @@ export function QuizCard({
         <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Correct!</p>
       )}
       {feedback === 'retry' && (
-        <p className="text-sm font-medium text-destructive">
-          Not quite. {MAX_ATTEMPTS - attempts} attempt{MAX_ATTEMPTS - attempts === 1 ? '' : 's'} left.
+        <p className="text-destructive text-sm font-medium">
+          Not quite. {MAX_ATTEMPTS - attempts} attempt{MAX_ATTEMPTS - attempts === 1 ? '' : 's'}{' '}
+          left.
         </p>
       )}
       {feedback === 'revealed' && (
-        <p className="text-sm font-medium text-destructive">
+        <p className="text-destructive text-sm font-medium">
           Not quite. The answer was: {card.answer}
         </p>
       )}

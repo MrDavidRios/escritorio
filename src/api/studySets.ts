@@ -11,19 +11,12 @@ export async function listStudySets(): Promise<StudySet[]> {
 }
 
 export async function getStudySet(id: string): Promise<StudySet> {
-  const { data, error } = await supabase
-    .from('study_sets')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const { data, error } = await supabase.from('study_sets').select('*').eq('id', id).single()
   if (error) throw error
   return data
 }
 
-export async function createStudySet(
-  ownerId: string,
-  input: StudySetInput,
-): Promise<StudySet> {
+export async function createStudySet(ownerId: string, input: StudySetInput): Promise<StudySet> {
   const { data, error } = await supabase
     .from('study_sets')
     .insert({ ...input, owner_id: ownerId })
@@ -33,10 +26,7 @@ export async function createStudySet(
   return data
 }
 
-export async function updateStudySet(
-  id: string,
-  input: StudySetInput,
-): Promise<StudySet> {
+export async function updateStudySet(id: string, input: StudySetInput): Promise<StudySet> {
   const { data, error } = await supabase
     .from('study_sets')
     .update(input)

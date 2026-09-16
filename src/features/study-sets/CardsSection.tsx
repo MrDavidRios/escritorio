@@ -33,26 +33,19 @@ export function CardsSection({ studySetId }: { studySetId: string }) {
       {isLoading && <p className="text-muted-foreground">Loading…</p>}
 
       {isError && (
-        <p className="text-sm text-destructive">
-          Failed to load cards: {(error as Error).message}
-        </p>
+        <p className="text-destructive text-sm">Failed to load cards: {(error as Error).message}</p>
       )}
 
       {cards && cards.length === 0 && (
-        <p className="text-muted-foreground">
-          No cards yet. Add one to start building this set.
-        </p>
+        <p className="text-muted-foreground">No cards yet. Add one to start building this set.</p>
       )}
 
       <div className="flex flex-col gap-2">
         {cards?.map((card) => {
           const imageUrl = imageUrls?.[card.image_path]
           return (
-            <div
-              key={card.id}
-              className="flex items-center gap-3 rounded-lg border p-3"
-            >
-              <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted/50">
+            <div key={card.id} className="flex items-center gap-3 rounded-lg border p-3">
+              <div className="bg-muted/50 flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-md border">
                 {imageUrl ? (
                   <img
                     src={imageUrl}
@@ -62,15 +55,13 @@ export function CardsSection({ studySetId }: { studySetId: string }) {
                     className="size-full object-cover"
                   />
                 ) : (
-                  <ImageIcon className="size-5 text-muted-foreground" />
+                  <ImageIcon className="text-muted-foreground size-5" />
                 )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{card.answer}</p>
                 {card.hint && (
-                  <p className="truncate text-sm text-muted-foreground">
-                    Hint: {card.hint}
-                  </p>
+                  <p className="text-muted-foreground truncate text-sm">Hint: {card.hint}</p>
                 )}
               </div>
               <div className="flex shrink-0 items-center gap-2">

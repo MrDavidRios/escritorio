@@ -36,8 +36,8 @@ export function DeleteStudySetDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete "{studySetTitle}"?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently delete the study set and all of its cards.
-            This action cannot be undone.
+            This will permanently delete the study set and all of its cards. This action cannot be
+            undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

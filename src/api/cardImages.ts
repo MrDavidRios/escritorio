@@ -31,9 +31,7 @@ export async function deleteCardImages(paths: string[]): Promise<void> {
   if (error) throw error
 }
 
-export async function getSignedImageUrls(
-  paths: string[],
-): Promise<Record<string, string>> {
+export async function getSignedImageUrls(paths: string[]): Promise<Record<string, string>> {
   if (paths.length === 0) return {}
   const { data, error } = await supabase.storage
     .from(BUCKET)
