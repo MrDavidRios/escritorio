@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,9 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { CardsSection } from './CardsSection'
 import { DeleteStudySetDialog } from './DeleteStudySetDialog'
+import { useSignedImageUrls } from './hooks/useSignedImageUrls'
 import { useStudySet, useUpdateStudySet } from './hooks/useStudySets'
+import { ImageUploadField } from './ImageUploadField'
 import { studySetSchema, type StudySetFormValues } from './studySetSchema'
 
 export function StudySetEditorPage() {
@@ -16,6 +18,13 @@ export function StudySetEditorPage() {
   const navigate = useNavigate()
   const { data: studySet, isLoading, isError, error } = useStudySet(setId)
   const updateStudySet = useUpdateStudySet(setId!)
+  const [image, setImage] = useState<File | null>(null)
+
+  const existingImagePaths = studySet?.image_path ? [studySet.image_path] : []
+  const existingImageUrls = useSignedImageUrls(existingImagePaths)
+  const existingImageUrl = studySet?.image_path
+    ? existingImageUrls.data?.[studySet.image_path]
+    : undefined
 
   const {
     register,
@@ -30,6 +39,7 @@ export function StudySetEditorPage() {
   useEffect(() => {
     if (studySet) {
       reset({ title: studySet.title, description: studySet.description ?? '' })
+      setImage(null)
     }
   }, [studySet, reset])
 
@@ -41,8 +51,11 @@ export function StudySetEditorPage() {
     const updated = await updateStudySet.mutateAsync({
       title: values.title,
       description: values.description || null,
+      image,
+      currentImagePath: studySet!.image_path,
     })
     reset({ title: updated.title, description: updated.description ?? '' })
+    setImage(null)
   }
 
   return (
@@ -71,6 +84,11 @@ export function StudySetEditorPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+            <ImageUploadField
+              value={image}
+              onChange={setImage}
+              existingImageUrl={existingImageUrl}
+            />
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="title">Title</Label>
               <Input id="title" {...register('title')} />
@@ -88,7 +106,7 @@ export function StudySetEditorPage() {
               </p>
             )}
             <div>
-              <Button type="submit" disabled={isSubmitting || !isDirty}>
+              <Button type="submit" disabled={isSubmitting || (!isDirty && !image)}>
                 {isSubmitting ? 'Saving…' : 'Save'}
               </Button>
             </div>

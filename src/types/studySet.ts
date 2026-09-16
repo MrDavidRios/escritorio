@@ -3,6 +3,7 @@ export interface StudySet {
   owner_id: string
   title: string
   description: string | null
+  image_path: string | null
   created_at: string
   updated_at: string
 }
@@ -10,4 +11,5 @@ export interface StudySet {
 export interface StudySetInput {
   title: string
   description: string | null
+  image_path?: string | null
 }

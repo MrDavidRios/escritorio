@@ -39,6 +39,7 @@ export function CreateStudySetDialog() {
     })
     setOpen(false)
     reset()
+    // Deliberately jump to the editor (unlike Delete, which stays put) since a new set has no cards yet.
     navigate(`/sets/${studySet.id}/edit`)
   }
 
@@ -71,7 +72,7 @@ export function CreateStudySetDialog() {
           </div>
           {createStudySet.isError && (
             <p className="text-sm text-destructive">
-              {(createStudySet.error as Error).message}
+              Couldn't create the study set. Please try again.
             </p>
           )}
           <DialogFooter>

@@ -41,12 +41,14 @@ export function DeleteStudySetDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            onClick={async () => {
+            disabled={deleteStudySet.isPending}
+            onClick={async (e) => {
+              e.preventDefault()
               await deleteStudySet.mutateAsync(studySetId)
               onDeleted?.()
             }}
           >
-            Delete
+            {deleteStudySet.isPending ? 'Deleting…' : 'Delete'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

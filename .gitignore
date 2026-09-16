@@ -25,3 +25,6 @@ dist-ssr
 
 # Playwright MCP snapshots
 .playwright-mcp/
+
+# Impeccable design skill local state
+.impeccable/

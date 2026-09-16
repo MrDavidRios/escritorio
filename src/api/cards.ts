@@ -11,6 +11,22 @@ export async function listCards(studySetId: string): Promise<Card[]> {
   return data
 }
 
+// Lightweight query for study-set thumbnail fallbacks: just the first few
+// image paths by position, without pulling full card rows.
+export async function listCardImagePaths(
+  studySetId: string,
+  limit: number,
+): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('cards')
+    .select('image_path')
+    .eq('study_set_id', studySetId)
+    .order('position', { ascending: true })
+    .limit(limit)
+  if (error) throw error
+  return data.map((row) => row.image_path)
+}
+
 export async function createCard(
   id: string,
   studySetId: string,
