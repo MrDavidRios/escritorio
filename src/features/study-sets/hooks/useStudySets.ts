@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { deleteCardImages } from '@/api/cardImages'
+import { listCards } from '@/api/cards'
 import {
   createStudySet,
   deleteStudySet,
@@ -60,7 +62,13 @@ export function useDeleteStudySet() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => deleteStudySet(id),
+    mutationFn: async (id: string) => {
+      // The DB cascade removes card rows, but not their storage objects --
+      // clean those up first, or a deleted set leaves orphaned images.
+      const cards = await listCards(id)
+      await deleteCardImages(cards.map((card) => card.image_path))
+      await deleteStudySet(id)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: studySetsKey() })
     },

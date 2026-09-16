@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { CardsSection } from './CardsSection'
 import { DeleteStudySetDialog } from './DeleteStudySetDialog'
 import { useStudySet, useUpdateStudySet } from './hooks/useStudySets'
 import { studySetSchema, type StudySetFormValues } from './studySetSchema'
@@ -94,10 +95,7 @@ export function StudySetEditorPage() {
           </form>
 
           <div className="border-t pt-4">
-            <h2 className="text-lg font-semibold">Cards</h2>
-            <p className="text-muted-foreground">
-              Coming next: add, edit, and remove cards with images.
-            </p>
+            <CardsSection studySetId={studySet.id} />
           </div>
         </>
       )}
