@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Loader2 } from 'lucide-react'
 import { useState, type ClipboardEvent, type ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
 import { AccentedCharPad } from '@/components/AccentedCharPad'
@@ -138,6 +139,7 @@ export function CardFormDialog({
           )}
           <DialogFooter>
             <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 data-icon="inline-start" className="animate-spin" />}
               {isSubmitting ? 'Saving…' : isEdit ? 'Save' : 'Add card'}
             </Button>
           </DialogFooter>

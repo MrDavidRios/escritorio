@@ -1,3 +1,4 @@
+import { LogOut } from 'lucide-react'
 import { Link, Outlet } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/AuthContext'
@@ -12,6 +13,7 @@ export function Layout() {
           Escritorio
         </Link>
         <Button variant="outline" size="sm" onClick={signOut}>
+          <LogOut data-icon="inline-start" />
           Sign out
         </Button>
       </header>

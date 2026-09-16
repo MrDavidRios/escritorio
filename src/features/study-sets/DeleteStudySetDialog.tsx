@@ -1,3 +1,4 @@
+import { Loader2, Trash2 } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +28,7 @@ export function DeleteStudySetDialog({
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="destructive" size="sm">
+          <Trash2 data-icon="inline-start" />
           Delete
         </Button>
       </AlertDialogTrigger>
@@ -48,6 +50,11 @@ export function DeleteStudySetDialog({
               onDeleted?.()
             }}
           >
+            {deleteStudySet.isPending ? (
+              <Loader2 data-icon="inline-start" className="animate-spin" />
+            ) : (
+              <Trash2 data-icon="inline-start" />
+            )}
             {deleteStudySet.isPending ? 'Deleting…' : 'Delete'}
           </AlertDialogAction>
         </AlertDialogFooter>

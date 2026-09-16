@@ -1,3 +1,4 @@
+import { Loader2, Trash2 } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,7 @@ export function DeleteCardDialog({
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="destructive" size="sm">
+          <Trash2 data-icon="inline-start" />
           Delete
         </Button>
       </AlertDialogTrigger>
@@ -39,8 +41,16 @@ export function DeleteCardDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={() => deleteCard.mutate(card)}>
-            Delete
+          <AlertDialogAction
+            disabled={deleteCard.isPending}
+            onClick={() => deleteCard.mutate(card)}
+          >
+            {deleteCard.isPending ? (
+              <Loader2 data-icon="inline-start" className="animate-spin" />
+            ) : (
+              <Trash2 data-icon="inline-start" />
+            )}
+            {deleteCard.isPending ? 'Deleting…' : 'Delete'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

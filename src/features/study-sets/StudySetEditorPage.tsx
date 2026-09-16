@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
@@ -107,6 +108,7 @@ export function StudySetEditorPage() {
             )}
             <div>
               <Button type="submit" disabled={isSubmitting || (!isDirty && !image)}>
+                {isSubmitting && <Loader2 data-icon="inline-start" className="animate-spin" />}
                 {isSubmitting ? 'Saving…' : 'Save'}
               </Button>
             </div>

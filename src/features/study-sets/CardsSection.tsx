@@ -1,4 +1,4 @@
-import { ImageIcon } from 'lucide-react'
+import { ImageIcon, Pencil, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/AuthContext'
 import { CardFormDialog } from './CardFormDialog'
@@ -21,7 +21,12 @@ export function CardsSection({ studySetId }: { studySetId: string }) {
         <CardFormDialog
           studySetId={studySetId}
           ownerId={user.id}
-          trigger={<Button size="sm">Add card</Button>}
+          trigger={
+            <Button size="sm">
+              <Plus data-icon="inline-start" />
+              Add card
+            </Button>
+          }
         />
       </div>
 
@@ -76,6 +81,7 @@ export function CardsSection({ studySetId }: { studySetId: string }) {
                   existingImageUrl={imageUrl}
                   trigger={
                     <Button variant="outline" size="sm">
+                      <Pencil data-icon="inline-start" />
                       Edit
                     </Button>
                   }

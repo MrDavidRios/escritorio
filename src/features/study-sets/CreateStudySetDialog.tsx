@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Loader2, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
@@ -52,7 +53,10 @@ export function CreateStudySetDialog() {
       }}
     >
       <DialogTrigger asChild>
-        <Button>New study set</Button>
+        <Button>
+          <Plus data-icon="inline-start" />
+          New study set
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -77,6 +81,7 @@ export function CreateStudySetDialog() {
           )}
           <DialogFooter>
             <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 data-icon="inline-start" className="animate-spin" />}
               {isSubmitting ? 'Creating…' : 'Create'}
             </Button>
           </DialogFooter>

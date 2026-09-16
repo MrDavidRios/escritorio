@@ -1,8 +1,8 @@
+import { Loader2, Pencil, Play, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { CreateStudySetDialog } from './CreateStudySetDialog'
-import { DeleteStudySetDialog } from './DeleteStudySetDialog'
 import { useStudySets } from './hooks/useStudySets'
 import { StudySetThumbnail } from './StudySetThumbnail'
 
@@ -43,6 +43,11 @@ export function DashboardPage() {
             onClick={() => refetch()}
             disabled={isRefetching}
           >
+            {isRefetching ? (
+              <Loader2 data-icon="inline-start" className="animate-spin" />
+            ) : (
+              <RefreshCw data-icon="inline-start" />
+            )}
             {isRefetching ? 'Retrying…' : 'Try again'}
           </Button>
         </div>
@@ -68,16 +73,18 @@ export function DashboardPage() {
                 )}
               </div>
               <div className="ml-auto flex shrink-0 items-center gap-2">
-                <Button asChild variant="outline" size="sm">
-                  <Link to={`/sets/${studySet.id}/study`}>Study</Link>
+                <Button asChild size="sm">
+                  <Link to={`/sets/${studySet.id}/study`}>
+                    <Play data-icon="inline-start" />
+                    Study
+                  </Link>
                 </Button>
                 <Button asChild variant="outline" size="sm">
-                  <Link to={`/sets/${studySet.id}/edit`}>Edit</Link>
+                  <Link to={`/sets/${studySet.id}/edit`}>
+                    <Pencil data-icon="inline-start" />
+                    Edit
+                  </Link>
                 </Button>
-                <DeleteStudySetDialog
-                  studySetId={studySet.id}
-                  studySetTitle={studySet.title}
-                />
               </div>
             </CardContent>
           </Card>
