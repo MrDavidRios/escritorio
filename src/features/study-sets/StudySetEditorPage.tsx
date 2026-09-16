@@ -60,7 +60,7 @@ export function StudySetEditorPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6 p-4">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 p-4 lg:p-8">
       <Link to="/" className="text-muted-foreground text-sm underline underline-offset-4">
         ← Back to study sets
       </Link>
@@ -74,46 +74,52 @@ export function StudySetEditorPage() {
       )}
 
       {studySet && (
-        <>
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold">Edit study set</h1>
-            <DeleteStudySetDialog
-              studySetId={studySet.id}
-              studySetTitle={studySet.title}
-              onDeleted={() => navigate('/')}
-            />
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[22rem_minmax(0,1fr)] lg:items-start">
+          <div className="flex flex-col gap-4 lg:sticky lg:top-8 lg:rounded-xl lg:border lg:p-5">
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl font-semibold">Edit study set</h1>
+              <DeleteStudySetDialog
+                studySetId={studySet.id}
+                studySetTitle={studySet.title}
+                onDeleted={() => navigate('/')}
+              />
+            </div>
+
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+              <ImageUploadField
+                value={image}
+                onChange={setImage}
+                existingImageUrl={existingImageUrl}
+              />
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="title">Title</Label>
+                <Input id="title" {...register('title')} />
+                {errors.title && (
+                  <p className="text-destructive text-sm">{errors.title.message}</p>
+                )}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" {...register('description')} />
+              </div>
+              {updateStudySet.isError && (
+                <p className="text-destructive text-sm">
+                  {(updateStudySet.error as Error).message}
+                </p>
+              )}
+              <div>
+                <Button type="submit" disabled={isSubmitting || (!isDirty && !image)}>
+                  {isSubmitting && <Loader2 data-icon="inline-start" className="animate-spin" />}
+                  {isSubmitting ? 'Saving…' : 'Save'}
+                </Button>
+              </div>
+            </form>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-            <ImageUploadField
-              value={image}
-              onChange={setImage}
-              existingImageUrl={existingImageUrl}
-            />
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="title">Title</Label>
-              <Input id="title" {...register('title')} />
-              {errors.title && <p className="text-destructive text-sm">{errors.title.message}</p>}
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" {...register('description')} />
-            </div>
-            {updateStudySet.isError && (
-              <p className="text-destructive text-sm">{(updateStudySet.error as Error).message}</p>
-            )}
-            <div>
-              <Button type="submit" disabled={isSubmitting || (!isDirty && !image)}>
-                {isSubmitting && <Loader2 data-icon="inline-start" className="animate-spin" />}
-                {isSubmitting ? 'Saving…' : 'Save'}
-              </Button>
-            </div>
-          </form>
-
-          <div className="border-t pt-4">
+          <div className="border-t pt-6 lg:border-t-0 lg:pt-0">
             <CardsSection studySetId={studySet.id} />
           </div>
-        </>
+        </div>
       )}
     </div>
   )
