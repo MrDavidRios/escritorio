@@ -42,6 +42,7 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
+  --color-wood-ink: var(--wood-ink);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -52,72 +53,85 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --background: oklch(0.965 0.012 75);
+  --foreground: oklch(0.28 0.032 45);
+  --card: oklch(0.985 0.009 78);
+  --card-foreground: oklch(0.28 0.032 45);
+  --popover: oklch(0.985 0.009 78);
+  --popover-foreground: oklch(0.28 0.032 45);
+  --primary: oklch(0.23 0.02 50);
+  --primary-foreground: oklch(0.98 0.012 78);
+  --secondary: oklch(0.91 0.022 62);
+  --secondary-foreground: oklch(0.32 0.035 45);
+  --muted: oklch(0.93 0.018 62);
+  --muted-foreground: oklch(0.48 0.03 50);
+  --accent: oklch(0.87 0.05 251);
+  --accent-foreground: oklch(0.3 0.08 254);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --border: oklch(0.85 0.026 60);
+  --input: oklch(0.85 0.026 60);
+  --ring: oklch(0.4 0.03 50);
+  --chart-1: oklch(0.23 0.02 50);
+  --chart-2: oklch(0.7 0.09 18);
+  --chart-3: oklch(0.75 0.08 234);
+  --chart-4: oklch(0.65 0.09 124);
+  --chart-5: oklch(0.55 0.1 56);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.93 0.02 65);
+  --sidebar-foreground: oklch(0.28 0.032 45);
+  --sidebar-primary: oklch(0.23 0.02 50);
+  --sidebar-primary-foreground: oklch(0.98 0.012 78);
+  --sidebar-accent: oklch(0.89 0.028 62);
+  --sidebar-accent-foreground: oklch(0.32 0.035 45);
+  --sidebar-border: oklch(0.85 0.026 60);
+  --sidebar-ring: oklch(0.4 0.03 50);
+  --wood: oklch(0.68 0.07 55);
+  --wood-grain: oklch(0.42 0.08 42);
+  --wood-grain-light: oklch(0.84 0.05 68);
+  --wood-wash: oklch(0.25 0.03 45 / 14%);
+  --wood-ink: oklch(0.18 0.07 44);
+  /* How much the texture is muted. Higher = flatter grain. */
+  --wood-scrim: 55%;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.19 0.016 50);
+  --foreground: oklch(0.92 0.026 75);
+  --card: oklch(0.245 0.02 48);
+  --card-foreground: oklch(0.92 0.026 75);
+  --popover: oklch(0.245 0.02 48);
+  --popover-foreground: oklch(0.92 0.026 75);
+  --primary: oklch(0.7 0.14 42);
+  --primary-foreground: oklch(0.17 0.016 45);
+  --secondary: oklch(0.3 0.022 50);
+  --secondary-foreground: oklch(0.92 0.026 75);
+  --muted: oklch(0.27 0.018 48);
+  --muted-foreground: oklch(0.66 0.026 60);
+  --accent: oklch(0.4 0.075 254);
+  --accent-foreground: oklch(0.92 0.026 75);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: oklch(0.9 0.02 60 / 12%);
+  --input: oklch(0.9 0.02 60 / 16%);
+  --ring: oklch(0.63 0.13 42);
+  --chart-1: oklch(0.7 0.14 42);
+  --chart-2: oklch(0.78 0.09 15);
+  --chart-3: oklch(0.78 0.08 234);
+  --chart-4: oklch(0.72 0.1 124);
+  --chart-5: oklch(0.66 0.09 56);
+  --sidebar: oklch(0.16 0.016 48);
+  --sidebar-foreground: oklch(0.92 0.026 75);
+  --sidebar-primary: oklch(0.7 0.14 42);
+  --sidebar-primary-foreground: oklch(0.17 0.016 45);
+  --sidebar-accent: oklch(0.3 0.022 50);
+  --sidebar-accent-foreground: oklch(0.92 0.026 75);
+  --sidebar-border: oklch(0.9 0.02 60 / 12%);
+  --sidebar-ring: oklch(0.63 0.13 42);
+  --wood: oklch(0.16 0.022 44);
+  --wood-grain: oklch(0.09 0.015 36);
+  --wood-grain-light: oklch(0.28 0.035 50);
+  --wood-wash: oklch(0.1 0.015 45 / 25%);
+  --wood-ink: oklch(0.9 0.035 55);
+  --wood-scrim: 50%;
 }
 
 @layer base {
@@ -129,5 +143,57 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer utilities {
+  /* Procedural wood grain: fine vertical streaks for grain, wide horizontal
+     bands for plank seams, and turbulence noise for the irregularity that
+     makes it read as a material instead of stripes. Colors are dedicated
+     wood tokens (not the UI background) so it reads as an actual wood
+     surface in both themes. */
+  .bg-wood {
+    background-color: var(--wood);
+    background-image:
+      /* vignette: darkens/mutes the edges to soften the material */
+      radial-gradient(
+        ellipse at center,
+        transparent 45%,
+        color-mix(in oklch, var(--wood-grain) 40%, transparent) 100%
+      ),
+      /* wash: a translucent tint that shifts the overall tone */
+        linear-gradient(var(--wood-wash), var(--wood-wash)),
+      /* scrim: the base wood color over the texture, muting the grain's
+         contrast without shifting the surface tone. The single knob for
+         how loud the texture reads. */
+        linear-gradient(
+          color-mix(in oklch, var(--wood) var(--wood-scrim), transparent),
+          color-mix(in oklch, var(--wood) var(--wood-scrim), transparent)
+        ),
+      repeating-linear-gradient(
+        177deg,
+        transparent 0px,
+        color-mix(in oklch, var(--wood-grain) 40%, transparent) 1px,
+        transparent 2px,
+        transparent 9px,
+        color-mix(in oklch, var(--wood-grain) 22%, transparent) 10px,
+        transparent 14px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        color-mix(in oklch, var(--wood-grain) 55%, transparent) 0px,
+        transparent 2px,
+        transparent 150px,
+        color-mix(in oklch, var(--wood-grain-light) 45%, transparent) 152px,
+        transparent 155px
+      ),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.9' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:
+      100% 100%,
+      100% 100%,
+      100% 100%,
+      100% 100%,
+      100% 100%,
+      220px 220px;
   }
 }
