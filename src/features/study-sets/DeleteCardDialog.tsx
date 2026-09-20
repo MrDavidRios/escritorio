@@ -1,4 +1,5 @@
 import { Loader2, Trash2 } from 'lucide-react'
+import type { ReactNode } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,16 +15,26 @@ import { Button } from '@/components/ui/button'
 import type { Card } from '@/types/card'
 import { useDeleteCard } from './hooks/useCards'
 
-export function DeleteCardDialog({ studySetId, card }: { studySetId: string; card: Card }) {
+export function DeleteCardDialog({
+  studySetId,
+  card,
+  trigger,
+}: {
+  studySetId: string
+  card: Card
+  trigger?: ReactNode
+}) {
   const deleteCard = useDeleteCard(studySetId)
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" size="sm">
-          <Trash2 data-icon="inline-start" />
-          Delete
-        </Button>
+        {trigger ?? (
+          <Button variant="destructive" size="sm">
+            <Trash2 data-icon="inline-start" />
+            Delete
+          </Button>
+        )}
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>

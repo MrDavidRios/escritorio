@@ -10,7 +10,7 @@ import {
 } from '@/api/studySets'
 import { deleteStudySetImages, studySetImagePath, uploadStudySetImage } from '@/api/studySetImages'
 import { useAuth } from '@/features/auth/AuthContext'
-import type { StudySetInput } from '@/types/studySet'
+import type { StudySet, StudySetInput } from '@/types/studySet'
 
 export function studySetsKey() {
   return ['study-sets'] as const
@@ -85,6 +85,27 @@ export function useUpdateStudySet(id: string) {
   })
 }
 
+export function usePatchStudySet(id: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (patch: Partial<StudySetInput>) => updateStudySet(id, patch),
+    onMutate: async (patch) => {
+      await queryClient.cancelQueries({ queryKey: studySetKey(id) })
+      const previous = queryClient.getQueryData<StudySet>(studySetKey(id))
+      queryClient.setQueryData<StudySet>(studySetKey(id), (prev) => prev && { ...prev, ...patch })
+      return previous
+    },
+    onError: (_err, _patch, context) => {
+      queryClient.setQueryData(studySetKey(id), context)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: studySetKey(id) })
+      queryClient.invalidateQueries({ queryKey: studySetsKey() })
+    },
+  })
+}
+
 export function useDeleteStudySet() {
   const queryClient = useQueryClient()
 
@@ -94,7 +115,8 @@ export function useDeleteStudySet() {
       // clean those up first, or a deleted set leaves orphaned images.
       const studySet = await getStudySet(id)
       const cards = await listCards(id)
-      await deleteCardImages(cards.map((card) => card.image_path))
+      const imagePaths = cards.map((card) => card.image_path).filter((p): p is string => p != null)
+      if (imagePaths.length > 0) await deleteCardImages(imagePaths)
       if (studySet.image_path) {
         await deleteStudySetImages([studySet.image_path])
       }

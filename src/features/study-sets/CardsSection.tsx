@@ -1,88 +1,60 @@
-import { ImageIcon, Pencil, Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { useAuth } from '@/features/auth/AuthContext'
-import { CardFormDialog } from './CardFormDialog'
-import { DeleteCardDialog } from './DeleteCardDialog'
+import { AddCardTile } from './AddCardTile'
+import { CardTile } from './CardTile'
 import { useCards } from './hooks/useCards'
 import { useSignedImageUrls } from './hooks/useSignedImageUrls'
 
-export function CardsSection({ studySetId }: { studySetId: string }) {
-  const { user } = useAuth()
-  const { data: cards, isLoading, isError, error } = useCards(studySetId)
-  const imagePaths = cards?.map((card) => card.image_path) ?? []
+export function CardsSection({
+  studySetId,
+  ownerId,
+  onSaving,
+  onSaved,
+  onError,
+}: {
+  studySetId: string
+  ownerId: string
+  onSaving: () => void
+  onSaved: () => void
+  onError: (retry: () => void) => void
+}) {
+  const { data: cards, isLoading, isError } = useCards(studySetId)
+  const imagePaths = (cards ?? []).map((card) => card.image_path).filter((p): p is string => p != null)
   const { data: imageUrls } = useSignedImageUrls(imagePaths)
 
-  if (!user) return null
+  const cardCount = cards?.length ?? 0
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Cards</h2>
-        <CardFormDialog
-          studySetId={studySetId}
-          ownerId={user.id}
-          trigger={
-            <Button size="sm">
-              <Plus data-icon="inline-start" />
-              Add card
-            </Button>
-          }
-        />
-      </div>
+    <div className="flex flex-col gap-4">
+      <h2 className="text-lg font-semibold">
+        Cards <span className="text-muted-foreground font-normal">{cardCount}</span>
+      </h2>
 
-      {isLoading && <p className="text-muted-foreground">Loading…</p>}
-
-      {isError && (
-        <p className="text-destructive text-sm">Failed to load cards: {(error as Error).message}</p>
+      {isLoading && (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="bg-muted aspect-[4/3] w-full animate-pulse rounded-xl" />
+          ))}
+        </div>
       )}
 
-      {cards && cards.length === 0 && (
-        <p className="text-muted-foreground">No cards yet. Add one to start building this set.</p>
-      )}
+      {isError && <p className="text-destructive text-sm">Couldn't load this set's cards.</p>}
 
-      <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
-        {cards?.map((card) => {
-          const imageUrl = imageUrls?.[card.image_path]
-          return (
-            <div key={card.id} className="flex items-center gap-3 rounded-lg border p-3">
-              <div className="bg-muted/50 flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-md border">
-                {imageUrl ? (
-                  <img
-                    src={imageUrl}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                    className="size-full object-cover"
-                  />
-                ) : (
-                  <ImageIcon className="text-muted-foreground size-5" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{card.answer}</p>
-                {card.hint && (
-                  <p className="text-muted-foreground truncate text-sm">Hint: {card.hint}</p>
-                )}
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <CardFormDialog
-                  studySetId={studySetId}
-                  ownerId={user.id}
-                  card={card}
-                  existingImageUrl={imageUrl}
-                  trigger={
-                    <Button variant="outline" size="sm">
-                      <Pencil data-icon="inline-start" />
-                      Edit
-                    </Button>
-                  }
-                />
-                <DeleteCardDialog studySetId={studySetId} card={card} />
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      {cards && (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          {cards.map((card) => (
+            <CardTile
+              key={card.id}
+              studySetId={studySetId}
+              ownerId={ownerId}
+              card={card}
+              imageUrl={card.image_path ? imageUrls?.[card.image_path] : undefined}
+              onSaving={onSaving}
+              onSaved={onSaved}
+              onError={onError}
+            />
+          ))}
+          <AddCardTile studySetId={studySetId} ownerId={ownerId} empty={cardCount === 0} />
+        </div>
+      )}
     </div>
   )
 }

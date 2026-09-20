@@ -1,4 +1,4 @@
-import { Loader2, Pencil, Play, RefreshCw } from 'lucide-react'
+import { ChevronRight, Loader2, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
@@ -56,9 +56,10 @@ export function DashboardPage() {
 
       <div className="flex flex-col gap-3">
         {studySets?.map((studySet) => (
-          <div
+          <Link
             key={studySet.id}
-            className="group/row ease-out-strong after:ease-out-strong relative isolate rounded-xl transition-transform duration-200 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-xl after:opacity-0 after:shadow-lg after:transition-opacity after:duration-200 hover:-translate-y-0.5 hover:after:opacity-100 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+            to={`/sets/${studySet.id}`}
+            className="group/row ease-out-strong after:ease-out-strong relative isolate block rounded-xl transition-transform duration-200 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-xl after:opacity-0 after:shadow-lg after:transition-opacity after:duration-200 hover:-translate-y-0.5 hover:after:opacity-100 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
           >
             <Card>
               <CardContent className="flex items-center gap-4">
@@ -71,23 +72,10 @@ export function DashboardPage() {
                     </p>
                   )}
                 </div>
-                <div className="ml-auto flex shrink-0 items-center gap-2">
-                  <Button asChild size="sm">
-                    <Link to={`/sets/${studySet.id}/study`}>
-                      <Play data-icon="inline-start" />
-                      Study
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="sm">
-                    <Link to={`/sets/${studySet.id}/edit`}>
-                      <Pencil data-icon="inline-start" />
-                      Edit
-                    </Link>
-                  </Button>
-                </div>
+                <ChevronRight aria-hidden className="text-muted-foreground shrink-0" />
               </CardContent>
             </Card>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

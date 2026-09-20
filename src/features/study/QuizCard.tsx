@@ -46,7 +46,7 @@ export function QuizCard({
       return
     }
 
-    if (isAnswerCorrect(value, card.answer)) {
+    if (isAnswerCorrect(value, card.spanish_term)) {
       setFeedback('correct')
       logAttempt.mutate({ card_id: card.id, is_correct: true, attempt_count: attempts + 1 })
       return
@@ -65,13 +65,32 @@ export function QuizCard({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="bg-muted/30 flex min-h-48 items-center justify-center overflow-hidden rounded-lg border">
-        {imageUrl ? (
-          <img src={imageUrl} alt="" decoding="async" className="max-h-72 w-full object-contain" />
-        ) : (
-          <p className="text-muted-foreground p-8 text-sm">Loading image…</p>
-        )}
-      </div>
+      {card.image_path && (
+        <div className="bg-muted/30 flex min-h-48 items-center justify-center overflow-hidden rounded-lg border">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt=""
+              decoding="async"
+              className="max-h-72 w-full object-contain"
+            />
+          ) : (
+            <p className="text-muted-foreground p-8 text-sm">Loading image…</p>
+          )}
+        </div>
+      )}
+
+      {card.definition && (
+        <div
+          className={
+            !card.image_path
+              ? 'bg-muted/30 flex min-h-48 items-center justify-center overflow-hidden rounded-lg border p-6'
+              : undefined
+          }
+        >
+          <p className="text-base leading-relaxed">{card.definition}</p>
+        </div>
+      )}
 
       {card.hint &&
         (hintShown ? (
@@ -112,7 +131,7 @@ export function QuizCard({
       )}
       {feedback === 'revealed' && (
         <p className="text-destructive text-sm font-medium">
-          Not quite. The answer was: {card.answer}
+          Not quite. The answer was: {card.spanish_term}
         </p>
       )}
 

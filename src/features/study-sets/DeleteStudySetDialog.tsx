@@ -1,4 +1,5 @@
 import { Loader2, Trash2 } from 'lucide-react'
+import type { ReactNode } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,20 +18,24 @@ export function DeleteStudySetDialog({
   studySetId,
   studySetTitle,
   onDeleted,
+  trigger,
 }: {
   studySetId: string
   studySetTitle: string
   onDeleted?: () => void
+  trigger?: ReactNode
 }) {
   const deleteStudySet = useDeleteStudySet()
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" size="sm">
-          <Trash2 data-icon="inline-start" />
-          Delete
-        </Button>
+        {trigger ?? (
+          <Button variant="destructive" size="sm">
+            <Trash2 data-icon="inline-start" />
+            Delete
+          </Button>
+        )}
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
