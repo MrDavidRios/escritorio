@@ -1,12 +1,9 @@
 # Escritorio
 
-A Quizlet-like flashcard study app. Each card shows an image and an optional
+A Quizlet-like flashcard study app for Spanish learning. Each card shows an image and an optional
 hint; you type the answer. Study sets are created, saved, and edited by
 signed-in users, backed by Supabase (Postgres + Auth + Storage) and deployed
 as a static site to GitHub Pages.
-
-See `docs/` for the implementation plan (or ask about it — it's tracked
-outside this repo for now).
 
 ## Stack
 
