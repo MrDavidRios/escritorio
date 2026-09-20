@@ -1,11 +1,8 @@
-import { BadgeQuestionMark, BookOpen, ImageIcon, Languages, Loader2, Plus, X } from 'lucide-react'
+import { Loader2, Plus, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
-import { AccentedCharPad } from '@/components/AccentedCharPad'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { useCursorInsert } from '@/hooks/useCursorInsert'
 import { cn } from '@/lib/utils'
+import { CardTile } from './CardTile'
 import { cardSchema } from './cardSchema'
 import { useCreateCard } from './hooks/useCards'
 
@@ -25,7 +22,6 @@ export function AddCardTile({
   const [definition, setDefinition] = useState('')
   const [hint, setHint] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const spanishTermRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const createCard = useCreateCard(studySetId, ownerId)
@@ -36,15 +32,6 @@ export function AddCardTile({
       if (previewUrl) URL.revokeObjectURL(previewUrl)
     }
   }, [previewUrl])
-
-  useEffect(() => {
-    if (image || manualEntry) spanishTermRef.current?.focus()
-  }, [image, manualEntry])
-
-  const spanishTermCursor = useCursorInsert(
-    () => spanishTerm,
-    (next) => setSpanishTerm(next),
-  )
 
   function reset() {
     setImage(null)
@@ -151,113 +138,35 @@ export function AddCardTile({
   }
 
   return (
-    <div className="ring-foreground/10 flex flex-col overflow-hidden rounded-xl ring-1">
-      {image ? (
-        <div className="bg-muted/50 relative aspect-[4/3] w-full">
-          <img src={previewUrl!} alt="" className="size-full object-cover" />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="absolute inset-0 flex items-center justify-center bg-black/50 text-sm font-medium text-white opacity-0 transition-opacity duration-150 hover:opacity-100 focus-visible:opacity-100"
-          >
-            Change
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => pickUpFile(e.target.files?.[0])}
-          />
+    <CardTile
+      imageUrl={previewUrl ?? undefined}
+      onPickImage={pickUpFile}
+      onRemoveImage={() => setImage(null)}
+      canRemoveImage={Boolean(image)}
+      spanishTerm={spanishTerm}
+      onSaveSpanishTerm={setSpanishTerm}
+      autoFocusSpanishTerm
+      englishEquivalent={englishEquivalent}
+      onSaveEnglishEquivalent={setEnglishEquivalent}
+      definition={definition}
+      onSaveDefinition={setDefinition}
+      hint={hint}
+      onSaveHint={setHint}
+      footer={
+        <div className="flex flex-col gap-2 p-3 pt-0">
+          {error && <p className="text-destructive text-xs">{error}</p>}
+          <div className="flex items-center gap-2">
+            <Button type="button" size="sm" onClick={submit} disabled={createCard.isPending}>
+              {createCard.isPending && <Loader2 data-icon="inline-start" className="animate-spin" />}
+              {createCard.isPending ? 'Adding…' : 'Add card'}
+            </Button>
+            <Button type="button" size="sm" variant="ghost" onClick={reset}>
+              <X data-icon="inline-start" />
+              Cancel
+            </Button>
+          </div>
         </div>
-      ) : (
-        <div className="flex items-center justify-between gap-2 p-3 pb-0">
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <ImageIcon data-icon="inline-start" />
-            Add image
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => pickUpFile(e.target.files?.[0])}
-          />
-        </div>
-      )}
-
-      <div className="flex flex-col gap-2 p-3">
-        <AccentedCharPad onInsert={spanishTermCursor.insert} />
-        <Input
-          ref={(el) => {
-            spanishTermRef.current = el
-            spanishTermCursor.setRef(el)
-          }}
-          aria-label="Spanish term"
-          placeholder="Spanish term"
-          value={spanishTerm}
-          onChange={(e) => setSpanishTerm(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') reset()
-          }}
-        />
-        <div className="relative">
-          <Languages className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
-          <Input
-            aria-label="English equivalent"
-            placeholder="Add an English equivalent"
-            value={englishEquivalent}
-            onChange={(e) => setEnglishEquivalent(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') reset()
-            }}
-            className="pl-8"
-          />
-        </div>
-        <div className="relative">
-          <BookOpen className="text-muted-foreground pointer-events-none absolute top-2.5 left-2.5 size-3.5" />
-          <Textarea
-            aria-label="Definition"
-            placeholder="Add a definition"
-            value={definition}
-            onChange={(e) => setDefinition(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') reset()
-            }}
-            className="pl-8"
-          />
-        </div>
-        <div className="relative">
-          <BadgeQuestionMark className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
-          <Input
-            aria-label="Hint"
-            placeholder="Add a hint"
-            value={hint}
-            onChange={(e) => setHint(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') reset()
-            }}
-            className="pl-8"
-          />
-        </div>
-
-        {error && <p className="text-destructive text-xs">{error}</p>}
-        <div className="flex items-center gap-2">
-          <Button type="button" size="sm" onClick={submit} disabled={createCard.isPending}>
-            {createCard.isPending && <Loader2 data-icon="inline-start" className="animate-spin" />}
-            {createCard.isPending ? 'Adding…' : 'Add card'}
-          </Button>
-          <Button type="button" size="sm" variant="ghost" onClick={reset}>
-            <X data-icon="inline-start" />
-            Cancel
-          </Button>
-        </div>
-      </div>
-    </div>
+      }
+    />
   )
 }
