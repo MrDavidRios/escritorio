@@ -17,7 +17,7 @@ export function CardsSection({
   onError: (retry: () => void) => void
 }) {
   const { data: cards, isLoading, isError } = useCards(studySetId)
-  const imagePaths = cards?.map((card) => card.image_path) ?? []
+  const imagePaths = (cards ?? []).map((card) => card.image_path).filter((p): p is string => p != null)
   const { data: imageUrls } = useSignedImageUrls(imagePaths)
 
   const cardCount = cards?.length ?? 0
@@ -46,7 +46,7 @@ export function CardsSection({
               studySetId={studySetId}
               ownerId={ownerId}
               card={card}
-              imageUrl={imageUrls?.[card.image_path]}
+              imageUrl={card.image_path ? imageUrls?.[card.image_path] : undefined}
               onSaving={onSaving}
               onSaved={onSaved}
               onError={onError}

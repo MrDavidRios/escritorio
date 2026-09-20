@@ -13,7 +13,10 @@ export function StudySessionPage() {
   const { data: cards, isLoading, isError, error } = useCards(setId)
   const [index, setIndex] = useState(0)
 
-  const imagePaths = useMemo(() => cards?.map((card) => card.image_path) ?? [], [cards])
+  const imagePaths = useMemo(
+    () => (cards ?? []).map((c) => c.image_path).filter((p): p is string => p != null),
+    [cards],
+  )
   const { data: imageUrls } = useSignedImageUrls(imagePaths)
 
   // Warm the browser's cache for every card in the deck as soon as their
@@ -58,7 +61,7 @@ export function StudySessionPage() {
           <QuizCard
             key={currentCard.id}
             card={currentCard}
-            imageUrl={imageUrls?.[currentCard.image_path]}
+            imageUrl={currentCard.image_path ? imageUrls?.[currentCard.image_path] : undefined}
             onNext={() => setIndex((i) => i + 1)}
           />
         </>

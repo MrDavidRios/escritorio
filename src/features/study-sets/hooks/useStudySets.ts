@@ -115,7 +115,8 @@ export function useDeleteStudySet() {
       // clean those up first, or a deleted set leaves orphaned images.
       const studySet = await getStudySet(id)
       const cards = await listCards(id)
-      await deleteCardImages(cards.map((card) => card.image_path))
+      const imagePaths = cards.map((card) => card.image_path).filter((p): p is string => p != null)
+      if (imagePaths.length > 0) await deleteCardImages(imagePaths)
       if (studySet.image_path) {
         await deleteStudySetImages([studySet.image_path])
       }

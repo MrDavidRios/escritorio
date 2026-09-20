@@ -11,7 +11,7 @@ export function AccentedCharPad({ onInsert }: { onInsert: (char: string) => void
       aria-label="Spanish accented characters"
       className="border-input bg-background inline-flex overflow-hidden rounded-md border shadow-sm"
     >
-      {SPANISH_HELPER_CHARS.map((char, i) => (
+      {SPANISH_HELPER_CHARS.map((char) => (
         <button
           key={char}
           type="button"

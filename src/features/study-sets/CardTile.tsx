@@ -1,4 +1,4 @@
-import { ImageIcon, Trash2 } from 'lucide-react'
+import { ImageIcon, Trash2, X } from 'lucide-react'
 import { useRef } from 'react'
 import { AccentedCharPad } from '@/components/AccentedCharPad'
 import { InlineText } from '@/components/InlineText'
@@ -27,12 +27,21 @@ export function CardTile({
   const updateCard = useUpdateCard(studySetId, ownerId)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  function save(patch: { hint: string } | { answer: string }) {
+  function save(
+    patch:
+      | { hint: string }
+      | { spanish_term: string }
+      | { english_equivalent: string }
+      | { definition: string },
+  ) {
     const variables = {
       card,
       image: null,
       hint: 'hint' in patch ? patch.hint : (card.hint ?? ''),
-      answer: 'answer' in patch ? patch.answer : card.answer,
+      spanish_term: 'spanish_term' in patch ? patch.spanish_term : card.spanish_term,
+      english_equivalent:
+        'english_equivalent' in patch ? patch.english_equivalent : (card.english_equivalent ?? ''),
+      definition: 'definition' in patch ? patch.definition : (card.definition ?? ''),
     }
     onSaving()
     updateCard.mutate(variables, {
@@ -44,13 +53,41 @@ export function CardTile({
   function replaceImage(file: File) {
     onSaving()
     updateCard.mutate(
-      { card, image: file, hint: card.hint ?? '', answer: card.answer },
+      {
+        card,
+        image: file,
+        hint: card.hint ?? '',
+        spanish_term: card.spanish_term,
+        english_equivalent: card.english_equivalent ?? '',
+        definition: card.definition ?? '',
+      },
       {
         onSuccess: onSaved,
         onError: () => onError(() => replaceImage(file)),
       },
     )
   }
+
+  function removeImage() {
+    onSaving()
+    updateCard.mutate(
+      {
+        card,
+        image: null,
+        removeImage: true,
+        hint: card.hint ?? '',
+        spanish_term: card.spanish_term,
+        english_equivalent: card.english_equivalent ?? '',
+        definition: card.definition ?? '',
+      },
+      {
+        onSuccess: onSaved,
+        onError: () => onError(() => removeImage()),
+      },
+    )
+  }
+
+  const canRemoveImage = Boolean(card.image_path && card.definition)
 
   return (
     <div className="ring-foreground/10 group relative flex flex-col overflow-hidden rounded-xl ring-1">
@@ -64,8 +101,9 @@ export function CardTile({
             className="size-full object-cover"
           />
         ) : (
-          <div className="flex size-full items-center justify-center">
+          <div className="flex size-full flex-col items-center justify-center gap-1">
             <ImageIcon className="text-muted-foreground size-6" />
+            <span className="text-muted-foreground text-xs">Add image</span>
           </div>
         )}
         <button
@@ -75,6 +113,21 @@ export function CardTile({
         >
           Change
         </button>
+        {canRemoveImage && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Remove image"
+            onClick={(e) => {
+              e.stopPropagation()
+              removeImage()
+            }}
+            className="absolute top-2 left-2 bg-black/40 text-white opacity-0 transition-opacity duration-150 hover:bg-black/60 hover:text-white group-focus-within/image:opacity-100 group-hover/image:opacity-100 [@media(hover:none)]:opacity-70"
+          >
+            <X />
+          </Button>
+        )}
         <input
           ref={fileInputRef}
           type="file"
@@ -105,13 +158,28 @@ export function CardTile({
 
       <div className="flex flex-col gap-0.5 p-3">
         <InlineText
-          value={card.answer}
-          onSave={(answer) => save({ answer })}
-          placeholder="Answer"
-          label="Card answer"
+          value={card.spanish_term}
+          onSave={(spanish_term) => save({ spanish_term })}
+          placeholder="Spanish term"
+          label="Card spanish term"
           required
           className="font-medium"
           accessory={(insert) => <AccentedCharPad onInsert={insert} />}
+        />
+        <InlineText
+          value={card.english_equivalent ?? ''}
+          onSave={(english_equivalent) => save({ english_equivalent })}
+          placeholder="Add an English equivalent"
+          label="Card English equivalent"
+          className="text-muted-foreground text-sm"
+        />
+        <InlineText
+          value={card.definition ?? ''}
+          onSave={(definition) => save({ definition })}
+          placeholder="Add a definition"
+          label="Card definition"
+          multiline
+          className="text-muted-foreground text-sm"
         />
         <InlineText
           value={card.hint ?? ''}
