@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCursorInsert } from '@/hooks/useCursorInsert'
+import { useFloatingPosition } from '@/hooks/useFloatingPosition'
 import { cn } from '@/lib/utils'
 
 const BOX = '-mx-2 rounded-md px-2 py-0.5'
@@ -37,6 +38,14 @@ export function InlineText({
   const cursor = useCursorInsert(
     () => draft,
     (next) => setDraft(next),
+  )
+  const {
+    referenceRef,
+    floatingRef: accessoryRef,
+    position: accessoryPosition,
+  } = useFloatingPosition<HTMLInputElement | HTMLTextAreaElement, HTMLDivElement>(
+    Boolean(accessory),
+    [editing],
   )
 
   useEffect(() => {
@@ -118,7 +127,7 @@ export function InlineText({
 
   if (!editing) {
     return (
-      <Wrapper className={className}>
+      <Wrapper className={cn(className, 'relative')}>
         <button
           ref={buttonRef}
           type="button"
@@ -143,13 +152,26 @@ export function InlineText({
   )
 
   return (
-    <Wrapper className={className}>
-      {accessory?.(cursor.insert)}
+    <Wrapper className={cn(className, 'relative')}>
+      {accessory && (
+        <div
+          ref={accessoryRef}
+          style={{
+            position: 'absolute',
+            top: accessoryPosition.y,
+            left: accessoryPosition.x,
+          }}
+          className="z-10"
+        >
+          {accessory(cursor.insert)}
+        </div>
+      )}
       {multiline ? (
         <textarea
           ref={(el) => {
             inputRef.current = el
             cursor.setRef(el)
+            referenceRef.current = el
           }}
           aria-label={label}
           value={draft}
@@ -164,6 +186,7 @@ export function InlineText({
           ref={(el) => {
             inputRef.current = el
             cursor.setRef(el)
+            referenceRef.current = el
           }}
           type="text"
           aria-label={label}
