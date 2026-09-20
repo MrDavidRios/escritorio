@@ -1,6 +1,6 @@
 import { LogOut, Moon, Sun } from 'lucide-react'
 import { Link, Outlet } from 'react-router-dom'
-import { useTheme } from '@/app/ThemeContext'
+import { Logo } from '@/components/Logo'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/AuthContext'
 
@@ -10,9 +10,10 @@ export function Layout() {
 
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="bg-card text-card-foreground border-foreground/10 flex items-center justify-between border-b px-4 py-3">
-        <Link to="/" className="font-semibold">
-          Escritorio
+      <header className="flex items-center justify-between border-b px-4 py-3">
+        <Link to="/" className="flex items-center gap-2 font-semibold">
+          <Logo />
+          <span className="relative top-px">Escritorio</span>
         </Link>
         <div className="flex items-center gap-2">
           <Button

@@ -40,7 +40,7 @@ export function CardsSection({ studySetId }: { studySetId: string }) {
         <p className="text-muted-foreground">No cards yet. Add one to start building this set.</p>
       )}
 
-      <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
         {cards?.map((card) => {
           const imageUrl = imageUrls?.[card.image_path]
           return (
