@@ -28,3 +28,6 @@ dist-ssr
 
 # Impeccable design skill local state
 .impeccable/
+
+# Supabase CLI local state
+supabase/.temp/
