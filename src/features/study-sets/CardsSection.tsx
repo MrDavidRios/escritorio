@@ -1,5 +1,5 @@
 import { AddCardTile } from './AddCardTile'
-import { CardTile } from './CardTile'
+import { EditableCardTile } from './EditableCardTile'
 import { useCards } from './hooks/useCards'
 import { useSignedImageUrls } from './hooks/useSignedImageUrls'
 
@@ -41,7 +41,7 @@ export function CardsSection({
       {cards && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {cards.map((card) => (
-            <CardTile
+            <EditableCardTile
               key={card.id}
               studySetId={studySetId}
               ownerId={ownerId}
