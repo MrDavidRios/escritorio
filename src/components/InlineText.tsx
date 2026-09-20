@@ -19,6 +19,8 @@ type InlineTextProps = {
   accessory?: (insert: (text: string) => void) => React.ReactNode
   /** Rendered before the value/placeholder. */
   icon?: React.ReactNode
+  /** Start already in edit mode on mount. */
+  autoFocus?: boolean
   /** Shown on hover; defaults to `label`. */
   tooltip?: string
 }
@@ -34,9 +36,10 @@ export function InlineText({
   className,
   accessory,
   icon,
+  autoFocus = false,
   tooltip,
 }: InlineTextProps) {
-  const [editing, setEditing] = useState(false)
+  const [editing, setEditing] = useState(autoFocus)
   const [draft, setDraft] = useState(value)
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
