@@ -1,4 +1,4 @@
-import { ImageIcon, Loader2, Plus, X } from 'lucide-react'
+import { BadgeQuestionMark, BookOpen, ImageIcon, Languages, Loader2, Plus, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import { AccentedCharPad } from '@/components/AccentedCharPad'
 import { Button } from '@/components/ui/button'
@@ -206,33 +206,45 @@ export function AddCardTile({
             if (e.key === 'Escape') reset()
           }}
         />
-        <Input
-          aria-label="English equivalent"
-          placeholder="Add an English equivalent"
-          value={englishEquivalent}
-          onChange={(e) => setEnglishEquivalent(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') reset()
-          }}
-        />
-        <Textarea
-          aria-label="Definition"
-          placeholder="Add a definition"
-          value={definition}
-          onChange={(e) => setDefinition(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') reset()
-          }}
-        />
-        <Input
-          aria-label="Hint"
-          placeholder="Add a hint"
-          value={hint}
-          onChange={(e) => setHint(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') reset()
-          }}
-        />
+        <div className="relative">
+          <Languages className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
+          <Input
+            aria-label="English equivalent"
+            placeholder="Add an English equivalent"
+            value={englishEquivalent}
+            onChange={(e) => setEnglishEquivalent(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') reset()
+            }}
+            className="pl-8"
+          />
+        </div>
+        <div className="relative">
+          <BookOpen className="text-muted-foreground pointer-events-none absolute top-2.5 left-2.5 size-3.5" />
+          <Textarea
+            aria-label="Definition"
+            placeholder="Add a definition"
+            value={definition}
+            onChange={(e) => setDefinition(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') reset()
+            }}
+            className="pl-8"
+          />
+        </div>
+        <div className="relative">
+          <BadgeQuestionMark className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
+          <Input
+            aria-label="Hint"
+            placeholder="Add a hint"
+            value={hint}
+            onChange={(e) => setHint(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') reset()
+            }}
+            className="pl-8"
+          />
+        </div>
 
         {error && <p className="text-destructive text-xs">{error}</p>}
         <div className="flex items-center gap-2">

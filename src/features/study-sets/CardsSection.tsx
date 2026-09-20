@@ -31,7 +31,7 @@ export function CardsSection({
       {isLoading && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="bg-muted aspect-[4/3] w-full animate-pulse rounded-xl" />
+            <div key={i} className="bg-muted aspect-4/3 w-full animate-pulse rounded-xl" />
           ))}
         </div>
       )}

@@ -1,4 +1,4 @@
-import { ImageIcon, Trash2, X } from 'lucide-react'
+import { BadgeQuestionMark, BookOpen, ImageIcon, Languages, Trash2, X } from 'lucide-react'
 import { useRef } from 'react'
 import { AccentedCharPad } from '@/components/AccentedCharPad'
 import { InlineText } from '@/components/InlineText'
@@ -162,6 +162,7 @@ export function CardTile({
           onSave={(spanish_term) => save({ spanish_term })}
           placeholder="Spanish term"
           label="Card spanish term"
+          tooltip="Edit title"
           required
           className="font-medium"
           accessory={(insert) => <AccentedCharPad onInsert={insert} />}
@@ -171,22 +172,28 @@ export function CardTile({
           onSave={(english_equivalent) => save({ english_equivalent })}
           placeholder="Add an English equivalent"
           label="Card English equivalent"
+          tooltip="Edit English word"
           className="text-muted-foreground text-sm"
+          icon={<Languages />}
         />
         <InlineText
           value={card.definition ?? ''}
           onSave={(definition) => save({ definition })}
           placeholder="Add a definition"
           label="Card definition"
+          tooltip="Edit definition"
           multiline
           className="text-muted-foreground text-sm"
+          icon={<BookOpen />}
         />
         <InlineText
           value={card.hint ?? ''}
           onSave={(hint) => save({ hint })}
           placeholder="Add a hint"
           label="Card hint"
+          tooltip="Edit hint"
           className="text-muted-foreground text-sm"
+          icon={<BadgeQuestionMark />}
         />
       </div>
     </div>
