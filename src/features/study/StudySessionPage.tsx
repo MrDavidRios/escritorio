@@ -43,7 +43,7 @@ export function StudySessionPage() {
       {cards && cards.length === 0 && (
         <p className="text-muted-foreground">
           This set has no cards yet.{' '}
-          <Link to={`/sets/${setId}/edit`} className="underline underline-offset-4">
+          <Link to={`/sets/${setId}`} className="underline underline-offset-4">
             Add some
           </Link>
           .
@@ -75,7 +75,7 @@ export function StudySessionPage() {
               Study again
             </Button>
             <Button asChild>
-              <Link to="/">Back to dashboard</Link>
+              <Link to={`/sets/${setId}`}>Back to the set</Link>
             </Button>
           </div>
         </div>

@@ -6,9 +6,11 @@ import { useCallback, useRef } from 'react'
  * DOM ref so it works with any value/onChange pair -- react-hook-form's
  * getValues/setValue, a useState pair, etc.
  */
+type CursorField = HTMLInputElement | HTMLTextAreaElement
+
 export function useCursorInsert(getValue: () => string, setValue: (next: string) => void) {
-  const ref = useRef<HTMLInputElement | null>(null)
-  const setRef = useCallback((el: HTMLInputElement | null) => {
+  const ref = useRef<CursorField | null>(null)
+  const setRef = useCallback((el: CursorField | null) => {
     ref.current = el
   }, [])
 

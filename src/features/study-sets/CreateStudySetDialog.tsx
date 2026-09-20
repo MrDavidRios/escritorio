@@ -40,8 +40,8 @@ export function CreateStudySetDialog() {
     })
     setOpen(false)
     reset()
-    // Deliberately jump to the editor (unlike Delete, which stays put) since a new set has no cards yet.
-    navigate(`/sets/${studySet.id}/edit`)
+    // Deliberately jump to the set's page (unlike Delete, which stays put) since a new set has no cards yet, so adding them is the owner's next move.
+    navigate(`/sets/${studySet.id}`)
   }
 
   return (

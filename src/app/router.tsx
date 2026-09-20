@@ -4,7 +4,7 @@ import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
 import { SignInPage } from '@/features/auth/SignInPage'
 import { SignUpPage } from '@/features/auth/SignUpPage'
 import { DashboardPage } from '@/features/study-sets/DashboardPage'
-import { StudySetEditorPage } from '@/features/study-sets/StudySetEditorPage'
+import { StudySetPage } from '@/features/study-sets/StudySetPage'
 import { StudySessionPage } from '@/features/study/StudySessionPage'
 
 export function AppRouter() {
@@ -17,7 +17,7 @@ export function AppRouter() {
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
             <Route path="/" element={<DashboardPage />} />
-            <Route path="/sets/:setId/edit" element={<StudySetEditorPage />} />
+            <Route path="/sets/:setId" element={<StudySetPage />} />
             <Route path="/sets/:setId/study" element={<StudySessionPage />} />
           </Route>
         </Route>

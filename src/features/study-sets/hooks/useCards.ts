@@ -87,7 +87,18 @@ export function useUpdateCard(studySetId: string, ownerId: string) {
 
       return updateCard(card.id, { image_path: imagePath, hint: hint || null, answer })
     },
-    onSuccess: () => {
+    onMutate: async ({ card, hint, answer }) => {
+      await queryClient.cancelQueries({ queryKey: cardsKey(studySetId) })
+      const previous = queryClient.getQueryData<Card[]>(cardsKey(studySetId))
+      queryClient.setQueryData<Card[]>(cardsKey(studySetId), (cards) =>
+        cards?.map((c) => (c.id === card.id ? { ...c, hint: hint || null, answer } : c)),
+      )
+      return previous
+    },
+    onError: (_err, _variables, context) => {
+      queryClient.setQueryData(cardsKey(studySetId), context)
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: cardsKey(studySetId) })
     },
   })

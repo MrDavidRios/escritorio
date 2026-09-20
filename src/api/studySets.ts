@@ -26,7 +26,7 @@ export async function createStudySet(ownerId: string, input: StudySetInput): Pro
   return data
 }
 
-export async function updateStudySet(id: string, input: StudySetInput): Promise<StudySet> {
+export async function updateStudySet(id: string, input: Partial<StudySetInput>): Promise<StudySet> {
   const { data, error } = await supabase
     .from('study_sets')
     .update(input)
