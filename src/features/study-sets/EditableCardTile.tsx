@@ -106,11 +106,11 @@ export function EditableCardTile({
       excludedReason={exclusionReason(card, config)}
       cornerSlot={
         <div className="absolute right-2 bottom-full z-10 hidden pb-2 group-hover:flex [@media(hover:none)]:flex">
-          <DeleteCardDialog
-            studySetId={studySetId}
-            card={card}
-            trigger={
-              <Tooltip>
+          <Tooltip>
+            <DeleteCardDialog
+              studySetId={studySetId}
+              card={card}
+              trigger={
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
@@ -121,10 +121,10 @@ export function EditableCardTile({
                     <Trash2 />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Delete card</TooltipContent>
-              </Tooltip>
-            }
-          />
+              }
+            />
+            <TooltipContent>Delete card</TooltipContent>
+          </Tooltip>
         </div>
       }
     />
