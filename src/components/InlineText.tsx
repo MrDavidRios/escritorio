@@ -16,6 +16,10 @@ type InlineTextProps = {
   className?: string
   /** Rendered above the field while editing, wired to insert at the caret. */
   accessory?: (insert: (text: string) => void) => React.ReactNode
+  /** Rendered before the value/placeholder. */
+  icon?: React.ReactNode
+  /** Start already in edit mode on mount. */
+  autoFocus?: boolean
 }
 
 export function InlineText({
@@ -28,13 +32,16 @@ export function InlineText({
   as = 'span',
   className,
   accessory,
+  icon,
+  autoFocus = false,
 }: InlineTextProps) {
-  const [editing, setEditing] = useState(false)
+  const [editing, setEditing] = useState(autoFocus)
   const [draft, setDraft] = useState(value)
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const focusButtonOnExit = useRef(false)
   const skipBlurCommit = useRef(false)
+  const clickOffset = useRef<number | null>(null)
   const cursor = useCursorInsert(
     () => draft,
     (next) => setDraft(next),
@@ -53,8 +60,9 @@ export function InlineText({
     const el = inputRef.current
     if (!el) return
     el.focus()
-    const end = el.value.length
-    el.setSelectionRange(end, end)
+    const offset = clickOffset.current ?? el.value.length
+    clickOffset.current = null
+    el.setSelectionRange(offset, offset)
   }, [editing])
 
   useEffect(() => {
@@ -72,9 +80,27 @@ export function InlineText({
     }
   }, [editing])
 
-  function startEditing() {
+  function startEditing(offset: number | null = null) {
+    clickOffset.current = offset
     setDraft(value)
     setEditing(true)
+  }
+
+  function getOffsetFromPoint(x: number, y: number): number | null {
+    const doc = document as Document & {
+      caretPositionFromPoint?: (x: number, y: number) => { offsetNode: Node; offset: number } | null
+    }
+    if (typeof doc.caretPositionFromPoint === 'function') {
+      const pos = doc.caretPositionFromPoint(x, y)
+      if (pos?.offsetNode.nodeType === Node.TEXT_NODE) return pos.offset
+      return null
+    }
+    if (typeof document.caretRangeFromPoint === 'function') {
+      const range = document.caretRangeFromPoint(x, y)
+      if (range?.startContainer.nodeType === Node.TEXT_NODE) return range.startOffset
+      return null
+    }
+    return null
   }
 
   function commit() {
@@ -132,15 +158,20 @@ export function InlineText({
           ref={buttonRef}
           type="button"
           aria-label={label}
-          onClick={startEditing}
+          onClick={(e) =>
+            startEditing(value && e.detail > 0 ? getOffsetFromPoint(e.clientX, e.clientY) : null)
+          }
           className={cn(
             BOX,
-            'hover:bg-muted/60 focus-visible:bg-muted/60 block w-full max-w-full text-left transition-colors duration-150',
-            !value && 'text-muted-foreground',
+            'hover:bg-muted/60 focus-visible:bg-muted/60 flex w-full max-w-full items-start gap-1.5 text-left transition-colors duration-150',
+            !value && 'text-muted-foreground/50',
             multiline && 'whitespace-pre-wrap',
           )}
         >
-          {value || placeholder}
+          {icon && (
+            <span className="text-muted-foreground mt-0.5 shrink-0 [&_svg]:size-3.5">{icon}</span>
+          )}
+          <span className={cn(multiline && 'whitespace-pre-wrap')}>{value || placeholder}</span>
         </button>
       </Wrapper>
     )
@@ -148,7 +179,7 @@ export function InlineText({
 
   const inputClassName = cn(
     BOX,
-    'block w-full max-w-full bg-background text-inherit outline-none ring-1 ring-ring [font:inherit] [letter-spacing:inherit]',
+    'placeholder:text-muted-foreground/50 block w-full max-w-full bg-transparent text-inherit outline-none [font:inherit] [letter-spacing:inherit]',
   )
 
   return (
@@ -166,37 +197,44 @@ export function InlineText({
           {accessory(cursor.insert)}
         </div>
       )}
-      {multiline ? (
-        <textarea
-          ref={(el) => {
-            inputRef.current = el
-            cursor.setRef(el)
-            referenceRef.current = el
-          }}
-          aria-label={label}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onBlur={handleBlur}
-          rows={1}
-          className={cn(inputClassName, 'resize-none overflow-hidden')}
-        />
-      ) : (
-        <input
-          ref={(el) => {
-            inputRef.current = el
-            cursor.setRef(el)
-            referenceRef.current = el
-          }}
-          type="text"
-          aria-label={label}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onBlur={handleBlur}
-          className={inputClassName}
-        />
-      )}
+      <div className="flex items-start gap-1.5">
+        {icon && (
+          <span className="text-muted-foreground mt-1 shrink-0 [&_svg]:size-3.5">{icon}</span>
+        )}
+        {multiline ? (
+          <textarea
+            ref={(el) => {
+              inputRef.current = el
+              cursor.setRef(el)
+              referenceRef.current = el
+            }}
+            aria-label={label}
+            placeholder={placeholder}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={handleBlur}
+            rows={1}
+            className={cn(inputClassName, 'resize-none overflow-hidden')}
+          />
+        ) : (
+          <input
+            ref={(el) => {
+              inputRef.current = el
+              cursor.setRef(el)
+              referenceRef.current = el
+            }}
+            type="text"
+            aria-label={label}
+            placeholder={placeholder}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={handleBlur}
+            className={inputClassName}
+          />
+        )}
+      </div>
     </Wrapper>
   )
 }
