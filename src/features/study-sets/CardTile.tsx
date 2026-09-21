@@ -1,8 +1,9 @@
-import { BadgeQuestionMark, BookOpen, ImageIcon, Languages, X } from 'lucide-react'
+import { BadgeQuestionMark, BookOpen, EyeOff, ImageIcon, Languages, X } from 'lucide-react'
 import { useRef } from 'react'
 import { AccentedCharPad } from '@/components/AccentedCharPad'
 import { InlineText } from '@/components/InlineText'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 export type CardTileProps = {
   imageUrl?: string
@@ -20,6 +21,7 @@ export type CardTileProps = {
   onSaveHint: (value: string) => void
   cornerSlot?: React.ReactNode
   footer?: React.ReactNode
+  excludedReason?: string | null
 }
 
 export function CardTile({
@@ -38,12 +40,24 @@ export function CardTile({
   onSaveHint,
   cornerSlot,
   footer,
+  excludedReason,
 }: CardTileProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   return (
     <div className="ring-foreground/10 group relative flex flex-col rounded-xl ring-1">
-      <div className="group/image bg-muted/50 relative aspect-[4/3] w-full overflow-hidden rounded-t-xl">
+      {excludedReason && (
+        <div className="bg-muted text-muted-foreground flex items-center gap-1.5 rounded-t-xl px-3 py-1.5 text-xs">
+          <EyeOff className="size-3.5 shrink-0" />
+          {excludedReason} — excluded from this study mode
+        </div>
+      )}
+      <div
+        className={cn(
+          'group/image bg-muted/50 relative aspect-[4/3] w-full overflow-hidden',
+          excludedReason ? 'rounded-none' : 'rounded-t-xl',
+        )}
+      >
         {imageUrl ? (
           <>
             <img

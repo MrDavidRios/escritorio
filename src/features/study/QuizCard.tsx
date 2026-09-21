@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCursorInsert } from '@/hooks/useCursorInsert'
 import { isAnswerCorrect } from '@/lib/grading'
-import type { Card } from '@/types/card'
+import type { Question } from './studyMode'
 import { useLogQuizAttempt } from './hooks/useLogQuizAttempt'
 
 const MAX_ATTEMPTS = 3
@@ -13,23 +13,29 @@ const MAX_ATTEMPTS = 3
 type Feedback = 'correct' | 'retry' | 'revealed' | null
 
 /**
- * One quiz question: image + optional hint, a typed-answer input, and
- * immediate right/wrong feedback. Mount fresh per card (parent keys it by
- * card.id) so all local state resets between cards automatically.
+ * One quiz question: prompt (conversion mode's word, or meaning mode's
+ * image/definition) + a typed-answer input, with immediate right/wrong
+ * feedback. Mount fresh per card (parent keys it by card.id) so all
+ * local state resets between cards automatically.
  *
  * A wrong answer gets up to MAX_ATTEMPTS tries before revealing the
  * correct answer -- only a correct answer or the final wrong attempt
  * locks the input and advances to "Next".
  */
 export function QuizCard({
-  card,
+  question,
   imageUrl,
+  sessionId,
+  onCorrect,
   onNext,
 }: {
-  card: Card
+  question: Question
   imageUrl: string | undefined
+  sessionId: string | null
+  onCorrect: () => void
   onNext: () => void
 }) {
+  const { card } = question
   const [value, setValue] = useState('')
   const [attempts, setAttempts] = useState(0)
   const [feedback, setFeedback] = useState<Feedback>(null)
@@ -39,6 +45,16 @@ export function QuizCard({
   const locked = feedback === 'correct' || feedback === 'revealed'
   const logAttempt = useLogQuizAttempt()
 
+  function logResult(isCorrect: boolean, attemptCount: number) {
+    logAttempt.mutate({
+      card_id: card.id,
+      is_correct: isCorrect,
+      attempt_count: attemptCount,
+      session_id: sessionId,
+      resolved_direction: question.resolvedDirection,
+    })
+  }
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (locked) {
@@ -46,9 +62,10 @@ export function QuizCard({
       return
     }
 
-    if (isAnswerCorrect(value, card.spanish_term)) {
+    if (isAnswerCorrect(value, question.expectedAnswer)) {
       setFeedback('correct')
-      logAttempt.mutate({ card_id: card.id, is_correct: true, attempt_count: attempts + 1 })
+      logResult(true, attempts + 1)
+      onCorrect()
       return
     }
 
@@ -56,7 +73,7 @@ export function QuizCard({
     setAttempts(nextAttempts)
     if (nextAttempts >= MAX_ATTEMPTS) {
       setFeedback('revealed')
-      logAttempt.mutate({ card_id: card.id, is_correct: false, attempt_count: nextAttempts })
+      logResult(false, nextAttempts)
     } else {
       setFeedback('retry')
       setValue('')
@@ -65,7 +82,7 @@ export function QuizCard({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      {card.image_path && (
+      {question.showImage && card.image_path && (
         <div className="bg-muted/30 flex min-h-48 items-center justify-center overflow-hidden rounded-lg border">
           {imageUrl ? (
             <img
@@ -80,15 +97,21 @@ export function QuizCard({
         </div>
       )}
 
-      {card.definition && (
+      {question.showDefinition && card.definition && (
         <div
           className={
-            !card.image_path
+            !(question.showImage && card.image_path)
               ? 'bg-muted/30 flex min-h-48 items-center justify-center overflow-hidden rounded-lg border p-6'
               : undefined
           }
         >
           <p className="text-base leading-relaxed">{card.definition}</p>
+        </div>
+      )}
+
+      {!question.showImage && !question.showDefinition && (
+        <div className="bg-muted/30 flex min-h-32 items-center justify-center overflow-hidden rounded-lg border p-6">
+          <p className="text-xl font-medium">{question.prompt}</p>
         </div>
       )}
 
@@ -107,7 +130,9 @@ export function QuizCard({
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="quiz-answer">Your answer</Label>
-        <AccentedCharPad onInsert={locked ? () => {} : cursor.insert} />
+        {question.answerLanguage === 'es' && (
+          <AccentedCharPad onInsert={locked ? () => {} : cursor.insert} />
+        )}
         <Input
           id="quiz-answer"
           autoComplete="off"
@@ -131,7 +156,7 @@ export function QuizCard({
       )}
       {feedback === 'revealed' && (
         <p className="text-destructive text-sm font-medium">
-          Not quite. The answer was: {card.spanish_term}
+          Not quite. The answer was: {question.expectedAnswer}
         </p>
       )}
 
