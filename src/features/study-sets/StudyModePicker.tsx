@@ -3,8 +3,7 @@ import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
@@ -40,14 +39,16 @@ export function StudyModePicker({
   onStart: () => void
 }) {
   const canStart = eligibleCount > 0
+  const modeLabel = studyModeLabel(config.mode)
   const startLabel =
-    eligibleCount === totalCount
-      ? 'Start studying'
-      : `Start studying · ${eligibleCount} of ${totalCount} cards`
+    eligibleCount === totalCount ? modeLabel : `${modeLabel} · ${eligibleCount} of ${totalCount} cards`
+  const otherModes: StudyMode[] = (['conversion', 'meaning'] as StudyMode[]).filter(
+    (mode) => mode !== config.mode,
+  )
 
   return (
     <div className="flex flex-col items-stretch gap-2 sm:items-end">
-      <div className="flex items-stretch gap-0.5">
+      <div className="flex items-stretch">
         <Button size="lg" className="h-10 rounded-r-none" disabled={!canStart} onClick={onStart}>
           <Play data-icon="inline-start" />
           {startLabel}
@@ -56,25 +57,19 @@ export function StudyModePicker({
           <DropdownMenuTrigger asChild>
             <Button
               size="lg"
-              variant="outline"
-              className="h-10 rounded-l-none border-l-0 px-2"
+              className="-ml-px h-10 rounded-l-none border-l border-primary-foreground/10 px-2"
+              disabled={!canStart}
               aria-label="Choose study mode"
             >
               <ChevronDown />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuRadioGroup
-              value={config.mode}
-              onValueChange={(value) => onModeChange(value as StudyMode)}
-            >
-              <DropdownMenuRadioItem value="conversion">
-                {studyModeLabel('conversion')}
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="meaning">
-                {studyModeLabel('meaning')}
-              </DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
+          <DropdownMenuContent align="end" className="min-w-0">
+            {otherModes.map((mode) => (
+              <DropdownMenuItem key={mode} onSelect={() => onModeChange(mode)}>
+                {studyModeLabel(mode)}
+              </DropdownMenuItem>
+            ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

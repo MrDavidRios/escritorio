@@ -1,14 +1,17 @@
 import { ImageIcon, Loader2, Play, RefreshCw } from 'lucide-react'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { InlineText } from '@/components/InlineText'
 import { SaveStatus } from '@/components/SaveStatus'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/AuthContext'
-import type { StudyConfig } from '@/features/study/studyMode'
-import { eligibleCards } from '@/features/study/studyMode'
+import {
+  loadStudySettings,
+  saveStudySettings,
+  type StoredStudySettings,
+} from '@/features/study/studyConfigStorage'
+import { configFromFields, eligibleCards } from '@/features/study/studyMode'
 import { useSaveStatus } from '@/hooks/useSaveStatus'
-import type { StudySet } from '@/types/studySet'
 import { CardsSection } from './CardsSection'
 import { DeleteStudySetDialog } from './DeleteStudySetDialog'
 import { useCards } from './hooks/useCards'
@@ -29,12 +32,6 @@ function relativeTime(iso: string) {
   return relativeTimeFormatter.format(diffDays, 'day')
 }
 
-function configFromStudySet(studySet: StudySet): StudyConfig {
-  return studySet.study_mode === 'conversion'
-    ? { mode: 'conversion', direction: studySet.conversion_direction }
-    : { mode: 'meaning', visibility: studySet.meaning_visibility }
-}
-
 export function StudySetPage() {
   const { setId } = useParams<{ setId: string }>()
   const navigate = useNavigate()
@@ -45,10 +42,25 @@ export function StudySetPage() {
   const updateStudySet = useUpdateStudySet(setId ?? '')
   const saveStatus = useSaveStatus()
   const coverInputRef = useRef<HTMLInputElement>(null)
+  const [localSettings, setLocalSettings] = useState<StoredStudySettings | null>(() =>
+    setId ? loadStudySettings(setId) : null,
+  )
+  const loadedSettingsForRef = useRef(setId)
+  if (loadedSettingsForRef.current !== setId) {
+    loadedSettingsForRef.current = setId
+    setLocalSettings(setId ? loadStudySettings(setId) : null)
+  }
 
   const coverPaths = studySet?.image_path ? [studySet.image_path] : []
   const { data: coverUrls } = useSignedImageUrls(coverPaths)
   const coverUrl = studySet?.image_path ? coverUrls?.[studySet.image_path] : undefined
+  const settings: StoredStudySettings | undefined = localSettings ?? studySet
+  const config = settings ? configFromFields(settings) : undefined
+
+  function updateSettings(next: StoredStudySettings) {
+    setLocalSettings(next)
+    if (setId) saveStudySettings(setId, next)
+  }
 
   if (!setId) {
     return <Navigate to="/" replace />
@@ -207,27 +219,19 @@ export function StudySetPage() {
                 </>
               ) : (
                 <StudyModePicker
-                  config={configFromStudySet(studySet)}
+                  config={config!}
                   onChange={(config) => {
-                    saveStatus.setSaving()
-                    const patch =
-                      config.mode === 'conversion'
-                        ? { study_mode: 'conversion' as const, conversion_direction: config.direction }
-                        : { study_mode: 'meaning' as const, meaning_visibility: config.visibility }
-                    patchStudySet.mutate(patch, {
-                      onSuccess: saveStatus.setSaved,
-                      onError: () => saveStatus.setError(() => patchStudySet.mutate(patch)),
+                    updateSettings({
+                      ...settings!,
+                      ...(config.mode === 'conversion'
+                        ? { study_mode: 'conversion', conversion_direction: config.direction }
+                        : { study_mode: 'meaning', meaning_visibility: config.visibility }),
                     })
                   }}
                   onModeChange={(mode) => {
-                    saveStatus.setSaving()
-                    const patch = { study_mode: mode }
-                    patchStudySet.mutate(patch, {
-                      onSuccess: saveStatus.setSaved,
-                      onError: () => saveStatus.setError(() => patchStudySet.mutate(patch)),
-                    })
+                    updateSettings({ ...settings!, study_mode: mode })
                   }}
-                  eligibleCount={eligibleCards(cards ?? [], configFromStudySet(studySet)).length}
+                  eligibleCount={eligibleCards(cards ?? [], config!).length}
                   totalCount={cardCount}
                   onStart={() => navigate(`/sets/${setId}/study`)}
                 />
@@ -239,7 +243,7 @@ export function StudySetPage() {
             <CardsSection
               studySetId={studySet.id}
               ownerId={user.id}
-              config={configFromStudySet(studySet)}
+              config={config!}
               onSaving={saveStatus.setSaving}
               onSaved={saveStatus.setSaved}
               onError={saveStatus.setError}

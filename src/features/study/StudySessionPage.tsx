@@ -5,16 +5,15 @@ import { useCards } from '@/features/study-sets/hooks/useCards'
 import { useSignedImageUrls } from '@/features/study-sets/hooks/useSignedImageUrls'
 import { useStudySet } from '@/features/study-sets/hooks/useStudySets'
 import { useImagePrefetch } from '@/hooks/useImagePrefetch'
-import { eligibleCards, buildQuestion, type Question, type StudyConfig } from './studyMode'
+import { loadStudySettings } from './studyConfigStorage'
+import {
+  configFromFields,
+  eligibleCards,
+  buildQuestion,
+  type Question,
+} from './studyMode'
 import { useCompleteStudySession, useStartStudySession } from './hooks/useStudySessions'
 import { QuizCard } from './QuizCard'
-import type { StudySet } from '@/types/studySet'
-
-function configFromStudySet(studySet: StudySet): StudyConfig {
-  return studySet.study_mode === 'conversion'
-    ? { mode: 'conversion', direction: studySet.conversion_direction }
-    : { mode: 'meaning', visibility: studySet.meaning_visibility }
-}
 
 export function StudySessionPage() {
   const { setId } = useParams<{ setId: string }>()
@@ -36,8 +35,9 @@ export function StudySessionPage() {
 
   useEffect(() => {
     if (!cards || !studySet) return
-    const config = configFromStudySet(studySet)
-    const buildKey = `${studySet.id}:${studySet.study_mode}:${studySet.conversion_direction}:${studySet.meaning_visibility}:${cards.length}`
+    const settings = loadStudySettings(studySet.id) ?? studySet
+    const config = configFromFields(settings)
+    const buildKey = `${studySet.id}:${settings.study_mode}:${settings.conversion_direction}:${settings.meaning_visibility}:${cards.length}`
     if (builtForRef.current === buildKey) return
     builtForRef.current = buildKey
 

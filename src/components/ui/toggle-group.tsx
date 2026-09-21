@@ -10,7 +10,7 @@ function ToggleGroup({
     <ToggleGroupPrimitive.Root
       data-slot="toggle-group"
       className={cn(
-        'ring-foreground/10 inline-flex items-center gap-0.5 rounded-lg p-0.5 ring-1',
+        'ring-foreground/10 bg-foreground/5 inline-flex items-center gap-0.5 rounded-lg p-0.5 ring-1',
         className,
       )}
       {...props}

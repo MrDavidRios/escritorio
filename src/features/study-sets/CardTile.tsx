@@ -1,10 +1,11 @@
-import { BadgeQuestionMark, BookOpen, EyeOff, ImageIcon, Languages, X } from 'lucide-react'
-import { useRef } from 'react'
+import { BadgeQuestionMark, BookOpen, Download, EyeOff, ImageIcon, Languages, X } from 'lucide-react'
+import { useRef, useState } from 'react'
 import { AccentedCharPad } from '@/components/AccentedCharPad'
 import { InlineText } from '@/components/InlineText'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { DefinitionLookupButton } from './DefinitionLookupButton'
+import { extractDroppedImageFile, extractPastedImageFile } from './imageDrop'
 
 export type CardTileProps = {
   imageUrl?: string
@@ -44,9 +45,16 @@ export function CardTile({
   excludedReason,
 }: CardTileProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isDraggingOver, setIsDraggingOver] = useState(false)
 
   return (
-    <div className="ring-foreground/10 group relative flex flex-col rounded-xl ring-1">
+    <div
+      className="ring-foreground/10 group relative flex flex-col rounded-xl ring-1"
+      onPaste={(e) => {
+        const file = extractPastedImageFile(e)
+        if (file) onPickImage(file)
+      }}
+    >
       {excludedReason && (
         <div className="bg-muted text-muted-foreground flex items-center gap-1.5 rounded-t-xl px-3 py-1.5 text-xs">
           <EyeOff className="size-3.5 shrink-0" />
@@ -58,6 +66,26 @@ export function CardTile({
           'group/image bg-muted/50 relative aspect-[4/3] w-full overflow-hidden',
           excludedReason ? 'rounded-none' : 'rounded-t-xl',
         )}
+        onDragEnter={(e) => {
+          e.preventDefault()
+          setIsDraggingOver(true)
+        }}
+        onDragOver={(e) => {
+          e.preventDefault()
+          e.dataTransfer.dropEffect = 'copy'
+          setIsDraggingOver(true)
+        }}
+        onDragLeave={(e) => {
+          if (e.currentTarget.contains(e.relatedTarget as Node | null)) return
+          setIsDraggingOver(false)
+        }}
+        onDrop={(e) => {
+          e.preventDefault()
+          setIsDraggingOver(false)
+          extractDroppedImageFile(e).then((file) => {
+            if (file) onPickImage(file)
+          })
+        }}
       >
         {imageUrl ? (
           <>
@@ -82,8 +110,14 @@ export function CardTile({
             onClick={() => fileInputRef.current?.click()}
             className="text-muted-foreground hover:bg-muted hover:text-foreground flex size-full flex-col items-center justify-center gap-1 transition-colors duration-150"
           >
-            <ImageIcon className="size-6" />
-            <span className="text-xs">Add image</span>
+            {isDraggingOver ? (
+              <Download className="pointer-events-none size-6" />
+            ) : (
+              <ImageIcon className="pointer-events-none size-6" />
+            )}
+            <span className="pointer-events-none text-xs">
+              {isDraggingOver ? 'Drop to add image' : 'Add image'}
+            </span>
           </button>
         )}
         {canRemoveImage && onRemoveImage && (

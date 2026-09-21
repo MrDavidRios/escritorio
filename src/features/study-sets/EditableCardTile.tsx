@@ -1,5 +1,6 @@
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import type { StudyConfig } from '@/features/study/studyMode'
 import { exclusionReason } from '@/features/study/studyMode'
 import type { Card } from '@/types/card'
@@ -105,20 +106,25 @@ export function EditableCardTile({
       excludedReason={exclusionReason(card, config)}
       cornerSlot={
         <div className="absolute right-2 bottom-full z-10 hidden pb-2 group-hover:flex [@media(hover:none)]:flex">
-          <DeleteCardDialog
-            studySetId={studySetId}
-            card={card}
-            trigger={
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Delete card"
-                className="text-destructive hover:bg-destructive/10 bg-background ring-foreground/10 shadow-sm ring-1"
-              >
-                <Trash2 />
-              </Button>
-            }
-          />
+          <Tooltip>
+            <DeleteCardDialog
+              studySetId={studySetId}
+              card={card}
+              trigger={
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Delete card"
+                    className="bg-background shadow-sm [&_svg]:text-foreground/60 hover:bg-foreground/10"
+                  >
+                    <Trash2 />
+                  </Button>
+                </TooltipTrigger>
+              }
+            />
+            <TooltipContent>Delete card</TooltipContent>
+          </Tooltip>
         </div>
       }
     />
