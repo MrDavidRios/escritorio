@@ -96,7 +96,7 @@ export function CardTile({
               e.stopPropagation()
               onRemoveImage()
             }}
-            className="absolute top-2 left-2 bg-black/40 text-white opacity-0 transition-opacity duration-150 hover:bg-black/60 hover:text-white group-focus-within/image:opacity-100 group-hover/image:opacity-100 [@media(hover:none)]:opacity-70"
+            className="absolute top-2 left-2 bg-black/40 text-white opacity-0 transition-opacity duration-150 group-focus-within/image:opacity-100 group-hover/image:opacity-100 hover:bg-black/60 hover:text-white [@media(hover:none)]:opacity-70"
           >
             <X />
           </Button>
@@ -143,12 +143,13 @@ export function CardTile({
           multiline
           className="text-muted-foreground text-sm"
           icon={<BookOpen />}
-          trailingAction={({ draft, setDraft, preventNextBlurCommit }) => (
+          trailingAction={({ draft, setDraft, preventNextBlurCommit, commitAndExit }) => (
             <DefinitionLookupButton
               spanishTerm={spanishTerm}
               draft={draft}
               onResult={setDraft}
               preventNextBlurCommit={preventNextBlurCommit}
+              commitAndExit={commitAndExit}
             />
           )}
         />

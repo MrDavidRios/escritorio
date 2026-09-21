@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { fetchEnglishDefinition, fetchSpanishDefinition } from './dictionaryApi'
 
@@ -21,11 +22,13 @@ export function DefinitionLookupButton({
   draft,
   onResult,
   preventNextBlurCommit,
+  commitAndExit,
 }: {
   spanishTerm: string
   draft: string
   onResult: (definition: string) => void
   preventNextBlurCommit: () => void
+  commitAndExit: (value?: string) => void
 }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
   const [results, setResults] = useState<Record<Language, string | null> | null>(null)
@@ -59,17 +62,22 @@ export function DefinitionLookupButton({
 
   return (
     <div className="relative shrink-0">
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        aria-label="Look up definition"
-        disabled={!term || status === 'loading'}
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => void handleClick()}
-      >
-        {status === 'loading' ? <Loader2 className="animate-spin" /> : <Search />}
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Look up definition"
+            disabled={!term || status === 'loading'}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => void handleClick()}
+          >
+            {status === 'loading' ? <Loader2 className="animate-spin" /> : <Search />}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Insert definition from web</TooltipContent>
+      </Tooltip>
       {status === 'error' && (
         <span className="text-destructive absolute top-full right-0 mt-1 text-xs whitespace-nowrap">
           No definition found
@@ -122,7 +130,7 @@ export function DefinitionLookupButton({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                if (selectedDefinition) onResult(selectedDefinition)
+                if (selectedDefinition) commitAndExit(selectedDefinition)
                 setResults(null)
               }}
             >

@@ -22,6 +22,8 @@ type InlineTextProps = {
     setDraft: (next: string) => void
     /** Suppresses the next blur-triggered commit/exit, e.g. while a confirmation dialog steals focus. */
     preventNextBlurCommit: () => void
+    /** Saves the given value (or the current draft) and exits edit mode immediately. */
+    commitAndExit: (value?: string) => void
   }) => React.ReactNode
   /** Rendered before the value/placeholder. */
   icon?: React.ReactNode
@@ -111,8 +113,8 @@ export function InlineText({
     return null
   }
 
-  function commit() {
-    const trimmed = draft.trim()
+  function commit(overrideValue?: string) {
+    const trimmed = (overrideValue ?? draft).trim()
     if ((required && trimmed === '') || trimmed === value.trim()) {
       focusButtonOnExit.current = true
       setEditing(false)
@@ -246,7 +248,7 @@ export function InlineText({
             className={inputClassName}
           />
         )}
-        {trailingAction?.({ draft, setDraft, preventNextBlurCommit })}
+        {trailingAction?.({ draft, setDraft, preventNextBlurCommit, commitAndExit: commit })}
       </div>
     </Wrapper>
   )
