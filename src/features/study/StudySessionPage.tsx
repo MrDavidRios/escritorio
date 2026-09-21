@@ -75,13 +75,15 @@ export function StudySessionPage() {
 
   const currentQuestion = questions?.[index]
   const isComplete = !!questions && questions.length > 0 && index >= questions.length
+  const completedSessionRef = useRef<string | null>(null)
 
   useEffect(() => {
-    if (isComplete && sessionId) {
+    if (isComplete && sessionId && completedSessionRef.current !== sessionId) {
+      completedSessionRef.current = sessionId
       completeSession.mutate({ id: sessionId, cardsAnswered: correctCount })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once when isComplete flips true
-  }, [isComplete])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- completeSession (a mutation object) is intentionally excluded; the completedSessionRef guard ensures the mutation fires exactly once per sessionId
+  }, [isComplete, sessionId, correctCount])
 
   if (!setId) {
     return <Navigate to="/" replace />
@@ -96,6 +98,7 @@ export function StudySessionPage() {
     setCorrectCount(0)
     sessionStartedRef.current = true
     setSessionId(null)
+    completedSessionRef.current = null
     startSession.mutate(
       {
         study_set_id: studySet.id,
