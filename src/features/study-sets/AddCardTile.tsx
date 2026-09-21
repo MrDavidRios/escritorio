@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { CardTile } from './CardTile'
 import { cardSchema } from './cardSchema'
 import { useCreateCard } from './hooks/useCards'
+import { extractDroppedImageFile, extractPastedImageFile } from './imageDrop'
 
 export function AddCardTile({
   studySetId,
@@ -86,15 +87,15 @@ export function AddCardTile({
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault()
-          const file = e.dataTransfer.files[0]
-          if (file) {
-            pickUpFile(file)
-            setManualEntry(true)
-          }
+          extractDroppedImageFile(e).then((file) => {
+            if (file) {
+              pickUpFile(file)
+              setManualEntry(true)
+            }
+          })
         }}
         onPaste={(e) => {
-          const item = Array.from(e.clipboardData.items).find((i) => i.type.startsWith('image/'))
-          const file = item?.getAsFile()
+          const file = extractPastedImageFile(e)
           if (file) {
             pickUpFile(file)
             setManualEntry(true)
