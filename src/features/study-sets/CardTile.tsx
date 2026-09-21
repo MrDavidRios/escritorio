@@ -4,6 +4,7 @@ import { AccentedCharPad } from '@/components/AccentedCharPad'
 import { InlineText } from '@/components/InlineText'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { DefinitionLookupButton } from './DefinitionLookupButton'
 
 export type CardTileProps = {
   imageUrl?: string
@@ -142,6 +143,14 @@ export function CardTile({
           multiline
           className="text-muted-foreground text-sm"
           icon={<BookOpen />}
+          trailingAction={({ draft, setDraft, preventNextBlurCommit }) => (
+            <DefinitionLookupButton
+              spanishTerm={spanishTerm}
+              draft={draft}
+              onResult={setDraft}
+              preventNextBlurCommit={preventNextBlurCommit}
+            />
+          )}
         />
         <InlineText
           value={hint}
