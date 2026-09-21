@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useCursorInsert } from '@/hooks/useCursorInsert'
 import { useFloatingPosition } from '@/hooks/useFloatingPosition'
 import { cn } from '@/lib/utils'
@@ -21,8 +20,6 @@ type InlineTextProps = {
   icon?: React.ReactNode
   /** Start already in edit mode on mount. */
   autoFocus?: boolean
-  /** Shown on hover; defaults to `label`. */
-  tooltip?: string
 }
 
 export function InlineText({
@@ -37,7 +34,6 @@ export function InlineText({
   accessory,
   icon,
   autoFocus = false,
-  tooltip,
 }: InlineTextProps) {
   const [editing, setEditing] = useState(autoFocus)
   const [draft, setDraft] = useState(value)
@@ -156,37 +152,27 @@ export function InlineText({
   const Wrapper = as
 
   if (!editing) {
-    const button = (
-      <button
-        ref={buttonRef}
-        type="button"
-        aria-label={label}
-        onClick={(e) =>
-          startEditing(value && e.detail > 0 ? getOffsetFromPoint(e.clientX, e.clientY) : null)
-        }
-        className={cn(
-          BOX,
-          'hover:bg-muted/60 focus-visible:bg-muted/60 flex w-full max-w-full items-start gap-1.5 text-left transition-colors duration-150',
-          !value && 'text-muted-foreground/50',
-          multiline && 'whitespace-pre-wrap',
-        )}
-      >
-        {icon && (
-          <span className="text-muted-foreground mt-0.5 shrink-0 [&_svg]:size-3.5">{icon}</span>
-        )}
-        <span className={cn(multiline && 'whitespace-pre-wrap')}>{value || placeholder}</span>
-      </button>
-    )
     return (
       <Wrapper className={cn(className, 'relative')}>
-        {tooltip ? (
-          <Tooltip>
-            <TooltipTrigger asChild>{button}</TooltipTrigger>
-            <TooltipContent>{tooltip}</TooltipContent>
-          </Tooltip>
-        ) : (
-          button
-        )}
+        <button
+          ref={buttonRef}
+          type="button"
+          aria-label={label}
+          onClick={(e) =>
+            startEditing(value && e.detail > 0 ? getOffsetFromPoint(e.clientX, e.clientY) : null)
+          }
+          className={cn(
+            BOX,
+            'hover:bg-muted/60 focus-visible:bg-muted/60 flex w-full max-w-full items-start gap-1.5 text-left transition-colors duration-150',
+            !value && 'text-muted-foreground/50',
+            multiline && 'whitespace-pre-wrap',
+          )}
+        >
+          {icon && (
+            <span className="text-muted-foreground mt-0.5 shrink-0 [&_svg]:size-3.5">{icon}</span>
+          )}
+          <span className={cn(multiline && 'whitespace-pre-wrap')}>{value || placeholder}</span>
+        </button>
       </Wrapper>
     )
   }

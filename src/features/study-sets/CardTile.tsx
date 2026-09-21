@@ -42,29 +42,35 @@ export function CardTile({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   return (
-    <div className="ring-foreground/10 group relative flex flex-col overflow-hidden rounded-xl ring-1">
-      <div className="group/image bg-muted/50 relative aspect-[4/3] w-full">
+    <div className="ring-foreground/10 group relative flex flex-col rounded-xl ring-1">
+      <div className="group/image bg-muted/50 relative aspect-[4/3] w-full overflow-hidden rounded-t-xl">
         {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="size-full object-cover"
-          />
+          <>
+            <img
+              src={imageUrl}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="size-full object-cover"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute inset-0 flex items-center justify-center bg-black/50 text-sm font-medium text-white opacity-0 transition-opacity duration-150 group-focus-within/image:opacity-100 group-hover/image:opacity-100 [@media(hover:none)]:bg-black/30 [@media(hover:none)]:opacity-100"
+            >
+              Change
+            </button>
+          </>
         ) : (
-          <div className="flex size-full flex-col items-center justify-center gap-1">
-            <ImageIcon className="text-muted-foreground size-6" />
-            <span className="text-muted-foreground text-xs">Add image</span>
-          </div>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="text-muted-foreground hover:bg-muted hover:text-foreground flex size-full flex-col items-center justify-center gap-1 transition-colors duration-150"
+          >
+            <ImageIcon className="size-6" />
+            <span className="text-xs">Add image</span>
+          </button>
         )}
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="absolute inset-0 flex items-center justify-center bg-black/50 text-sm font-medium text-white opacity-0 transition-opacity duration-150 group-focus-within/image:opacity-100 group-hover/image:opacity-100 [@media(hover:none)]:bg-black/30 [@media(hover:none)]:opacity-100"
-        >
-          Change
-        </button>
         {canRemoveImage && onRemoveImage && (
           <Button
             type="button"
@@ -101,7 +107,6 @@ export function CardTile({
           onSave={onSaveSpanishTerm}
           placeholder="Spanish term"
           label="Card spanish term"
-          tooltip="Edit title"
           required
           autoFocus={autoFocusSpanishTerm}
           className="font-medium"
@@ -112,7 +117,6 @@ export function CardTile({
           onSave={onSaveEnglishEquivalent}
           placeholder="Add an English equivalent"
           label="Card English equivalent"
-          tooltip="Edit English word"
           className="text-muted-foreground text-sm"
           icon={<Languages />}
         />
@@ -121,7 +125,6 @@ export function CardTile({
           onSave={onSaveDefinition}
           placeholder="Add a definition"
           label="Card definition"
-          tooltip="Edit definition"
           multiline
           className="text-muted-foreground text-sm"
           icon={<BookOpen />}
@@ -131,7 +134,6 @@ export function CardTile({
           onSave={onSaveHint}
           placeholder="Add a hint"
           label="Card hint"
-          tooltip="Edit hint"
           className="text-muted-foreground text-sm"
           icon={<BadgeQuestionMark />}
         />

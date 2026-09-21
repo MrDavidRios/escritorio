@@ -99,20 +99,22 @@ export function EditableCardTile({
       hint={card.hint ?? ''}
       onSaveHint={(hint) => save({ hint })}
       cornerSlot={
-        <DeleteCardDialog
-          studySetId={studySetId}
-          card={card}
-          trigger={
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Delete card"
-              className="text-destructive hover:bg-destructive/20 absolute top-2 right-2 bg-black/40 opacity-0 transition-opacity duration-150 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-70"
-            >
-              <Trash2 />
-            </Button>
-          }
-        />
+        <div className="absolute right-2 bottom-full z-10 hidden pb-2 group-hover:flex [@media(hover:none)]:flex">
+          <DeleteCardDialog
+            studySetId={studySetId}
+            card={card}
+            trigger={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Delete card"
+                className="text-destructive hover:bg-destructive/10 bg-background ring-foreground/10 shadow-sm ring-1"
+              >
+                <Trash2 />
+              </Button>
+            }
+          />
+        </div>
       }
     />
   )
