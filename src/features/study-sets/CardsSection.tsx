@@ -1,3 +1,4 @@
+import type { StudyConfig } from '@/features/study/studyMode'
 import { AddCardTile } from './AddCardTile'
 import { EditableCardTile } from './EditableCardTile'
 import { useCards } from './hooks/useCards'
@@ -6,12 +7,14 @@ import { useSignedImageUrls } from './hooks/useSignedImageUrls'
 export function CardsSection({
   studySetId,
   ownerId,
+  config,
   onSaving,
   onSaved,
   onError,
 }: {
   studySetId: string
   ownerId: string
+  config: StudyConfig
   onSaving: () => void
   onSaved: () => void
   onError: (retry: () => void) => void
@@ -46,6 +49,7 @@ export function CardsSection({
               studySetId={studySetId}
               ownerId={ownerId}
               card={card}
+              config={config}
               imageUrl={card.image_path ? imageUrls?.[card.image_path] : undefined}
               onSaving={onSaving}
               onSaved={onSaved}

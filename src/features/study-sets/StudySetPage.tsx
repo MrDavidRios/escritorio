@@ -5,12 +5,16 @@ import { InlineText } from '@/components/InlineText'
 import { SaveStatus } from '@/components/SaveStatus'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/AuthContext'
+import type { StudyConfig } from '@/features/study/studyMode'
+import { eligibleCards } from '@/features/study/studyMode'
 import { useSaveStatus } from '@/hooks/useSaveStatus'
+import type { StudySet } from '@/types/studySet'
 import { CardsSection } from './CardsSection'
 import { DeleteStudySetDialog } from './DeleteStudySetDialog'
 import { useCards } from './hooks/useCards'
 import { useSignedImageUrls } from './hooks/useSignedImageUrls'
 import { usePatchStudySet, useStudySet, useUpdateStudySet } from './hooks/useStudySets'
+import { StudyModePicker } from './StudyModePicker'
 
 const relativeTimeFormatter = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
 
@@ -23,6 +27,12 @@ function relativeTime(iso: string) {
     return relativeTimeFormatter.format(diffHours, 'hour')
   }
   return relativeTimeFormatter.format(diffDays, 'day')
+}
+
+function configFromStudySet(studySet: StudySet): StudyConfig {
+  return studySet.study_mode === 'conversion'
+    ? { mode: 'conversion', direction: studySet.conversion_direction }
+    : { mode: 'meaning', visibility: studySet.meaning_visibility }
 }
 
 export function StudySetPage() {
@@ -185,23 +195,34 @@ export function StudySetPage() {
 
             <div className="col-span-2 row-start-4 mt-4 flex flex-col items-stretch gap-2 sm:col-span-1 sm:col-start-3 sm:row-span-3 sm:row-start-1 sm:mt-0 sm:items-end sm:self-end">
               <SaveStatus status={saveStatus.status} onRetry={saveStatus.retry} />
-              <Button asChild={cardCount > 0} size="lg" disabled={cardCount === 0} className="h-10">
-                {cardCount > 0 ? (
-                  <Link to={`/sets/${setId}/study`}>
+              {cardCount === 0 ? (
+                <>
+                  <Button size="lg" disabled className="h-10">
                     <Play data-icon="inline-start" />
                     Start studying
-                  </Link>
-                ) : (
-                  <>
-                    <Play data-icon="inline-start" />
-                    Start studying
-                  </>
-                )}
-              </Button>
-              {cardCount === 0 && (
-                <p className="text-muted-foreground text-xs sm:text-right">
-                  Add a card to start studying.
-                </p>
+                  </Button>
+                  <p className="text-muted-foreground text-xs sm:text-right">
+                    Add a card to start studying.
+                  </p>
+                </>
+              ) : (
+                <StudyModePicker
+                  config={configFromStudySet(studySet)}
+                  onChange={(config) => {
+                    saveStatus.setSaving()
+                    const patch =
+                      config.mode === 'conversion'
+                        ? { study_mode: 'conversion' as const, conversion_direction: config.direction }
+                        : { study_mode: 'meaning' as const, meaning_visibility: config.visibility }
+                    patchStudySet.mutate(patch, {
+                      onSuccess: saveStatus.setSaved,
+                      onError: () => saveStatus.setError(() => patchStudySet.mutate(patch)),
+                    })
+                  }}
+                  eligibleCount={eligibleCards(cards ?? [], configFromStudySet(studySet)).length}
+                  totalCount={cardCount}
+                  onStart={() => navigate(`/sets/${setId}/study`)}
+                />
               )}
             </div>
           </div>
@@ -210,6 +231,7 @@ export function StudySetPage() {
             <CardsSection
               studySetId={studySet.id}
               ownerId={user.id}
+              config={configFromStudySet(studySet)}
               onSaving={saveStatus.setSaving}
               onSaved={saveStatus.setSaved}
               onError={saveStatus.setError}
