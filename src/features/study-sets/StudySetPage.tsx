@@ -1,11 +1,16 @@
 import { ImageIcon, Loader2, Play, RefreshCw } from 'lucide-react'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { InlineText } from '@/components/InlineText'
 import { SaveStatus } from '@/components/SaveStatus'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/AuthContext'
-import { configFromStudySet, eligibleCards } from '@/features/study/studyMode'
+import {
+  loadStudySettings,
+  saveStudySettings,
+  type StoredStudySettings,
+} from '@/features/study/studyConfigStorage'
+import { configFromFields, eligibleCards } from '@/features/study/studyMode'
 import { useSaveStatus } from '@/hooks/useSaveStatus'
 import { CardsSection } from './CardsSection'
 import { DeleteStudySetDialog } from './DeleteStudySetDialog'
@@ -37,11 +42,25 @@ export function StudySetPage() {
   const updateStudySet = useUpdateStudySet(setId ?? '')
   const saveStatus = useSaveStatus()
   const coverInputRef = useRef<HTMLInputElement>(null)
+  const [localSettings, setLocalSettings] = useState<StoredStudySettings | null>(() =>
+    setId ? loadStudySettings(setId) : null,
+  )
+  const loadedSettingsForRef = useRef(setId)
+  if (loadedSettingsForRef.current !== setId) {
+    loadedSettingsForRef.current = setId
+    setLocalSettings(setId ? loadStudySettings(setId) : null)
+  }
 
   const coverPaths = studySet?.image_path ? [studySet.image_path] : []
   const { data: coverUrls } = useSignedImageUrls(coverPaths)
   const coverUrl = studySet?.image_path ? coverUrls?.[studySet.image_path] : undefined
-  const config = studySet ? configFromStudySet(studySet) : undefined
+  const settings: StoredStudySettings | undefined = localSettings ?? studySet
+  const config = settings ? configFromFields(settings) : undefined
+
+  function updateSettings(next: StoredStudySettings) {
+    setLocalSettings(next)
+    if (setId) saveStudySettings(setId, next)
+  }
 
   if (!setId) {
     return <Navigate to="/" replace />
@@ -202,23 +221,15 @@ export function StudySetPage() {
                 <StudyModePicker
                   config={config!}
                   onChange={(config) => {
-                    saveStatus.setSaving()
-                    const patch =
-                      config.mode === 'conversion'
-                        ? { study_mode: 'conversion' as const, conversion_direction: config.direction }
-                        : { study_mode: 'meaning' as const, meaning_visibility: config.visibility }
-                    patchStudySet.mutate(patch, {
-                      onSuccess: saveStatus.setSaved,
-                      onError: () => saveStatus.setError(() => patchStudySet.mutate(patch)),
+                    updateSettings({
+                      ...settings!,
+                      ...(config.mode === 'conversion'
+                        ? { study_mode: 'conversion', conversion_direction: config.direction }
+                        : { study_mode: 'meaning', meaning_visibility: config.visibility }),
                     })
                   }}
                   onModeChange={(mode) => {
-                    saveStatus.setSaving()
-                    const patch = { study_mode: mode }
-                    patchStudySet.mutate(patch, {
-                      onSuccess: saveStatus.setSaved,
-                      onError: () => saveStatus.setError(() => patchStudySet.mutate(patch)),
-                    })
+                    updateSettings({ ...settings!, study_mode: mode })
                   }}
                   eligibleCount={eligibleCards(cards ?? [], config!).length}
                   totalCount={cardCount}

@@ -120,8 +120,14 @@ export function studyModeLabel(mode: StudyMode): string {
   return mode === 'conversion' ? 'Word conversion' : 'Definition to word'
 }
 
+export function configFromFields(
+  fields: Pick<StudySet, 'study_mode' | 'conversion_direction' | 'meaning_visibility'>,
+): StudyConfig {
+  return fields.study_mode === 'conversion'
+    ? { mode: 'conversion', direction: fields.conversion_direction }
+    : { mode: 'meaning', visibility: fields.meaning_visibility }
+}
+
 export function configFromStudySet(studySet: StudySet): StudyConfig {
-  return studySet.study_mode === 'conversion'
-    ? { mode: 'conversion', direction: studySet.conversion_direction }
-    : { mode: 'meaning', visibility: studySet.meaning_visibility }
+  return configFromFields(studySet)
 }

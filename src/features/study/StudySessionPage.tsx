@@ -5,8 +5,9 @@ import { useCards } from '@/features/study-sets/hooks/useCards'
 import { useSignedImageUrls } from '@/features/study-sets/hooks/useSignedImageUrls'
 import { useStudySet } from '@/features/study-sets/hooks/useStudySets'
 import { useImagePrefetch } from '@/hooks/useImagePrefetch'
+import { loadStudySettings } from './studyConfigStorage'
 import {
-  configFromStudySet,
+  configFromFields,
   eligibleCards,
   buildQuestion,
   type Question,
@@ -34,8 +35,9 @@ export function StudySessionPage() {
 
   useEffect(() => {
     if (!cards || !studySet) return
-    const config = configFromStudySet(studySet)
-    const buildKey = `${studySet.id}:${studySet.study_mode}:${studySet.conversion_direction}:${studySet.meaning_visibility}:${cards.length}`
+    const settings = loadStudySettings(studySet.id) ?? studySet
+    const config = configFromFields(settings)
+    const buildKey = `${studySet.id}:${settings.study_mode}:${settings.conversion_direction}:${settings.meaning_visibility}:${cards.length}`
     if (builtForRef.current === buildKey) return
     builtForRef.current = buildKey
 
