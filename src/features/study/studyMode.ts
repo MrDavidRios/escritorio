@@ -1,5 +1,5 @@
 import type { Card } from '@/types/card'
-import type { ConversionDirection, MeaningVisibility, StudyMode } from '@/types/studySet'
+import type { ConversionDirection, MeaningVisibility, StudySet, StudyMode } from '@/types/studySet'
 
 export type StudyConfig =
   | { mode: 'conversion'; direction: ConversionDirection }
@@ -118,4 +118,10 @@ export function buildQuestion(
 
 export function studyModeLabel(mode: StudyMode): string {
   return mode === 'conversion' ? 'Word conversion' : 'Definition to word'
+}
+
+export function configFromStudySet(studySet: StudySet): StudyConfig {
+  return studySet.study_mode === 'conversion'
+    ? { mode: 'conversion', direction: studySet.conversion_direction }
+    : { mode: 'meaning', visibility: studySet.meaning_visibility }
 }

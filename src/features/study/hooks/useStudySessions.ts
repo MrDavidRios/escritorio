@@ -9,6 +9,9 @@ import { completeStudySession, createStudySession } from '@/api/studySessions'
 export function useStartStudySession() {
   return useMutation({
     mutationFn: createStudySession,
+    onError: (error) => {
+      console.error('Failed to start study session:', error)
+    },
   })
 }
 

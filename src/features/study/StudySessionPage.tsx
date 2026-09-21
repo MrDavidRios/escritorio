@@ -5,16 +5,14 @@ import { useCards } from '@/features/study-sets/hooks/useCards'
 import { useSignedImageUrls } from '@/features/study-sets/hooks/useSignedImageUrls'
 import { useStudySet } from '@/features/study-sets/hooks/useStudySets'
 import { useImagePrefetch } from '@/hooks/useImagePrefetch'
-import { eligibleCards, buildQuestion, type Question, type StudyConfig } from './studyMode'
+import {
+  configFromStudySet,
+  eligibleCards,
+  buildQuestion,
+  type Question,
+} from './studyMode'
 import { useCompleteStudySession, useStartStudySession } from './hooks/useStudySessions'
 import { QuizCard } from './QuizCard'
-import type { StudySet } from '@/types/studySet'
-
-function configFromStudySet(studySet: StudySet): StudyConfig {
-  return studySet.study_mode === 'conversion'
-    ? { mode: 'conversion', direction: studySet.conversion_direction }
-    : { mode: 'meaning', visibility: studySet.meaning_visibility }
-}
 
 export function StudySessionPage() {
   const { setId } = useParams<{ setId: string }>()
