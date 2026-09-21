@@ -1,5 +1,5 @@
 import { Loader2, Search } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +33,7 @@ export function DefinitionLookupButton({
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
   const [results, setResults] = useState<Record<Language, string | null> | null>(null)
   const [language, setLanguage] = useState<Language>('es')
+  const pendingReplacement = useRef<string | undefined>(undefined)
 
   async function handleClick() {
     const term = spanishTerm.trim()
@@ -86,7 +87,10 @@ export function DefinitionLookupButton({
       <AlertDialog
         open={results !== null}
         onOpenChange={(open) => {
-          if (!open) setResults(null)
+          if (open) return
+          commitAndExit(pendingReplacement.current)
+          pendingReplacement.current = undefined
+          setResults(null)
         }}
       >
         <AlertDialogContent>
@@ -130,8 +134,7 @@ export function DefinitionLookupButton({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                if (selectedDefinition) commitAndExit(selectedDefinition)
-                setResults(null)
+                pendingReplacement.current = selectedDefinition ?? undefined
               }}
             >
               Replace
