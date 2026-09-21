@@ -179,7 +179,7 @@ export function InlineText({
 
   const inputClassName = cn(
     BOX,
-    'block w-full max-w-full bg-transparent text-inherit outline-none [font:inherit] [letter-spacing:inherit]',
+    'placeholder:text-muted-foreground/50 block w-full max-w-full bg-transparent text-inherit outline-none [font:inherit] [letter-spacing:inherit]',
   )
 
   return (
@@ -209,6 +209,7 @@ export function InlineText({
               referenceRef.current = el
             }}
             aria-label={label}
+            placeholder={placeholder}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -225,6 +226,7 @@ export function InlineText({
             }}
             type="text"
             aria-label={label}
+            placeholder={placeholder}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={handleKeyDown}
