@@ -1,5 +1,5 @@
 import { Loader2, Plus, X } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CardTile } from './CardTile'
@@ -22,7 +22,6 @@ export function AddCardTile({
   const [definition, setDefinition] = useState('')
   const [hint, setHint] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const createCard = useCreateCard(studySetId, ownerId)
   const previewUrl = useMemo(() => (image ? URL.createObjectURL(image) : null), [image])
@@ -47,11 +46,6 @@ export function AddCardTile({
     if (!file) return
     setImage(file)
     setError(null)
-  }
-
-  function handleDrop(e: DragEvent) {
-    e.preventDefault()
-    pickUpFile(e.dataTransfer.files[0])
   }
 
   async function submit() {
@@ -88,13 +82,23 @@ export function AddCardTile({
     return (
       <button
         type="button"
-        onClick={() => fileInputRef.current?.click()}
+        onClick={() => setManualEntry(true)}
         onDragOver={(e) => e.preventDefault()}
-        onDrop={handleDrop}
+        onDrop={(e) => {
+          e.preventDefault()
+          const file = e.dataTransfer.files[0]
+          if (file) {
+            pickUpFile(file)
+            setManualEntry(true)
+          }
+        }}
         onPaste={(e) => {
           const item = Array.from(e.clipboardData.items).find((i) => i.type.startsWith('image/'))
           const file = item?.getAsFile()
-          if (file) pickUpFile(file)
+          if (file) {
+            pickUpFile(file)
+            setManualEntry(true)
+          }
         }}
         className={cn(
           'border-input hover:bg-muted/40 focus-visible:bg-muted/40 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-center transition-colors duration-150',
@@ -105,34 +109,9 @@ export function AddCardTile({
         <span className="text-sm font-medium">{empty ? 'Add your first card' : 'Add card'}</span>
         {empty && (
           <span className="text-muted-foreground max-w-sm text-xs">
-            Drop or paste an image, then type the answer you want to recall.
+            Type the answer you want to recall, with an optional image.
           </span>
         )}
-        <span
-          role="button"
-          tabIndex={0}
-          onClick={(e) => {
-            e.stopPropagation()
-            setManualEntry(true)
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault()
-              e.stopPropagation()
-              setManualEntry(true)
-            }
-          }}
-          className="text-muted-foreground text-xs underline underline-offset-2"
-        >
-          Add without an image
-        </span>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => pickUpFile(e.target.files?.[0])}
-        />
       </button>
     )
   }
