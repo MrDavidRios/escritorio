@@ -16,6 +16,15 @@ type InlineTextProps = {
   className?: string
   /** Rendered above the field while editing, wired to insert at the caret. */
   accessory?: (insert: (text: string) => void) => React.ReactNode
+  /** Rendered inline after the field while editing, with direct read/write access to the draft. */
+  trailingAction?: (ctx: {
+    draft: string
+    setDraft: (next: string) => void
+    /** Suppresses the next blur-triggered commit/exit, e.g. while a confirmation dialog steals focus. */
+    preventNextBlurCommit: () => void
+    /** Saves the given value (or the current draft) and exits edit mode immediately. */
+    commitAndExit: (value?: string) => void
+  }) => React.ReactNode
   /** Rendered before the value/placeholder. */
   icon?: React.ReactNode
   /** Start already in edit mode on mount. */
@@ -32,6 +41,7 @@ export function InlineText({
   as = 'span',
   className,
   accessory,
+  trailingAction,
   icon,
   autoFocus = false,
 }: InlineTextProps) {
@@ -103,8 +113,8 @@ export function InlineText({
     return null
   }
 
-  function commit() {
-    const trimmed = draft.trim()
+  function commit(overrideValue?: string) {
+    const trimmed = (overrideValue ?? draft).trim()
     if ((required && trimmed === '') || trimmed === value.trim()) {
       focusButtonOnExit.current = true
       setEditing(false)
@@ -113,6 +123,10 @@ export function InlineText({
     onSave(trimmed)
     focusButtonOnExit.current = true
     setEditing(false)
+  }
+
+  function preventNextBlurCommit() {
+    skipBlurCommit.current = true
   }
 
   function revert() {
@@ -234,6 +248,7 @@ export function InlineText({
             className={inputClassName}
           />
         )}
+        {trailingAction?.({ draft, setDraft, preventNextBlurCommit, commitAndExit: commit })}
       </div>
     </Wrapper>
   )
