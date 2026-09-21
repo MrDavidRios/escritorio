@@ -23,7 +23,7 @@ create table public.study_sessions (
   direction conversion_direction,
   visibility meaning_visibility,
   deck_size integer not null,
-  cards_answered integer not null default 0,
+  cards_correct integer not null default 0,
   started_at timestamptz not null default now(),
   completed_at timestamptz,
   constraint study_sessions_direction_matches_mode
@@ -58,6 +58,8 @@ begin
 end;
 $$;
 
+revoke execute on function public.set_study_session_lineage() from public;
+
 create trigger study_sessions_set_lineage
   before insert on public.study_sessions
   for each row
@@ -65,11 +67,12 @@ create trigger study_sessions_set_lineage
 
 -- Unlike quiz_attempts (strictly append-only), a session row is opened
 -- at start and closed at completion. This trigger pins every column
--- except completed_at/cards_answered to its original value, so an
+-- except completed_at/cards_correct to its original value, so an
 -- update can never rewrite a session into a different mode/config.
 create or replace function public.guard_study_session_update()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   new.study_set_id := old.study_set_id;

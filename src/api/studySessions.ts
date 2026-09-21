@@ -13,7 +13,7 @@ export async function createStudySession(input: StudySessionInput): Promise<Stud
 
 export async function completeStudySession(
   id: string,
-  patch: { completed_at: string; cards_answered: number },
+  patch: { completed_at: string; cards_correct: number },
 ): Promise<StudySession> {
   const { data, error } = await supabase
     .from('study_sessions')

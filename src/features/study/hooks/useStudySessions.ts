@@ -21,7 +21,7 @@ export function useStartStudySession() {
 export function useCompleteStudySession() {
   return useMutation({
     mutationFn: ({ id, cardsAnswered }: { id: string; cardsAnswered: number }) =>
-      completeStudySession(id, { completed_at: new Date().toISOString(), cards_answered: cardsAnswered }),
+      completeStudySession(id, { completed_at: new Date().toISOString(), cards_correct: cardsAnswered }),
     onError: (error) => {
       console.error('Failed to mark study session complete:', error)
     },

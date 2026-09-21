@@ -27,25 +27,18 @@ const VISIBILITY_OPTIONS: { value: MeaningVisibility; label: string }[] = [
 export function StudyModePicker({
   config,
   onChange,
+  onModeChange,
   eligibleCount,
   totalCount,
   onStart,
 }: {
   config: StudyConfig
   onChange: (config: StudyConfig) => void
+  onModeChange: (mode: StudyMode) => void
   eligibleCount: number
   totalCount: number
   onStart: () => void
 }) {
-  function selectMode(mode: StudyMode) {
-    if (mode === config.mode) return
-    onChange(
-      mode === 'conversion'
-        ? { mode: 'conversion', direction: 'en_es' }
-        : { mode: 'meaning', visibility: 'both' },
-    )
-  }
-
   const canStart = eligibleCount > 0
   const startLabel =
     eligibleCount === totalCount
@@ -73,7 +66,7 @@ export function StudyModePicker({
           <DropdownMenuContent align="end">
             <DropdownMenuRadioGroup
               value={config.mode}
-              onValueChange={(value) => selectMode(value as StudyMode)}
+              onValueChange={(value) => onModeChange(value as StudyMode)}
             >
               <DropdownMenuRadioItem value="conversion">
                 {studyModeLabel('conversion')}

@@ -8,7 +8,7 @@ export interface StudySession {
   direction: ConversionDirection | null
   visibility: MeaningVisibility | null
   deck_size: number
-  cards_answered: number
+  cards_correct: number
   started_at: string
   completed_at: string | null
 }

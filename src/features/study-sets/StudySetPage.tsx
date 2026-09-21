@@ -219,6 +219,14 @@ export function StudySetPage() {
                       onError: () => saveStatus.setError(() => patchStudySet.mutate(patch)),
                     })
                   }}
+                  onModeChange={(mode) => {
+                    saveStatus.setSaving()
+                    const patch = { study_mode: mode }
+                    patchStudySet.mutate(patch, {
+                      onSuccess: saveStatus.setSaved,
+                      onError: () => saveStatus.setError(() => patchStudySet.mutate(patch)),
+                    })
+                  }}
                   eligibleCount={eligibleCards(cards ?? [], configFromStudySet(studySet)).length}
                   totalCount={cardCount}
                   onStart={() => navigate(`/sets/${setId}/study`)}
