@@ -1,5 +1,7 @@
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import type { StudyConfig } from '@/features/study/studyMode'
+import { exclusionReason } from '@/features/study/studyMode'
 import type { Card } from '@/types/card'
 import { CardTile } from './CardTile'
 import { DeleteCardDialog } from './DeleteCardDialog'
@@ -9,6 +11,7 @@ export function EditableCardTile({
   studySetId,
   ownerId,
   card,
+  config,
   imageUrl,
   onSaving,
   onSaved,
@@ -17,6 +20,7 @@ export function EditableCardTile({
   studySetId: string
   ownerId: string
   card: Card
+  config: StudyConfig
   imageUrl?: string
   onSaving: () => void
   onSaved: () => void
@@ -98,6 +102,7 @@ export function EditableCardTile({
       onSaveDefinition={(definition) => save({ definition })}
       hint={card.hint ?? ''}
       onSaveHint={(hint) => save({ hint })}
+      excludedReason={exclusionReason(card, config)}
       cornerSlot={
         <div className="absolute right-2 bottom-full z-10 hidden pb-2 group-hover:flex [@media(hover:none)]:flex">
           <DeleteCardDialog
