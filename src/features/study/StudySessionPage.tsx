@@ -11,6 +11,7 @@ import {
   eligibleCards,
   buildQuestion,
   type Question,
+  configFromStudySet,
 } from './studyMode'
 import { useCompleteStudySession, useStartStudySession } from './hooks/useStudySessions'
 import { QuizCard } from './QuizCard'
