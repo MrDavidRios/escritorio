@@ -3,6 +3,7 @@ import { Loader2, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
+import { GhostCardButton } from '@/components/GhostCardButton'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -53,10 +54,10 @@ export function CreateStudySetDialog() {
       }}
     >
       <DialogTrigger asChild>
-        <Button>
-          <Plus data-icon="inline-start" />
+        <GhostCardButton>
+          <Plus className="size-4" aria-hidden />
           New study set
-        </Button>
+        </GhostCardButton>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
