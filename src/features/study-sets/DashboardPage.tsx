@@ -2,6 +2,7 @@ import { ChevronRight, Loader2, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
+import { IdiomOfTheDayBanner } from '@/features/idioms/IdiomOfTheDayBanner'
 import { CreateStudySetDialog } from './CreateStudySetDialog'
 import { useStudySets } from './hooks/useStudySets'
 import { StudySetThumbnail } from './StudySetThumbnail'
@@ -10,14 +11,13 @@ export function DashboardPage() {
   const { data: studySets, isLoading, isError, refetch, isRefetching } = useStudySets()
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4 p-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Your study sets</h1>
-        <CreateStudySetDialog />
-      </div>
+    <div className="mx-auto flex max-w-6xl flex-col gap-4 p-4 sm:p-6 lg:gap-6 lg:p-8">
+      <IdiomOfTheDayBanner />
+
+      <h1 className="text-xl font-semibold">Your study sets</h1>
 
       {isLoading && (
-        <div className="flex flex-col gap-3">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {[0, 1, 2].map((i) => (
             <Card key={i}>
               <CardContent className="flex items-center gap-4">
@@ -54,7 +54,7 @@ export function DashboardPage() {
         </p>
       )}
 
-      <div className="flex flex-col gap-3">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {studySets?.map((studySet) => (
           <Link
             key={studySet.id}
@@ -77,6 +77,7 @@ export function DashboardPage() {
             </Card>
           </Link>
         ))}
+        {!isLoading && !isError && <CreateStudySetDialog />}
       </div>
     </div>
   )
