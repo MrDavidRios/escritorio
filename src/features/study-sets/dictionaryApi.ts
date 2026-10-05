@@ -1,3 +1,16 @@
+/** External dictionary pages for looking a term up by hand when the APIs come back empty. */
+export function manualLookupLinks(word: string): { label: string; href: string }[] {
+  const term = encodeURIComponent(word.trim())
+  return [
+    { label: 'RAE', href: `https://dle.rae.es/${term}` },
+    { label: 'SpanishDict', href: `https://www.spanishdict.com/translate/${term}` },
+    {
+      label: 'WordReference',
+      href: `https://www.wordreference.com/es/en/translation.asp?spen=${term}`,
+    },
+  ]
+}
+
 interface EnglishDictionaryResponse {
   entries?: {
     senses?: { definition?: string }[]
