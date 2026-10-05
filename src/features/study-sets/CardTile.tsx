@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { cn } from '@/lib/utils'
 import { DefinitionLookupButton } from './DefinitionLookupButton'
 import { extractDroppedImageFile, extractPastedImageFile } from './imageDrop'
+import { IMAGE_ACCEPT, isAcceptedImage } from './imageFormats'
 
 export type CardTileProps = {
   imageUrl?: string
@@ -140,12 +141,12 @@ export function CardTile({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept={IMAGE_ACCEPT}
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0]
           e.target.value = ''
-          if (file) onPickImage(file)
+          if (file && isAcceptedImage(file)) onPickImage(file)
         }}
       />
 
