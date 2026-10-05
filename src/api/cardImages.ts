@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { createSignedUrlBatcher } from './signedUrlBatcher'
 
 const BUCKET = 'flashcard-images'
 
@@ -44,5 +45,9 @@ export async function getSignedImageUrls(paths: string[]): Promise<Record<string
   })
   return map
 }
+
+// One signed URL per path, batched with any others requested in the same
+// tick (see useSignedImageUrls). Null when the object has no signed URL.
+export const getSignedImageUrl = createSignedUrlBatcher(getSignedImageUrls)
 
 export const SIGNED_URL_STALE_TIME_MS = (SIGNED_URL_EXPIRES_IN_SECONDS - 10 * 60) * 1000

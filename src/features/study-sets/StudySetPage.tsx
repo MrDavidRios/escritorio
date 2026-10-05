@@ -19,6 +19,8 @@ import { DeleteStudySetDialog } from './DeleteStudySetDialog'
 import { useCards } from './hooks/useCards'
 import { useSignedImageUrls } from './hooks/useSignedImageUrls'
 import { usePatchStudySet, useStudySet, useUpdateStudySet } from './hooks/useStudySets'
+import { extractPastedImageFile } from './imageDrop'
+import { IMAGE_ACCEPT, isAcceptedImage } from './imageFormats'
 import { StudyModePicker } from './StudyModePicker'
 
 const relativeTimeFormatter = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
@@ -120,8 +122,7 @@ export function StudySetPage() {
   }
 
   function handleBandPaste(e: React.ClipboardEvent) {
-    const item = Array.from(e.clipboardData.items).find((i) => i.type.startsWith('image/'))
-    const file = item?.getAsFile()
+    const file = extractPastedImageFile(e)
     if (!file) return
     e.preventDefault()
     replaceCover(file)
@@ -219,12 +220,12 @@ export function StudySetPage() {
               <input
                 ref={coverInputRef}
                 type="file"
-                accept="image/*"
+                accept={IMAGE_ACCEPT}
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0]
                   e.target.value = ''
-                  if (file) replaceCover(file)
+                  if (file && isAcceptedImage(file)) replaceCover(file)
                 }}
               />
             </div>
