@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import type { StudyConfig } from '@/features/study/studyMode'
-import { studyModeLabel } from '@/features/study/studyMode'
+import { noEligibleCardsMessage, studyModeLabel } from '@/features/study/studyMode'
 import type { ConversionDirection, MeaningVisibility, StudyMode } from '@/types/studySet'
 
 const DIRECTION_OPTIONS: { value: ConversionDirection; label: string }[] = [
@@ -28,20 +28,16 @@ export function StudyModePicker({
   onChange,
   onModeChange,
   eligibleCount,
-  totalCount,
   onStart,
 }: {
   config: StudyConfig
   onChange: (config: StudyConfig) => void
   onModeChange: (mode: StudyMode) => void
   eligibleCount: number
-  totalCount: number
   onStart: () => void
 }) {
   const canStart = eligibleCount > 0
   const modeLabel = studyModeLabel(config.mode)
-  const startLabel =
-    eligibleCount === totalCount ? modeLabel : `${modeLabel} · ${eligibleCount} of ${totalCount} cards`
   const otherModes: StudyMode[] = (['conversion', 'meaning'] as StudyMode[]).filter(
     (mode) => mode !== config.mode,
   )
@@ -51,14 +47,13 @@ export function StudyModePicker({
       <div className="flex items-stretch">
         <Button size="lg" className="h-10 rounded-r-none" disabled={!canStart} onClick={onStart}>
           <Play data-icon="inline-start" />
-          {startLabel}
+          {modeLabel}
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               size="lg"
-              className="-ml-px h-10 rounded-l-none border-l border-primary-foreground/10 px-2"
-              disabled={!canStart}
+              className="border-primary-foreground/10 -ml-px h-10 rounded-l-none border-l px-2"
               aria-label="Choose study mode"
             >
               <ChevronDown />
@@ -106,7 +101,7 @@ export function StudyModePicker({
 
       {!canStart && (
         <p className="text-muted-foreground text-xs sm:text-right">
-          No cards are eligible for this mode/setting — try a different one.
+          {noEligibleCardsMessage(config)}
         </p>
       )}
     </div>

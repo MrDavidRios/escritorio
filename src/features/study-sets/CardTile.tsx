@@ -1,9 +1,8 @@
-import { BadgeQuestionMark, BookOpen, Download, EyeOff, ImageIcon, Languages, X } from 'lucide-react'
+import { BadgeQuestionMark, BookOpen, Download, ImageIcon, Languages, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { AccentedCharPad } from '@/components/AccentedCharPad'
 import { InlineText } from '@/components/InlineText'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import { DefinitionLookupButton } from './DefinitionLookupButton'
 import { extractDroppedImageFile, extractPastedImageFile } from './imageDrop'
 
@@ -23,7 +22,8 @@ export type CardTileProps = {
   onSaveHint: (value: string) => void
   cornerSlot?: React.ReactNode
   footer?: React.ReactNode
-  excludedReason?: string | null
+  /** Hide empty optional fields until the tile is hovered or focused. */
+  quietEmptyFields?: boolean
 }
 
 export function CardTile({
@@ -42,7 +42,7 @@ export function CardTile({
   onSaveHint,
   cornerSlot,
   footer,
-  excludedReason,
+  quietEmptyFields = false,
 }: CardTileProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDraggingOver, setIsDraggingOver] = useState(false)
@@ -55,17 +55,8 @@ export function CardTile({
         if (file) onPickImage(file)
       }}
     >
-      {excludedReason && (
-        <div className="bg-muted text-muted-foreground flex items-center gap-1.5 rounded-t-xl px-3 py-1.5 text-xs">
-          <EyeOff className="size-3.5 shrink-0" />
-          {excludedReason} — excluded from this study mode
-        </div>
-      )}
       <div
-        className={cn(
-          'group/image bg-muted/50 relative aspect-[4/3] w-full overflow-hidden',
-          excludedReason ? 'rounded-none' : 'rounded-t-xl',
-        )}
+        className="group/image bg-muted/50 relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded-t-xl"
         onDragEnter={(e) => {
           e.preventDefault()
           setIsDraggingOver(true)
@@ -168,6 +159,7 @@ export function CardTile({
           label="Card English equivalent"
           className="text-muted-foreground text-sm"
           icon={<Languages />}
+          quietWhenEmpty={quietEmptyFields}
         />
         <InlineText
           value={definition}
@@ -177,6 +169,7 @@ export function CardTile({
           multiline
           className="text-muted-foreground text-sm"
           icon={<BookOpen />}
+          quietWhenEmpty={quietEmptyFields}
           trailingAction={({ draft, setDraft, preventNextBlurCommit, commitAndExit }) => (
             <DefinitionLookupButton
               spanishTerm={spanishTerm}
@@ -194,6 +187,7 @@ export function CardTile({
           label="Card hint"
           className="text-muted-foreground text-sm"
           icon={<BadgeQuestionMark />}
+          quietWhenEmpty={quietEmptyFields}
         />
       </div>
 

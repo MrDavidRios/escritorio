@@ -103,7 +103,7 @@ export function AddCardTile({
         }}
         className={cn(
           'border-input hover:bg-muted/40 focus-visible:bg-muted/40 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-center transition-colors duration-150',
-          empty ? 'col-span-full aspect-auto py-12' : 'aspect-[4/3]',
+          empty ? 'col-span-full aspect-auto py-12' : 'min-h-64 min-w-0',
         )}
       >
         <Plus className="text-muted-foreground size-6" />

@@ -69,6 +69,22 @@ export function exclusionReason(card: Card, config: StudyConfig): string | null 
   return 'No definition'
 }
 
+/** Copy explaining why the deck is empty and what a card needs, per mode/setting. */
+export function noEligibleCardsMessage(config: StudyConfig): string {
+  if (config.mode === 'conversion') {
+    return 'No cards have an English equivalent — add one to a card, or switch to Definition to word.'
+  }
+
+  switch (config.visibility) {
+    case 'image':
+      return 'No cards have an image — add one to a card, or try a different setting.'
+    case 'definition':
+      return 'No cards have a definition — add one to a card, or try a different setting.'
+    case 'both':
+      return 'No cards have both an image and a definition — add the missing ones, or try "Show image" or "Show definition".'
+  }
+}
+
 /**
  * Builds the question shown for a single card under the given config.
  * `rng` resolves conversion mode's 'random' direction per card --

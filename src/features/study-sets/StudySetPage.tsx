@@ -232,7 +232,6 @@ export function StudySetPage() {
                     updateSettings({ ...settings!, study_mode: mode })
                   }}
                   eligibleCount={eligibleCards(cards ?? [], config!).length}
-                  totalCount={cardCount}
                   onStart={() => navigate(`/sets/${setId}/study`)}
                 />
               )}
