@@ -99,7 +99,7 @@ export function EditableCardTile({
       onSaveDefinition={(definition) => save({ definition })}
       hint={card.hint ?? ''}
       onSaveHint={(hint) => save({ hint })}
-      quietEmptyFields
+      collapseEmptyFields
       cornerSlot={
         <div className="absolute right-2 bottom-full z-10 hidden pb-2 group-hover:flex [@media(hover:none)]:flex">
           <Tooltip>

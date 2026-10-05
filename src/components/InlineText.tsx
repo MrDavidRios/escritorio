@@ -29,12 +29,8 @@ type InlineTextProps = {
   icon?: React.ReactNode
   /** Start already in edit mode on mount. */
   autoFocus?: boolean
-  /**
-   * While empty, hide the placeholder until an ancestor `group` is hovered or
-   * has focus. The field keeps its space (no layout shift) and stays
-   * keyboard-focusable; touch devices always see it.
-   */
-  quietWhenEmpty?: boolean
+  /** Called when edit mode ends, with the value the field now holds. */
+  onEditingEnd?: (value: string) => void
 }
 
 export function InlineText({
@@ -50,7 +46,7 @@ export function InlineText({
   trailingAction,
   icon,
   autoFocus = false,
-  quietWhenEmpty = false,
+  onEditingEnd,
 }: InlineTextProps) {
   const [editing, setEditing] = useState(autoFocus)
   const [draft, setDraft] = useState(value)
@@ -125,11 +121,13 @@ export function InlineText({
     if ((required && trimmed === '') || trimmed === value.trim()) {
       focusButtonOnExit.current = true
       setEditing(false)
+      onEditingEnd?.(value)
       return
     }
     onSave(trimmed)
     focusButtonOnExit.current = true
     setEditing(false)
+    onEditingEnd?.(trimmed)
   }
 
   function preventNextBlurCommit() {
@@ -140,6 +138,7 @@ export function InlineText({
     setDraft(value)
     focusButtonOnExit.current = true
     setEditing(false)
+    onEditingEnd?.(value)
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) {
@@ -184,11 +183,8 @@ export function InlineText({
           }
           className={cn(
             BOX,
-            'hover:bg-muted/60 focus-visible:bg-muted/60 flex w-full max-w-full items-start gap-1.5 text-left transition-[color,background-color,opacity] duration-150',
+            'hover:bg-muted/60 focus-visible:bg-muted/60 flex w-full max-w-full items-start gap-1.5 text-left transition-colors duration-150',
             !value && 'text-muted-foreground/50',
-            !value &&
-              quietWhenEmpty &&
-              'opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100',
             multiline && 'whitespace-pre-wrap',
           )}
         >
