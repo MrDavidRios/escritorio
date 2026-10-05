@@ -11,6 +11,7 @@ import {
 import { deleteStudySetImages, studySetImagePath, uploadStudySetImage } from '@/api/studySetImages'
 import { useAuth } from '@/features/auth/AuthContext'
 import type { StudySet, StudySetInput } from '@/types/studySet'
+import { optimizeImage } from '../optimizeImage'
 
 export function studySetsKey() {
   return ['study-sets'] as const
@@ -63,13 +64,14 @@ export function useUpdateStudySet(id: string) {
     mutationFn: async ({
       title,
       description,
-      image,
+      image: rawImage,
       currentImagePath,
       removeImage,
     }: StudySetFormInput) => {
       let imagePath = currentImagePath
 
-      if (image) {
+      if (rawImage) {
+        const image = await optimizeImage(rawImage)
         const newPath = studySetImagePath(user!.id, id, image.name)
         if (newPath === currentImagePath) {
           // Same extension: overwrite in place.
