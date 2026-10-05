@@ -156,8 +156,13 @@ export function useDeleteCard(studySetId: string) {
       if (card.image_path) await deleteCardImages([card.image_path])
       await deleteCard(card.id)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cardsKey(studySetId) })
+    // Drop the card from the cache only once the backend has confirmed the
+    // delete, and keep the mutation pending until the list has refreshed.
+    onSuccess: (_data, card) => {
+      queryClient.setQueryData<Card[]>(cardsKey(studySetId), (cards) =>
+        cards?.filter((c) => c.id !== card.id),
+      )
+      return queryClient.invalidateQueries({ queryKey: cardsKey(studySetId) })
     },
   })
 }
