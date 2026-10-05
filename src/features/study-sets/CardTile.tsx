@@ -3,11 +3,13 @@ import {
   BookOpen,
   Download,
   ImageIcon,
+  ImagePlus,
   Languages,
   type LucideIcon,
   X,
 } from 'lucide-react'
 import { useRef, useState } from 'react'
+
 import { AccentedCharPad } from '@/components/AccentedCharPad'
 import { InlineText } from '@/components/InlineText'
 import { Button } from '@/components/ui/button'
@@ -165,13 +167,16 @@ export function CardTile({
                 decoding="async"
                 className="block h-auto max-h-[133cqw] min-h-[56.25cqw] w-full object-cover"
               />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute inset-0 flex items-center justify-center bg-black/50 text-sm font-medium text-white opacity-0 transition-opacity duration-150 group-focus-within/image:opacity-100 group-hover/image:opacity-100 [@media(hover:none)]:bg-black/30 [@media(hover:none)]:opacity-100"
-              >
-                Change
-              </button>
+              <div className="pointer-events-none absolute inset-0 flex items-end justify-end bg-black/0 p-2 transition-colors duration-200 ease-out group-hover/image:bg-black/10 group-has-[:focus-visible]/image:bg-black/10">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="pointer-events-none flex items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1 text-xs font-medium text-white opacity-0 shadow-sm backdrop-blur-sm transition-[opacity,background-color] duration-200 ease-out group-hover/image:pointer-events-auto group-hover/image:opacity-100 group-has-[:focus-visible]/image:pointer-events-auto group-has-[:focus-visible]/image:opacity-100 hover:bg-black/70 [@media(hover:none)]:pointer-events-auto [@media(hover:none)]:opacity-100"
+                >
+                  <ImagePlus className="size-3.5" />
+                  Change
+                </button>
+              </div>
             </>
           ) : (
             <button
@@ -190,19 +195,24 @@ export function CardTile({
             </button>
           )}
           {canRemoveImage && onRemoveImage && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Remove image"
-              onClick={(e) => {
-                e.stopPropagation()
-                onRemoveImage()
-              }}
-              className="absolute top-2 left-2 bg-black/40 text-white opacity-0 transition-opacity duration-150 group-focus-within/image:opacity-100 group-hover/image:opacity-100 hover:bg-black/60 hover:text-white [@media(hover:none)]:opacity-70"
-            >
-              <X />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Remove image"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onRemoveImage()
+                  }}
+                  className="absolute top-2 right-2 bg-black/40 text-white opacity-0 transition-opacity duration-150 group-hover/image:opacity-100 group-has-[:focus-visible]/image:opacity-100 hover:bg-black/60 hover:text-white [@media(hover:none)]:opacity-70"
+                >
+                  <X />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Remove image</TooltipContent>
+            </Tooltip>
           )}
         </div>
       )}
