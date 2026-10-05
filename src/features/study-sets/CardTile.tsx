@@ -11,6 +11,8 @@ import { useRef, useState } from 'react'
 import { AccentedCharPad } from '@/components/AccentedCharPad'
 import { InlineText } from '@/components/InlineText'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 import { DefinitionLookupButton } from './DefinitionLookupButton'
 import { extractDroppedImageFile, extractPastedImageFile } from './imageDrop'
 
@@ -28,24 +30,24 @@ export type CardTileProps = {
   onSaveDefinition: (value: string) => void
   hint: string
   onSaveHint: (value: string) => void
-  cornerSlot?: React.ReactNode
+  /** Extra buttons at the end of the hover toolbar (collapsed tiles only). */
+  actions?: React.ReactNode
   footer?: React.ReactNode
   /**
-   * Render only filled optional fields; empty ones collapse into a single
-   * "+ English  + Hint" line at the tile's bottom, shown on hover/focus.
+   * Render only filled optional fields; empty ones (and a missing image)
+   * become icon buttons in a vertical toolbar straddling the tile's right
+   * edge near its bottom, shown on hover/focus, so the tile is only as tall
+   * as its content.
    */
   collapseEmptyFields?: boolean
 }
 
 type OptionalField = 'english' | 'definition' | 'hint'
 
-const OPTIONAL_FIELD_LABELS: Record<
-  OptionalField,
-  { short: string; long: string; Icon: LucideIcon }
-> = {
-  english: { short: 'English equivalent', long: 'Add an English equivalent', Icon: Languages },
-  definition: { short: 'Definition', long: 'Add a definition', Icon: BookOpen },
-  hint: { short: 'Hint', long: 'Add a hint', Icon: BadgeQuestionMark },
+const OPTIONAL_FIELD_LABELS: Record<OptionalField, { long: string; Icon: LucideIcon }> = {
+  english: { long: 'Add an English equivalent', Icon: Languages },
+  definition: { long: 'Add a definition', Icon: BookOpen },
+  hint: { long: 'Add a hint', Icon: BadgeQuestionMark },
 }
 
 export function CardTile({
@@ -62,7 +64,7 @@ export function CardTile({
   onSaveDefinition,
   hint,
   onSaveHint,
-  cornerSlot,
+  actions,
   footer,
   collapseEmptyFields = false,
 }: CardTileProps) {
@@ -71,14 +73,14 @@ export function CardTile({
   // The empty field the user just opened from the "+" line, rendered in
   // place until it either gains a value or is closed empty.
   const [openField, setOpenField] = useState<OptionalField | null>(null)
-  const refocusAddButton = useRef<OptionalField | null>(null)
+  const addButtons = useRef<Partial<Record<OptionalField, HTMLButtonElement | null>>>({})
 
   const values: Record<OptionalField, string> = { english: englishEquivalent, definition, hint }
   if (openField && values[openField].trim()) {
     setOpenField(null)
   }
 
-  // With collapsed fields, an empty image is just another "+ Image" chip
+  // With collapsed fields, an empty image is just another toolbar button
   // instead of a full-size placeholder repeated on every text-only tile.
   const showImageZone = !collapseEmptyFields || Boolean(imageUrl)
 
@@ -90,8 +92,16 @@ export function CardTile({
 
   function closeField(field: OptionalField, result: string) {
     if (result.trim()) return
-    refocusAddButton.current = field
-    setOpenField(null)
+    // Another field may already be opening (its toolbar button was clicked
+    // while this one was still being edited); leave that one open.
+    setOpenField((current) => (current === field ? null : current))
+    // Closing an opened field empty unmounts its input. Once the browser has
+    // settled focus, hand it back to this field's toolbar button, unless it
+    // already landed somewhere, e.g. on whatever was clicked to close it.
+    requestAnimationFrame(() => {
+      if (document.activeElement && document.activeElement !== document.body) return
+      addButtons.current[field]?.focus()
+    })
   }
 
   return (
@@ -137,15 +147,23 @@ export function CardTile({
       />
 
       {showImageZone && (
-        <div className="group/image bg-muted/50 relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded-t-xl">
+        <div
+          className={cn(
+            'group/image bg-muted/50 relative w-full shrink-0 overflow-hidden rounded-t-xl',
+            imageUrl ? '@container' : 'aspect-4/3',
+          )}
+        >
           {imageUrl ? (
             <>
+              {/* Natural proportions, held between 16:9 and 3:4 so no one
+                image dominates a column; the min-height also reserves space
+                while the image loads. */}
               <img
                 src={imageUrl}
                 alt=""
                 loading="lazy"
                 decoding="async"
-                className="size-full object-cover"
+                className="block h-auto max-h-[133cqw] min-h-[56.25cqw] w-full object-cover"
               />
               <button
                 type="button"
@@ -195,8 +213,6 @@ export function CardTile({
           Drop to add image
         </div>
       )}
-
-      {cornerSlot}
 
       <div className="flex flex-1 flex-col gap-0.5 p-3">
         <InlineText
@@ -255,52 +271,87 @@ export function CardTile({
             onEditingEnd={(result) => closeField('hint', result)}
           />
         )}
+      </div>
 
-        {(missingFields.length > 0 || !showImageZone) && (
-          <div className="mt-auto flex flex-wrap gap-x-1 pt-2 opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
+      {collapseEmptyFields && (
+        // Rail spanning the tile's height: the flex-1 spacer pushes the
+        // toolbar to the bottom, and once the tile is shorter than the
+        // toolbar the spacer collapses and justify-center centres it instead.
+        <div className="pointer-events-none absolute top-3 right-0 bottom-3 z-10 flex flex-col justify-center">
+          <div className="min-h-0 flex-1" />
+          {/* Laid out but transparent until the tile is hovered or focused,
+            so its buttons stay keyboard-reachable (focusing one reveals it)
+            and can take focus back when an opened field closes empty. */}
+          <div
+            role="toolbar"
+            aria-orientation="vertical"
+            aria-label="Card actions"
+            className="bg-background ring-foreground/10 pointer-events-none flex shrink-0 translate-x-1/2 flex-col items-center gap-0.5 rounded-lg p-0.5 opacity-0 shadow-sm ring-1 transition-opacity duration-150 group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100 [@media(hover:none)]:pointer-events-auto [@media(hover:none)]:opacity-100"
+          >
             {!showImageZone && (
-              <button
-                type="button"
-                aria-label="Add an image"
-                onClick={() => fileInputRef.current?.click()}
-                className="text-muted-foreground hover:bg-muted/60 hover:text-foreground focus-visible:bg-muted/60 flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs transition-colors duration-150 first:-ml-1.5"
-              >
-                <ImageIcon className="size-3" />
-                Image
-              </button>
+              <ToolbarButton label="Add an image" onClick={() => fileInputRef.current?.click()}>
+                <ImageIcon />
+              </ToolbarButton>
             )}
             {missingFields.map((field) => {
-              const { short, long, Icon } = OPTIONAL_FIELD_LABELS[field]
+              const { long, Icon } = OPTIONAL_FIELD_LABELS[field]
               return (
-                <button
+                <ToolbarButton
                   key={field}
-                  ref={(el) => {
-                    // Closing an opened field empty unmounts its input; hand
-                    // focus back to this button unless it already moved on.
-                    if (
-                      el &&
-                      refocusAddButton.current === field &&
-                      (!document.activeElement || document.activeElement === document.body)
-                    ) {
-                      el.focus()
-                    }
-                    if (el && refocusAddButton.current === field) refocusAddButton.current = null
-                  }}
-                  type="button"
-                  aria-label={long}
+                  label={long}
                   onClick={() => setOpenField(field)}
-                  className="text-muted-foreground hover:bg-muted/60 hover:text-foreground focus-visible:bg-muted/60 flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs transition-colors duration-150 first:-ml-1.5"
+                  buttonRef={(el) => {
+                    addButtons.current[field] = el
+                  }}
                 >
-                  <Icon className="size-3" />
-                  {short}
-                </button>
+                  <Icon />
+                </ToolbarButton>
               )
             })}
+            {actions && (missingFields.length > 0 || !showImageZone) && (
+              <span aria-hidden className="bg-foreground/10 my-0.5 h-px w-4" />
+            )}
+            {actions}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {footer}
     </div>
+  )
+}
+
+function ToolbarButton({
+  label,
+  onClick,
+  buttonRef,
+  children,
+}: {
+  label: string
+  onClick: () => void
+  buttonRef?: React.Ref<HTMLButtonElement>
+  children: React.ReactNode
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          ref={buttonRef}
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          aria-label={label}
+          // Keep focus where it is during the press: blurring an open field
+          // here would close it and reshuffle the toolbar under the pointer
+          // before mouseup, so the click would never land.
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={onClick}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
   )
 }
