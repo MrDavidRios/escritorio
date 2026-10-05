@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cardImagePath, deleteCardImages, uploadCardImage } from '@/api/cardImages'
 import { createCard, deleteCard, listCards, updateCard } from '@/api/cards'
 import type { Card } from '@/types/card'
+import { optimizeImage } from '../optimizeImage'
 
 export function cardsKey(studySetId: string) {
   return ['cards', studySetId] as const
@@ -28,13 +29,13 @@ export function useCreateCard(studySetId: string, ownerId: string) {
 
   return useMutation({
     mutationFn: async ({
-      image,
+      image: rawImage,
       hint,
       spanish_term,
       english_equivalent,
       definition,
     }: CardFormInput) => {
-      if (!image && !definition.trim()) {
+      if (!rawImage && !definition.trim()) {
         throw new Error('An image or a definition is required')
       }
 
@@ -42,6 +43,7 @@ export function useCreateCard(studySetId: string, ownerId: string) {
       // end); read from the cache rather than refetching.
       const existing = queryClient.getQueryData<Card[]>(cardsKey(studySetId)) ?? []
 
+      const image = rawImage ? await optimizeImage(rawImage) : null
       const id = crypto.randomUUID()
       const imagePath = image ? cardImagePath(ownerId, id, image.name) : null
 
@@ -74,7 +76,7 @@ export function useUpdateCard(studySetId: string, ownerId: string) {
   return useMutation({
     mutationFn: async ({
       card,
-      image,
+      image: rawImage,
       hint,
       spanish_term,
       english_equivalent,
@@ -91,7 +93,8 @@ export function useUpdateCard(studySetId: string, ownerId: string) {
     }) => {
       let imagePath = card.image_path
 
-      if (image) {
+      if (rawImage) {
+        const image = await optimizeImage(rawImage)
         const newPath = cardImagePath(ownerId, card.id, image.name)
         if (newPath === card.image_path) {
           // Same extension: overwrite in place.
