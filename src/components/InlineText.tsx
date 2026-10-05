@@ -149,13 +149,10 @@ export function InlineText({
       return
     }
     if (e.key === 'Enter') {
-      if (multiline) {
-        if (e.metaKey || e.ctrlKey) {
-          e.preventDefault()
-          commit()
-        }
-        return
-      }
+      // Multiline fields are multiline for wrapping, not for typing line
+      // breaks: Enter saves like a single-line field, Shift+Enter still
+      // inserts one when it's wanted.
+      if (multiline && e.shiftKey) return
       e.preventDefault()
       commit()
     }
