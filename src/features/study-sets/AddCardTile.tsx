@@ -122,7 +122,6 @@ export function AddCardTile({
       imageUrl={previewUrl ?? undefined}
       onPickImage={pickUpFile}
       onRemoveImage={() => setImage(null)}
-      canRemoveImage={Boolean(image)}
       spanishTerm={spanishTerm}
       onSaveSpanishTerm={setSpanishTerm}
       autoFocusSpanishTerm

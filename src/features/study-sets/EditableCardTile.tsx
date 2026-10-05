@@ -90,7 +90,9 @@ export function EditableCardTile({
       imageUrl={imageUrl}
       onPickImage={replaceImage}
       onRemoveImage={removeImage}
-      canRemoveImage={Boolean(card.image_path && card.definition)}
+      removeImageDisabledReason={
+        card.definition ? undefined : 'Add a definition before removing the image'
+      }
       spanishTerm={card.spanish_term}
       onSaveSpanishTerm={(spanish_term) => save({ spanish_term })}
       englishEquivalent={card.english_equivalent ?? ''}

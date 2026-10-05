@@ -22,7 +22,8 @@ export type CardTileProps = {
   imageUrl?: string
   onPickImage: (file: File) => void
   onRemoveImage?: () => void
-  canRemoveImage?: boolean
+  /** When set, the remove button is shown but disabled, with this as its tooltip. */
+  removeImageDisabledReason?: string
   spanishTerm: string
   onSaveSpanishTerm: (value: string) => void
   autoFocusSpanishTerm?: boolean
@@ -56,7 +57,7 @@ export function CardTile({
   imageUrl,
   onPickImage,
   onRemoveImage,
-  canRemoveImage = false,
+  removeImageDisabledReason,
   spanishTerm,
   onSaveSpanishTerm,
   autoFocusSpanishTerm = false,
@@ -167,7 +168,8 @@ export function CardTile({
                 decoding="async"
                 className="block h-auto max-h-[133cqw] min-h-[56.25cqw] w-full object-cover"
               />
-              <div className="pointer-events-none absolute inset-0 flex items-end justify-end bg-black/0 p-2 transition-colors duration-200 ease-out group-hover/image:bg-black/10 group-has-[:focus-visible]/image:bg-black/10">
+              <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-200 ease-out group-hover/image:bg-black/10 group-has-[:focus-visible]/image:bg-black/10" />
+              <div className="pointer-events-none absolute top-2 right-2 flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -176,6 +178,34 @@ export function CardTile({
                   <ImagePlus className="size-3.5" />
                   Change
                 </button>
+                {onRemoveImage && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      {/* aria-disabled rather than disabled: a natively disabled
+                        button swallows pointer events, so the tooltip explaining
+                        why it's disabled would never show. */}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="Remove image"
+                        aria-disabled={removeImageDisabledReason ? true : undefined}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (!removeImageDisabledReason) onRemoveImage()
+                        }}
+                        className={cn(
+                          'pointer-events-none rounded-full bg-black/40 text-white opacity-0 transition-opacity duration-150 group-hover/image:pointer-events-auto group-hover/image:opacity-100 group-has-[:focus-visible]/image:pointer-events-auto group-has-[:focus-visible]/image:opacity-100 hover:bg-black/60 hover:text-white [@media(hover:none)]:pointer-events-auto [@media(hover:none)]:opacity-70',
+                          removeImageDisabledReason &&
+                            'cursor-not-allowed group-hover/image:opacity-50 group-has-[:focus-visible]/image:opacity-50 hover:bg-black/40 [@media(hover:none)]:opacity-40',
+                        )}
+                      >
+                        <X />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{removeImageDisabledReason ?? 'Remove image'}</TooltipContent>
+                  </Tooltip>
+                )}
               </div>
             </>
           ) : (
@@ -193,26 +223,6 @@ export function CardTile({
                 {isDraggingOver ? 'Drop to add image' : 'Add image'}
               </span>
             </button>
-          )}
-          {canRemoveImage && onRemoveImage && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="Remove image"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onRemoveImage()
-                  }}
-                  className="absolute top-2 right-2 bg-black/40 text-white opacity-0 transition-opacity duration-150 group-hover/image:opacity-100 group-has-[:focus-visible]/image:opacity-100 hover:bg-black/60 hover:text-white [@media(hover:none)]:opacity-70"
-                >
-                  <X />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Remove image</TooltipContent>
-            </Tooltip>
           )}
         </div>
       )}
