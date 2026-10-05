@@ -15,6 +15,11 @@ export interface StudySet {
   updated_at: string
 }
 
+/** A study set as listed on the dashboard, with its first few card image paths. */
+export interface StudySetSummary extends StudySet {
+  fallback_image_paths: string[]
+}
+
 export interface StudySetInput {
   title: string
   description: string | null
