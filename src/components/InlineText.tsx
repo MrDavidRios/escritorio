@@ -29,6 +29,8 @@ type InlineTextProps = {
   icon?: React.ReactNode
   /** Start already in edit mode on mount. */
   autoFocus?: boolean
+  /** Called when edit mode ends, with the value the field now holds. */
+  onEditingEnd?: (value: string) => void
 }
 
 export function InlineText({
@@ -44,6 +46,7 @@ export function InlineText({
   trailingAction,
   icon,
   autoFocus = false,
+  onEditingEnd,
 }: InlineTextProps) {
   const [editing, setEditing] = useState(autoFocus)
   const [draft, setDraft] = useState(value)
@@ -118,11 +121,13 @@ export function InlineText({
     if ((required && trimmed === '') || trimmed === value.trim()) {
       focusButtonOnExit.current = true
       setEditing(false)
+      onEditingEnd?.(value)
       return
     }
     onSave(trimmed)
     focusButtonOnExit.current = true
     setEditing(false)
+    onEditingEnd?.(trimmed)
   }
 
   function preventNextBlurCommit() {
@@ -133,6 +138,7 @@ export function InlineText({
     setDraft(value)
     focusButtonOnExit.current = true
     setEditing(false)
+    onEditingEnd?.(value)
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) {

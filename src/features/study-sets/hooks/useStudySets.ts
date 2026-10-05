@@ -52,6 +52,7 @@ export interface StudySetFormInput {
   description: string | null
   image: File | null
   currentImagePath: string | null
+  removeImage?: boolean
 }
 
 export function useUpdateStudySet(id: string) {
@@ -59,7 +60,13 @@ export function useUpdateStudySet(id: string) {
   const { user } = useAuth()
 
   return useMutation({
-    mutationFn: async ({ title, description, image, currentImagePath }: StudySetFormInput) => {
+    mutationFn: async ({
+      title,
+      description,
+      image,
+      currentImagePath,
+      removeImage,
+    }: StudySetFormInput) => {
       let imagePath = currentImagePath
 
       if (image) {
@@ -74,6 +81,9 @@ export function useUpdateStudySet(id: string) {
           }
           imagePath = newPath
         }
+      } else if (removeImage && currentImagePath) {
+        await deleteStudySetImages([currentImagePath]).catch(() => {})
+        imagePath = null
       }
 
       return updateStudySet(id, { title, description, image_path: imagePath })

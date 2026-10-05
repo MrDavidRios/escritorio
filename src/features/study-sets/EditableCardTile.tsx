@@ -1,8 +1,6 @@
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import type { StudyConfig } from '@/features/study/studyMode'
-import { exclusionReason } from '@/features/study/studyMode'
 import type { Card } from '@/types/card'
 import { CardTile } from './CardTile'
 import { DeleteCardDialog } from './DeleteCardDialog'
@@ -12,7 +10,6 @@ export function EditableCardTile({
   studySetId,
   ownerId,
   card,
-  config,
   imageUrl,
   onSaving,
   onSaved,
@@ -21,7 +18,6 @@ export function EditableCardTile({
   studySetId: string
   ownerId: string
   card: Card
-  config: StudyConfig
   imageUrl?: string
   onSaving: () => void
   onSaved: () => void
@@ -103,29 +99,27 @@ export function EditableCardTile({
       onSaveDefinition={(definition) => save({ definition })}
       hint={card.hint ?? ''}
       onSaveHint={(hint) => save({ hint })}
-      excludedReason={exclusionReason(card, config)}
-      cornerSlot={
-        <div className="absolute right-2 bottom-full z-10 hidden pb-2 group-hover:flex [@media(hover:none)]:flex">
-          <Tooltip>
-            <DeleteCardDialog
-              studySetId={studySetId}
-              card={card}
-              trigger={
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label="Delete card"
-                    className="bg-background shadow-sm [&_svg]:text-foreground/60 hover:bg-foreground/10"
-                  >
-                    <Trash2 />
-                  </Button>
-                </TooltipTrigger>
-              }
-            />
-            <TooltipContent>Delete card</TooltipContent>
-          </Tooltip>
-        </div>
+      collapseEmptyFields
+      actions={
+        <Tooltip>
+          <DeleteCardDialog
+            studySetId={studySetId}
+            card={card}
+            trigger={
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="Delete card"
+                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 />
+                </Button>
+              </TooltipTrigger>
+            }
+          />
+          <TooltipContent side="right">Delete card</TooltipContent>
+        </Tooltip>
       }
     />
   )

@@ -1,9 +1,10 @@
-import { ImageIcon, Loader2, Play, RefreshCw } from 'lucide-react'
+import { ImageIcon, Loader2, Play, RefreshCw, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { InlineText } from '@/components/InlineText'
 import { SaveStatus } from '@/components/SaveStatus'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAuth } from '@/features/auth/AuthContext'
 import {
   loadStudySettings,
@@ -12,6 +13,7 @@ import {
 } from '@/features/study/studyConfigStorage'
 import { configFromFields, eligibleCards } from '@/features/study/studyMode'
 import { useSaveStatus } from '@/hooks/useSaveStatus'
+import { cn } from '@/lib/utils'
 import { CardsSection } from './CardsSection'
 import { DeleteStudySetDialog } from './DeleteStudySetDialog'
 import { useCards } from './hooks/useCards'
@@ -95,6 +97,28 @@ export function StudySetPage() {
     )
   }
 
+  // The mutation is shared with cover replacement; only a removal should
+  // put this button into its loading state.
+  const isRemovingCover = updateStudySet.isPending && Boolean(updateStudySet.variables?.removeImage)
+
+  function removeCover() {
+    if (!studySet) return
+    saveStatus.setSaving()
+    updateStudySet.mutate(
+      {
+        title: studySet.title,
+        description: studySet.description,
+        image: null,
+        currentImagePath: studySet.image_path,
+        removeImage: true,
+      },
+      {
+        onSuccess: saveStatus.setSaved,
+        onError: () => saveStatus.setError(removeCover),
+      },
+    )
+  }
+
   function handleBandPaste(e: React.ClipboardEvent) {
     const item = Array.from(e.clipboardData.items).find((i) => i.type.startsWith('image/'))
     const file = item?.getAsFile()
@@ -167,6 +191,31 @@ export function StudySetPage() {
                   Change
                 </span>
               </button>
+              {studySet.image_path && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label={isRemovingCover ? 'Removing cover image' : 'Remove cover image'}
+                      aria-busy={isRemovingCover}
+                      disabled={isRemovingCover}
+                      onClick={removeCover}
+                      className={cn(
+                        'bg-background ring-foreground/10 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:text-foreground pointer-events-none absolute -top-2 -right-2 z-10 flex size-6 items-center justify-center rounded-lg opacity-0 shadow-sm ring-1 transition-[opacity,color,background-color,scale] duration-150 group-focus-within/cover:pointer-events-auto group-focus-within/cover:opacity-100 group-hover/cover:pointer-events-auto group-hover/cover:opacity-100 active:scale-95 active:bg-[color-mix(in_oklch,var(--foreground)_12%,var(--muted))] [@media(hover:none)]:pointer-events-auto [@media(hover:none)]:opacity-100',
+                        // Stays visible while saving, even once the pointer leaves the cover.
+                        isRemovingCover && 'pointer-events-auto opacity-100',
+                      )}
+                    >
+                      {isRemovingCover ? (
+                        <Loader2 className="text-muted-foreground size-3.5 animate-spin" />
+                      ) : (
+                        <X className="size-3.5" />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Remove cover image</TooltipContent>
+                </Tooltip>
+              )}
               <input
                 ref={coverInputRef}
                 type="file"
@@ -232,7 +281,6 @@ export function StudySetPage() {
                     updateSettings({ ...settings!, study_mode: mode })
                   }}
                   eligibleCount={eligibleCards(cards ?? [], config!).length}
-                  totalCount={cardCount}
                   onStart={() => navigate(`/sets/${setId}/study`)}
                 />
               )}

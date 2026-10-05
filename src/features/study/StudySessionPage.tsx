@@ -12,6 +12,7 @@ import {
   buildQuestion,
   type Question,
   configFromStudySet,
+  noEligibleCardsMessage,
 } from './studyMode'
 import { useCompleteStudySession, useStartStudySession } from './hooks/useStudySessions'
 import { QuizCard } from './QuizCard'
@@ -126,7 +127,7 @@ export function StudySessionPage() {
 
       {questions && questions.length === 0 && (
         <p className="text-muted-foreground">
-          No cards are eligible for this set's current study mode.{' '}
+          {noEligibleCardsMessage(configFromFields(loadStudySettings(studySet!.id) ?? studySet!))}{' '}
           <Link to={`/sets/${setId}`} className="underline underline-offset-4">
             Change the mode or add cards
           </Link>

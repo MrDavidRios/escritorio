@@ -103,7 +103,7 @@ export function AddCardTile({
         }}
         className={cn(
           'border-input hover:bg-muted/40 focus-visible:bg-muted/40 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-center transition-colors duration-150',
-          empty ? 'col-span-full aspect-auto py-12' : 'aspect-[4/3]',
+          empty ? 'w-full py-12' : 'min-h-32 w-full',
         )}
       >
         <Plus className="text-muted-foreground size-6" />
@@ -137,7 +137,9 @@ export function AddCardTile({
           {error && <p className="text-destructive text-xs">{error}</p>}
           <div className="flex items-center gap-2">
             <Button type="button" size="sm" onClick={submit} disabled={createCard.isPending}>
-              {createCard.isPending && <Loader2 data-icon="inline-start" className="animate-spin" />}
+              {createCard.isPending && (
+                <Loader2 data-icon="inline-start" className="animate-spin" />
+              )}
               {createCard.isPending ? 'Adding…' : 'Add card'}
             </Button>
             <Button type="button" size="sm" variant="ghost" onClick={reset}>

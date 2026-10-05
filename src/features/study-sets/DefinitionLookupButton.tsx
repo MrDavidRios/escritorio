@@ -1,4 +1,4 @@
-import { Loader2, Search } from 'lucide-react'
+import { ExternalLink, Loader2, Search } from 'lucide-react'
 import { useRef, useState } from 'react'
 import {
   AlertDialog,
@@ -11,9 +11,17 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+} from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import { fetchEnglishDefinition, fetchSpanishDefinition } from './dictionaryApi'
+import { fetchEnglishDefinition, fetchSpanishDefinition, manualLookupLinks } from './dictionaryApi'
 
 type Language = 'es' | 'en'
 
@@ -45,7 +53,6 @@ export function DefinitionLookupButton({
 
     if (!es && !en) {
       setStatus('error')
-      setTimeout(() => setStatus((s) => (s === 'error' ? 'idle' : s)), 3000)
       return
     }
 
@@ -62,28 +69,66 @@ export function DefinitionLookupButton({
   const selectedDefinition = results?.[language] ?? null
 
   return (
-    <div className="relative shrink-0">
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Look up definition"
-            disabled={!term || status === 'loading'}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => void handleClick()}
-          >
-            {status === 'loading' ? <Loader2 className="animate-spin" /> : <Search />}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Insert definition from web</TooltipContent>
-      </Tooltip>
-      {status === 'error' && (
-        <span className="text-destructive absolute top-full right-0 mt-1 text-xs whitespace-nowrap">
-          No definition found
-        </span>
-      )}
+    <Popover
+      open={status === 'error'}
+      onOpenChange={(open) => {
+        if (!open) setStatus('idle')
+      }}
+    >
+      <PopoverAnchor className="shrink-0">
+        <Tooltip>
+          {/* Disabled buttons don't fire pointer events, so the tooltip hangs
+            off a wrapper; preventDefault keeps the field from blurring. */}
+          <TooltipTrigger asChild>
+            <span className="inline-flex" onMouseDown={(e) => e.preventDefault()}>
+              <Button
+                type="button"
+                variant="ghost"
+                // icon-xs (24px) matches InlineText's line box, so revealing
+                // this button on edit doesn't grow the row.
+                size="icon-xs"
+                aria-label={
+                  term ? 'Look up definition' : 'Add a Spanish term to look up a definition'
+                }
+                disabled={!term || status === 'loading'}
+                onClick={() => void handleClick()}
+              >
+                {status === 'loading' ? <Loader2 className="animate-spin" /> : <Search />}
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            {term ? 'Insert definition from web' : 'Add a Spanish term to look up a definition'}
+          </TooltipContent>
+        </Tooltip>
+      </PopoverAnchor>
+      <PopoverContent
+        align="end"
+        role="status"
+        // Keep focus in the definition field: moving it would blur-commit
+        // and end editing, unmounting this popover with it.
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onMouseDown={(e) => e.preventDefault()}
+      >
+        <PopoverHeader>
+          <PopoverTitle>No definition found for &quot;{term}&quot;</PopoverTitle>
+          <PopoverDescription>
+            {term.includes(' ')
+              ? 'Lookups work best on single words. Try a dictionary directly:'
+              : 'Try looking it up directly:'}
+          </PopoverDescription>
+        </PopoverHeader>
+        <div className="flex flex-wrap gap-1.5">
+          {manualLookupLinks(term).map((link) => (
+            <Button key={link.label} asChild variant="outline" size="xs">
+              <a href={link.href} target="_blank" rel="noreferrer">
+                {link.label}
+                <ExternalLink data-icon="inline-end" />
+              </a>
+            </Button>
+          ))}
+        </div>
+      </PopoverContent>
       <AlertDialog
         open={results !== null}
         onOpenChange={(open) => {
@@ -142,6 +187,6 @@ export function DefinitionLookupButton({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </Popover>
   )
 }
