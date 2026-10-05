@@ -1,8 +1,7 @@
 import { ImageIcon } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import type { StudySet } from '@/types/studySet'
-import { useStudySetFallbackImagePaths } from './hooks/useStudySetFallbackImagePaths'
+import type { StudySetSummary } from '@/types/studySet'
 import { useSignedImageUrls } from './hooks/useSignedImageUrls'
 
 const PLACEHOLDER_BOX =
@@ -38,12 +37,12 @@ function FadeImage({ className, ...props }: React.ComponentProps<'img'>) {
  * cards every time, not re-randomized per render); otherwise a plain
  * placeholder icon.
  */
-export function StudySetThumbnail({ studySet }: { studySet: StudySet }) {
+export function StudySetThumbnail({ studySet }: { studySet: StudySetSummary }) {
   const hasCustomImage = !!studySet.image_path
   const customImage = useSignedImageUrls(hasCustomImage ? [studySet.image_path!] : [])
 
-  const fallbackPaths = useStudySetFallbackImagePaths(studySet.id, !hasCustomImage)
-  const fallbackImages = useSignedImageUrls(fallbackPaths.data ?? [])
+  const fallbackPaths = hasCustomImage ? [] : studySet.fallback_image_paths
+  const fallbackImages = useSignedImageUrls(fallbackPaths)
 
   if (hasCustomImage) {
     const url = customImage.data?.[studySet.image_path!]
@@ -58,8 +57,7 @@ export function StudySetThumbnail({ studySet }: { studySet: StudySet }) {
     )
   }
 
-  const paths = fallbackPaths.data ?? []
-  const urls = paths
+  const urls = fallbackPaths
     .map((path) => fallbackImages.data?.[path])
     .filter((url): url is string => !!url)
 
