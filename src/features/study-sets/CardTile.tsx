@@ -269,11 +269,10 @@ export function CardTile({
             icon={<BookOpen />}
             autoFocus={openField === 'definition'}
             onEditingEnd={(result) => closeField('definition', result)}
-            trailingAction={({ draft, setDraft, preventNextBlurCommit, commitAndExit }) => (
+            trailingAction={({ draft, preventNextBlurCommit, commitAndExit }) => (
               <DefinitionLookupButton
                 spanishTerm={spanishTerm}
                 draft={draft}
-                onResult={setDraft}
                 preventNextBlurCommit={preventNextBlurCommit}
                 commitAndExit={commitAndExit}
               />

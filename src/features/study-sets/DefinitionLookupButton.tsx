@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { describeDefinitionChoice } from './definitionChoice'
 import { fetchEnglishDefinition, fetchSpanishDefinition, manualLookupLinks } from './dictionaryApi'
 
 type Language = 'es' | 'en'
@@ -28,13 +29,11 @@ type Language = 'es' | 'en'
 export function DefinitionLookupButton({
   spanishTerm,
   draft,
-  onResult,
   preventNextBlurCommit,
   commitAndExit,
 }: {
   spanishTerm: string
   draft: string
-  onResult: (definition: string) => void
   preventNextBlurCommit: () => void
   commitAndExit: (value?: string) => void
 }) {
@@ -57,16 +56,13 @@ export function DefinitionLookupButton({
     }
 
     setLanguage(es ? 'es' : 'en')
-    if (draft.trim()) {
-      preventNextBlurCommit()
-      setResults({ es, en })
-    } else {
-      onResult(es ?? en ?? '')
-    }
+    preventNextBlurCommit()
+    setResults({ es, en })
   }
 
   const term = spanishTerm.trim()
   const selectedDefinition = results?.[language] ?? null
+  const choice = describeDefinitionChoice(draft, term)
 
   return (
     <Popover
@@ -140,11 +136,8 @@ export function DefinitionLookupButton({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Replace existing definition?</AlertDialogTitle>
-            <AlertDialogDescription>
-              A definition was found for &quot;{term}&quot;. Replacing will overwrite what
-              you&apos;ve typed.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{choice.title}</AlertDialogTitle>
+            <AlertDialogDescription>{choice.description}</AlertDialogDescription>
           </AlertDialogHeader>
           {results && (
             <div className="flex flex-col gap-3">
@@ -168,8 +161,12 @@ export function DefinitionLookupButton({
                 ))}
               </div>
               <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
-                <span className="text-muted-foreground font-medium">Current</span>
-                <span className="text-muted-foreground line-through">{draft}</span>
+                {choice.showsCurrent && (
+                  <>
+                    <span className="text-muted-foreground font-medium">Current</span>
+                    <span className="text-muted-foreground line-through">{draft}</span>
+                  </>
+                )}
                 <span className="font-medium">New</span>
                 <span>{selectedDefinition}</span>
               </div>
@@ -182,7 +179,7 @@ export function DefinitionLookupButton({
                 pendingReplacement.current = selectedDefinition ?? undefined
               }}
             >
-              Replace
+              {choice.confirmLabel}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
