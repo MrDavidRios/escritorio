@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CardTile } from './CardTile'
-import { cardSchema } from './cardSchema'
+import { REQUIRED_CONTENT_MESSAGE, cardSchema, hasRequiredContent } from './cardSchema'
 import { useCreateCard } from './hooks/useCards'
 import { extractDroppedImageFile, extractPastedImageFile } from './imageDrop'
 
@@ -60,8 +60,14 @@ export function AddCardTile({
       setError(parsed.error.issues[0].message)
       return
     }
-    if (!image && !parsed.data.definition) {
-      setError('Add an image or a definition')
+    if (
+      !hasRequiredContent({
+        hasImage: Boolean(image),
+        definition: parsed.data.definition,
+        englishEquivalent: parsed.data.english_equivalent,
+      })
+    ) {
+      setError(REQUIRED_CONTENT_MESSAGE)
       return
     }
     setError(null)

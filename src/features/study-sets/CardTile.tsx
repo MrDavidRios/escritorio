@@ -30,8 +30,12 @@ export type CardTileProps = {
   autoFocusSpanishTerm?: boolean
   englishEquivalent: string
   onSaveEnglishEquivalent: (value: string) => void
+  /** Reverts clearing the English equivalent, e.g. when it's the card's only content. */
+  englishEquivalentRequired?: boolean
   definition: string
   onSaveDefinition: (value: string) => void
+  /** Reverts clearing the definition, e.g. when it's the card's only content. */
+  definitionRequired?: boolean
   hint: string
   onSaveHint: (value: string) => void
   /** Extra buttons at the end of the hover toolbar (collapsed tiles only). */
@@ -64,8 +68,10 @@ export function CardTile({
   autoFocusSpanishTerm = false,
   englishEquivalent,
   onSaveEnglishEquivalent,
+  englishEquivalentRequired = false,
   definition,
   onSaveDefinition,
+  definitionRequired = false,
   hint,
   onSaveHint,
   actions,
@@ -252,6 +258,7 @@ export function CardTile({
             onSave={onSaveEnglishEquivalent}
             placeholder={OPTIONAL_FIELD_LABELS.english.long}
             label="Card English equivalent"
+            required={englishEquivalentRequired}
             className="text-muted-foreground text-sm"
             icon={<Languages />}
             autoFocus={openField === 'english'}
@@ -264,6 +271,7 @@ export function CardTile({
             onSave={onSaveDefinition}
             placeholder={OPTIONAL_FIELD_LABELS.definition.long}
             label="Card definition"
+            required={definitionRequired}
             multiline
             className="text-muted-foreground text-sm"
             icon={<BookOpen />}

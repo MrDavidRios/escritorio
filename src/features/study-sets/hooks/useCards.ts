@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cardImagePath, deleteCardImages, uploadCardImage } from '@/api/cardImages'
 import { createCard, deleteCard, listCards, updateCard } from '@/api/cards'
 import type { Card } from '@/types/card'
+import { REQUIRED_CONTENT_MESSAGE, hasRequiredContent } from '../cardSchema'
 import { optimizeImage } from '../optimizeImage'
 
 export function cardsKey(studySetId: string) {
@@ -35,8 +36,14 @@ export function useCreateCard(studySetId: string, ownerId: string) {
       english_equivalent,
       definition,
     }: CardFormInput) => {
-      if (!rawImage && !definition.trim()) {
-        throw new Error('An image or a definition is required')
+      if (
+        !hasRequiredContent({
+          hasImage: Boolean(rawImage),
+          definition,
+          englishEquivalent: english_equivalent,
+        })
+      ) {
+        throw new Error(REQUIRED_CONTENT_MESSAGE)
       }
 
       // Existing cards determine the new card's position (appended to the
