@@ -100,7 +100,9 @@ export function StudyModePicker({
       )}
 
       {!canStart && (
-        <p className="text-muted-foreground text-xs sm:text-right">
+        // w-0 + min-w-full: wrap to the controls' width rather than widening
+        // the column, so the study set's title and description keep their room.
+        <p className="text-muted-foreground w-0 min-w-full text-xs sm:text-right">
           {noEligibleCardsMessage(config)}
         </p>
       )}

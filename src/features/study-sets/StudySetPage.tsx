@@ -174,7 +174,7 @@ export function StudySetPage() {
             className="grid grid-cols-[auto_minmax(0,1fr)] items-end gap-x-4 gap-y-1 border-b pb-6 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-x-6"
             onPaste={handleBandPaste}
           >
-            <div className="group/cover relative col-start-1 row-start-1 size-20 self-end sm:row-span-3 sm:size-28">
+            <div className="group/cover relative col-start-1 row-start-1 size-20 self-end sm:size-28">
               <button
                 type="button"
                 aria-label="Change cover image"
@@ -230,32 +230,37 @@ export function StudySetPage() {
               />
             </div>
 
-            <InlineText
-              value={studySet.title}
-              onSave={(title) => patch({ title })}
-              placeholder="Untitled study set"
-              label="Study set title"
-              as="h1"
-              required
-              className="col-start-2 row-start-1 self-end text-3xl font-semibold tracking-tight"
-            />
+            {/* On mobile these sit in the band's grid (the description and meta
+                span under the cover); from sm up they're one column the height of
+                the cover, so the taller study controls can't stretch their rows. */}
+            <div className="contents sm:col-start-2 sm:row-start-1 sm:flex sm:min-h-28 sm:flex-col sm:gap-1 sm:self-end">
+              <InlineText
+                value={studySet.title}
+                onSave={(title) => patch({ title })}
+                placeholder="Untitled study set"
+                label="Study set title"
+                as="h1"
+                required
+                className="col-start-2 row-start-1 self-end text-3xl font-semibold tracking-tight sm:self-auto"
+              />
 
-            <InlineText
-              value={studySet.description ?? ''}
-              onSave={(description) => patch({ description })}
-              placeholder="Add a description"
-              label="Study set description"
-              as="p"
-              multiline
-              className="text-muted-foreground col-span-2 row-start-2 sm:col-span-1 sm:col-start-2"
-            />
+              <InlineText
+                value={studySet.description ?? ''}
+                onSave={(description) => patch({ description })}
+                placeholder="Add a description"
+                label="Study set description"
+                as="p"
+                multiline
+                className="text-muted-foreground col-span-2 row-start-2"
+              />
 
-            <p className="text-muted-foreground col-span-2 row-start-3 mt-2 text-sm sm:col-span-1 sm:col-start-2">
-              {cardCount === 1 ? '1 card' : `${cardCount} cards`} · edited{' '}
-              {relativeTime(studySet.updated_at)}
-            </p>
+              <p className="text-muted-foreground col-span-2 row-start-3 mt-2 text-sm sm:mt-auto sm:pt-2">
+                {cardCount === 1 ? '1 card' : `${cardCount} cards`} · edited{' '}
+                {relativeTime(studySet.updated_at)}
+              </p>
+            </div>
 
-            <div className="col-span-2 row-start-4 mt-4 flex flex-col items-stretch gap-2 sm:col-span-1 sm:col-start-3 sm:row-span-3 sm:row-start-1 sm:mt-0 sm:items-end sm:self-end">
+            <div className="col-span-2 row-start-4 mt-4 flex flex-col items-stretch gap-2 sm:col-span-1 sm:col-start-3 sm:row-start-1 sm:mt-0 sm:items-end sm:self-end">
               <SaveStatus status={saveStatus.status} onRetry={saveStatus.retry} />
               {cardCount === 0 ? (
                 <>
