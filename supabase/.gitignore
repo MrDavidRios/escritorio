@@ -1,0 +1,11 @@
+# Supabase
+.branches
+.temp
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local
+
+# Generated from config.local.toml by the db:* scripts; never commit (see config.local.toml)
+config.toml

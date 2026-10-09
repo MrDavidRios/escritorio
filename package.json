@@ -10,7 +10,12 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:config": "cp supabase/config.local.toml supabase/config.toml",
+    "db:start": "bun run db:config && supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "bun run db:config && supabase db reset",
+    "db:status": "supabase status"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.8.0",
@@ -41,6 +46,7 @@
     "oxlint": "^1.81.0",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "supabase": "^2.120.0",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.0"
