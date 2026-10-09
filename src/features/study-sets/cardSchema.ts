@@ -8,3 +8,21 @@ export const cardSchema = z.object({
 })
 
 export type CardFormValues = z.infer<typeof cardSchema>
+
+export const REQUIRED_CONTENT_MESSAGE = 'Add an image, a definition, or an English equivalent'
+
+/**
+ * Mirrors the `cards_content_required` DB constraint: a card needs at
+ * least one of an image, a definition, or an English equivalent.
+ */
+export function hasRequiredContent({
+  hasImage,
+  definition,
+  englishEquivalent,
+}: {
+  hasImage: boolean
+  definition: string | null
+  englishEquivalent: string | null
+}): boolean {
+  return hasImage || Boolean(definition?.trim()) || Boolean(englishEquivalent?.trim())
+}
