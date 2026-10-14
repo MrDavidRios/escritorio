@@ -23,6 +23,7 @@ import {
 export function TypedAnswerQuiz<G extends GradeOutcome>({
   prompt,
   expectedAnswer,
+  answerLang,
   showAccentPad,
   grade,
   onResolved,
@@ -30,6 +31,8 @@ export function TypedAnswerQuiz<G extends GradeOutcome>({
 }: {
   prompt: ReactNode
   expectedAnswer: string
+  /** Language code of the expected answer, so screen readers pronounce it correctly. */
+  answerLang?: string
   showAccentPad: boolean
   grade: (typed: string) => Promise<G>
   onResolved: (resolution: Resolution<G>) => void
@@ -102,7 +105,7 @@ export function TypedAnswerQuiz<G extends GradeOutcome>({
         )}
         {feedback?.kind === 'revealed' && (
           <p className="text-destructive text-sm font-medium">
-            Not quite. The answer was: {expectedAnswer}
+            Not quite. The answer was: <span lang={answerLang}>{expectedAnswer}</span>
           </p>
         )}
       </div>

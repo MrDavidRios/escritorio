@@ -81,6 +81,7 @@ export function QuizCard({
     <TypedAnswerQuiz
       prompt={prompt}
       expectedAnswer={question.expectedAnswer}
+      answerLang={question.answerLanguage}
       showAccentPad={question.answerLanguage === 'es'}
       grade={async (typed) => ({ correct: isAnswerCorrect(typed, question.expectedAnswer) })}
       onResolved={({ correct, attemptCount }) => {

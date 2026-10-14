@@ -50,6 +50,7 @@ export function PhraseQuizCard({
     <TypedAnswerQuiz<PhraseOutcome>
       prompt={prompt}
       expectedAnswer={phrase.spanish}
+      answerLang="es"
       showAccentPad
       grade={async (typed) => {
         const grade = await gradePhrase(typed, phrase, callGradePhrase)
