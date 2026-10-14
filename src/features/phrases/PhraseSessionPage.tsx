@@ -117,7 +117,9 @@ export function PhraseSessionPage({ mode }: { mode: SessionMode }) {
 
       {saveFailed && (
         <p className="border-destructive/30 bg-destructive/5 text-destructive rounded-lg border p-3 text-sm">
-          Couldn't save a result. That phrase will stay due.
+          {mode === 'review'
+            ? "Couldn't save a result. That phrase will stay due."
+            : "Couldn't save a practice result."}
         </p>
       )}
 

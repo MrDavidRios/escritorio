@@ -16,7 +16,7 @@ import { StudySetThumbnail } from './StudySetThumbnail'
 
 export function DashboardPage() {
   const { data: studySets, isLoading, isError, refetch, isRefetching } = useStudySets()
-  const { data: phrases } = usePhrases()
+  const { data: phrases, isError: phrasesError } = usePhrases()
   const { data: settings, isError: settingsError } = useUserSettings()
   const phrasesDue = useMemo(() => {
     // Wait for settings (or their failure) so the count never flashes the default cap.
@@ -34,7 +34,7 @@ export function DashboardPage() {
       <IdiomOfTheDayBanner />
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        <PhrasesTile dueCount={phrasesDue} />
+        <PhrasesTile dueCount={phrasesDue} error={phrasesError} />
       </div>
 
       <h1 className="text-xl font-semibold">Your study sets</h1>

@@ -2,8 +2,14 @@ import { ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 
-/** Dashboard entry to /phrases. `dueCount` is null while loading. */
-export function PhrasesTile({ dueCount }: { dueCount: number | null }) {
+/** Dashboard entry to /phrases. `dueCount` is null while loading; `error` shows a neutral fallback. */
+export function PhrasesTile({
+  dueCount,
+  error = false,
+}: {
+  dueCount: number | null
+  error?: boolean
+}) {
   return (
     <Link
       to="/phrases"
@@ -14,11 +20,13 @@ export function PhrasesTile({ dueCount }: { dueCount: number | null }) {
           <div className="min-w-0 flex-1">
             <CardTitle>Phrases</CardTitle>
             <p className="text-muted-foreground mt-1 text-sm">
-              {dueCount === null
-                ? 'Loading…'
-                : dueCount === 0
-                  ? 'All caught up today'
-                  : `${dueCount} due today`}
+              {error
+                ? 'Open your phrases'
+                : dueCount === null
+                  ? 'Loading…'
+                  : dueCount === 0
+                    ? 'All caught up today'
+                    : `${dueCount} due today`}
             </p>
           </div>
           <ChevronRight aria-hidden className="text-muted-foreground shrink-0" />
