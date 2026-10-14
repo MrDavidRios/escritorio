@@ -80,7 +80,7 @@ export function TypedAnswerQuiz<G extends GradeOutcome>({
         />
       </div>
 
-      <div aria-live="polite">
+      <div aria-live="polite" className="contents">
         {feedback?.kind === 'correct' && (
           <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
             {feedback.note ?? 'Correct!'}
