@@ -1,8 +1,11 @@
 // grade-phrase: a stateless proxy that asks Jev whether a typed Spanish
-// phrase is acceptable, keeping TYPESAFE_API_KEY off the client. Callers
-// must be signed in (Supabase verifies the JWT before this runs). It never
-// touches the database. See the phrase spaced repetition spec.
+// phrase is acceptable, keeping TYPESAFE_API_KEY off the client. Supabase's
+// verify_jwt checks the token signature, but the public anon key is also a
+// valid JWT, so we additionally require a signed-in user's token (role
+// 'authenticated'; see auth.ts). It never touches the database. See the
+// phrase spaced repetition spec.
 
+import { isSignedInUser } from './auth.ts'
 import { buildJevPayload, JEV_URL, parseGradeRequest, parseJevResponse } from './jev.ts'
 
 // Below the client's 4 s budget, so the client sees a clean 502 rather
@@ -24,6 +27,9 @@ function json(body: unknown, status: number): Response {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  if (!isSignedInUser(req.headers.get('Authorization'))) {
+    return json({ error: 'sign in required' }, 401)
+  }
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405)
 
   const body = await req.json().catch(() => null)
@@ -54,7 +60,17 @@ Deno.serve(async (req) => {
     return json({ error: 'grader failed' }, 502)
   }
 
-  const grade = parseJevResponse(await response.json().catch(() => null))
-  if (!grade) return json({ error: 'grader failed' }, 502)
+  const raw = await response.text().catch(() => '')
+  let parsed: unknown = null
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    // falls through to the unparseable log below
+  }
+  const grade = parseJevResponse(parsed)
+  if (!grade) {
+    console.error('Unparseable Jev response:', raw.slice(0, 500))
+    return json({ error: 'grader failed' }, 502)
+  }
   return json(grade, 200)
 })
