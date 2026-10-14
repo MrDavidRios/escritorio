@@ -279,7 +279,7 @@ All pure, from the user's phrases + settings + local `today`.
   (overdue counted on today), plus projected new phrases. The projection
   releases the remaining queue `new_phrases_per_day` per day, starting
   with today's remaining allowance.
-- Returns `{ date, reviews, new }` per day.
+- Returns `{ date, reviews, newPhrases }` per day.
 - It's a forecast of the current schedule. It doesn't simulate future
   review outcomes.
 
