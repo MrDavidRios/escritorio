@@ -17,6 +17,12 @@ export function cardImagePath(ownerId: string, cardId: string, filename: string)
   return `${ownerId}/${cardId}.${extensionOf(filename)}`
 }
 
+// Phrase images share the bucket; the storage policies only check that the
+// first folder is the owner's id, so a phrases/ subfolder needs no new policy.
+export function phraseImagePath(ownerId: string, phraseId: string, filename: string): string {
+  return `${ownerId}/phrases/${phraseId}.${extensionOf(filename)}`
+}
+
 export async function uploadCardImage(
   path: string,
   file: File,
