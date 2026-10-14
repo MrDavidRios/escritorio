@@ -58,10 +58,9 @@ export async function gradePhrase(
     }, timeoutMs)
   })
 
-  const call = callJev(
-    { english: phrase.english, expected: phrase.spanish, typed },
-    controller.signal,
-  )
+  // The async wrapper turns a synchronous throw into a rejection handled below.
+  const call = (async () =>
+    callJev({ english: phrase.english, expected: phrase.spanish, typed }, controller.signal))()
   // If the timeout wins, the abandoned call may still reject later.
   call.catch(() => {})
 

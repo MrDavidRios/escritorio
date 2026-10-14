@@ -74,6 +74,20 @@ describe('gradePhrase', () => {
     })
   })
 
+  it('falls back when the grader throws synchronously, leaving no timer behind', async () => {
+    vi.useFakeTimers()
+    const callJev: JevGrader = () => {
+      throw new Error('boom')
+    }
+    await expect(gradePhrase('meter la pta', phrase, callJev)).resolves.toEqual({
+      correct: false,
+      verdict: 'wrong',
+      source: 'fallback',
+      jevVerdict: null,
+    })
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
   it('falls back at the timeout instead of waiting forever, and aborts the call', async () => {
     vi.useFakeTimers()
     let seenSignal: AbortSignal | undefined
