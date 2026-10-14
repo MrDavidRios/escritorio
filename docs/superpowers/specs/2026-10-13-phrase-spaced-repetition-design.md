@@ -37,7 +37,7 @@ Requirements:
 - **SRS** — spaced repetition system: each phrase has a next-due date
   that moves further out every time it's recalled correctly.
 - **SM-2** — the classic SRS formula (basis of Anki's scheduler). Each
-  phrase stores an *interval* (days until next due) and an *ease*
+  phrase stores an _interval_ (days until next due) and an _ease_
   (multiplier for interval growth). We use an SM-2-style variant,
   specified under Scheduling.
 - **Due session** — a review of today's due phrases. Updates the
@@ -221,7 +221,7 @@ record_phrase_review(
 4. Otherwise use Jev's verdict, `grade_source = jev`.
 
 `minor_slip` and `valid_variant` count as correct. Feedback always
-shows the exact expected form ("Accepted. Exact form: *meter la pata*").
+shows the exact expected form ("Accepted. Exact form: _meter la pata_").
 
 At session start, fire one background request to `grade-phrase` to
 warm a cold Edge Function.
@@ -230,11 +230,11 @@ warm a cold Edge Function.
 
 Up to 3 attempts per phrase, as in the existing quiz.
 
-| Outcome | Rating |
-|---|---|
-| Correct on 1st try via `exact` or `valid_variant` | good |
-| `minor_slip` on any try, or correct on 2nd/3rd try | hard |
-| Revealed after 3 misses | again |
+| Outcome                                            | Rating |
+| -------------------------------------------------- | ------ |
+| Correct on 1st try via `exact` or `valid_variant`  | good   |
+| `minor_slip` on any try, or correct on 2nd/3rd try | hard   |
+| Revealed after 3 misses                            | again  |
 
 ## Scheduling (`src/features/phrases/scheduler.ts`)
 
@@ -267,7 +267,7 @@ All pure, from the user's phrases + settings + local `today`.
 - **Due today** = phrases with `due_on <= today` (overdue rolls into
   today), plus **new today** = the oldest un-introduced phrases (by
   `created_at`), up to `new_phrases_per_day − (phrases with
-  introduced_on = today)`.
+introduced_on = today)`.
 - Order: due reviews first (most overdue first), then new phrases.
 - **Practice anyway** = the 10 introduced phrases with the soonest
   `due_on` (not due today). New phrases stay in their queue and are
@@ -287,7 +287,7 @@ All pure, from the user's phrases + settings + local `today`.
 
 ### Entry points
 
-- **Dashboard tile** "Phrases — *N* due today", linking to `/phrases`.
+- **Dashboard tile** "Phrases — _N_ due today", linking to `/phrases`.
 - **Idiom of the Day**: an "Add to my phrases" button that copies
   spanish/english/example and sets `idiom_id`. If the idiom is already
   in the collection, it shows "In your phrases ✓".
@@ -355,7 +355,7 @@ existing layout. `phraseImagePath` sits alongside `cardImagePath` in
     `workflow_dispatch`.
   - Steps: `supabase/setup-cli` → `deno test` for the function →
     `supabase functions deploy grade-phrase --project-ref
-    $SUPABASE_PROJECT_REF`.
+$SUPABASE_PROJECT_REF`.
   - Repo secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`.
 - **One-time setup**: set `TYPESAFE_API_KEY` as a Supabase function
   secret.
@@ -374,15 +374,15 @@ fallback covers it.
 
 ## Error handling
 
-| Failure | Behavior |
-|---|---|
-| Jev error / timeout / low confidence | Strict exact-match grading, `grade_source = fallback`. The session never blocks. |
-| `record_phrase_review` fails | Two retries, then a notice: "Couldn't save. This phrase will stay due." The session continues; the schedule didn't move. |
-| Duplicate save (retry, second tab) | The RPC refuses a scheduled review of a phrase that's not due. Duplicate practice logs are harmless. |
-| Midnight mid-session | The session uses the local date pinned at start. |
-| Phrase deleted mid-session | The RPC raises not found; the phrase is skipped. |
-| Adding an already-added idiom | The unique constraint catches it; the UI shows "In your phrases ✓". |
-| Image upload fails | Same behavior as card images. |
+| Failure                              | Behavior                                                                                                                 |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Jev error / timeout / low confidence | Strict exact-match grading, `grade_source = fallback`. The session never blocks.                                         |
+| `record_phrase_review` fails         | Two retries, then a notice: "Couldn't save. This phrase will stay due." The session continues; the schedule didn't move. |
+| Duplicate save (retry, second tab)   | The RPC refuses a scheduled review of a phrase that's not due. Duplicate practice logs are harmless.                     |
+| Midnight mid-session                 | The session uses the local date pinned at start.                                                                         |
+| Phrase deleted mid-session           | The RPC raises not found; the phrase is skipped.                                                                         |
+| Adding an already-added idiom        | The unique constraint catches it; the UI shows "In your phrases ✓".                                                      |
+| Image upload fails                   | Same behavior as card images.                                                                                            |
 
 ## Testing
 
@@ -402,5 +402,5 @@ fallback covers it.
 - **Database**: `bun run db:reset` locally. Check by hand that RLS
   isolates users and that `is_practice = true` never changes `phrases`.
 - **End to end**: the app against the local stack, with `supabase
-  functions serve` for grading. Run a due session, a practice session
+functions serve` for grading. Run a due session, a practice session
   and the calendar.

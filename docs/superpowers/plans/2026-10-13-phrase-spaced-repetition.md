@@ -5,6 +5,7 @@
 **Goal:** A per-user phrase collection, separate from study sets, that the learner reviews daily on an SM-2-style spaced-repetition schedule. Answers are typed and auto-graded with exact match, then Jev. The learner can practice ahead without changing the schedule and sees an upcoming-due calendar.
 
 **Architecture:**
+
 - A stateless Supabase Edge Function (`grade-phrase`) proxies Jev so the TypeSafe API key never reaches the browser.
 - All scheduling, queueing and forecasting are pure client-side TypeScript, unit-tested with vitest.
 - One Postgres RPC (`record_phrase_review`) atomically appends to the review log and updates a phrase's schedule. For practice reviews it only logs.
@@ -92,6 +93,7 @@ README.md                                         (modify) Edge Functions sectio
 ### Task 1: Phrase types, date helpers, and the scheduler
 
 **Files:**
+
 - Create: `src/types/phrase.ts`
 - Create: `src/features/phrases/dates.ts`
 - Create: `src/features/phrases/dates.test.ts`
@@ -99,6 +101,7 @@ README.md                                         (modify) Edge Functions sectio
 - Create: `src/features/phrases/scheduler.test.ts`
 
 **Interfaces:**
+
 - Consumes: `localDateKey(date: Date): string` from `@/features/idioms/idiomOfTheDay`
 - Produces:
   - `src/types/phrase.ts`: `DateKey`, `PhraseRating`, `PhraseGradeSource`, `JevVerdict`, `PhraseSchedule`, `Phrase`, `PhraseInput`, `UserSettings`
@@ -353,7 +356,9 @@ describe('nextSchedule', () => {
   })
 
   it('hard grows the interval by 1.2x, at least +1 day', () => {
-    expect(nextSchedule({ ...NEW, interval_days: 10, reps: 5 }, 'hard', TODAY).interval_days).toBe(12)
+    expect(nextSchedule({ ...NEW, interval_days: 10, reps: 5 }, 'hard', TODAY).interval_days).toBe(
+      12,
+    )
     expect(nextSchedule({ ...NEW, interval_days: 3, reps: 2 }, 'hard', TODAY).interval_days).toBe(4)
   })
 
@@ -363,14 +368,24 @@ describe('nextSchedule', () => {
   })
 
   it('never drops ease below 1.3', () => {
-    expect(nextSchedule({ ...NEW, ease: 1.4, interval_days: 5, reps: 4 }, 'again', TODAY).ease).toBe(1.3)
-    expect(nextSchedule({ ...NEW, ease: 1.35, interval_days: 5, reps: 4 }, 'hard', TODAY).ease).toBe(1.3)
+    expect(
+      nextSchedule({ ...NEW, ease: 1.4, interval_days: 5, reps: 4 }, 'again', TODAY).ease,
+    ).toBe(1.3)
+    expect(
+      nextSchedule({ ...NEW, ease: 1.35, interval_days: 5, reps: 4 }, 'hard', TODAY).ease,
+    ).toBe(1.3)
   })
 
   it('good recovers ease by 0.05, capped at 2.0', () => {
-    const recovering = nextSchedule({ ...NEW, ease: 1.7, interval_days: 10, reps: 5 }, 'good', TODAY)
+    const recovering = nextSchedule(
+      { ...NEW, ease: 1.7, interval_days: 10, reps: 5 },
+      'good',
+      TODAY,
+    )
     expect(recovering).toMatchObject({ ease: 1.75, interval_days: 17 })
-    expect(nextSchedule({ ...NEW, ease: 1.98, interval_days: 10, reps: 5 }, 'good', TODAY).ease).toBe(2)
+    expect(
+      nextSchedule({ ...NEW, ease: 1.98, interval_days: 10, reps: 5 }, 'good', TODAY).ease,
+    ).toBe(2)
   })
 
   it('relearning after a lapse multiplies by ease instead of replaying the steps', () => {
@@ -479,10 +494,12 @@ git commit -m "feat(phrases): add phrase types, date helpers, and SM-2-style sch
 ### Task 2: Phrase grading (exact → Jev → fallback) and rating
 
 **Files:**
+
 - Create: `src/features/phrases/grading.ts`
 - Create: `src/features/phrases/grading.test.ts`
 
 **Interfaces:**
+
 - Consumes: `isAnswerCorrect`, `normalizeAnswer` from `@/lib/grading`; `JevVerdict`, `PhraseGradeSource`, `PhraseRating` from `@/types/phrase`
 - Produces:
   - `JEV_CONFIDENCE_THRESHOLD = 0.6`, `JEV_TIMEOUT_MS = 4000`
@@ -611,7 +628,12 @@ describe('ratingFor', () => {
 
 describe('feedbackNote', () => {
   it('shows the exact form for slips and variants', () => {
-    const grade = { correct: true, verdict: 'minor_slip', source: 'jev', jevVerdict: 'minor_slip' } as const
+    const grade = {
+      correct: true,
+      verdict: 'minor_slip',
+      source: 'jev',
+      jevVerdict: 'minor_slip',
+    } as const
     expect(feedbackNote(grade, 'meter la pata')).toBe('Accepted. Exact form: meter la pata')
     expect(feedbackNote({ ...grade, verdict: 'valid_variant' }, 'meter la pata')).toBe(
       'Accepted. Exact form: meter la pata',
@@ -699,7 +721,10 @@ export async function gradePhrase(
     }, timeoutMs)
   })
 
-  const call = callJev({ english: phrase.english, expected: phrase.spanish, typed }, controller.signal)
+  const call = callJev(
+    { english: phrase.english, expected: phrase.spanish, typed },
+    controller.signal,
+  )
   // If the timeout wins, the abandoned call may still reject later.
   call.catch(() => {})
 
@@ -760,6 +785,7 @@ git commit -m "feat(phrases): grade typed phrases with exact match, Jev, and str
 ### Task 3: Daily queue and calendar forecast
 
 **Files:**
+
 - Create: `src/features/phrases/dailyQueue.ts`
 - Create: `src/features/phrases/dailyQueue.test.ts`
 - Create: `src/features/phrases/forecast.ts`
@@ -767,6 +793,7 @@ git commit -m "feat(phrases): grade typed phrases with exact match, Jev, and str
 - Create: `src/features/phrases/testPhrase.ts` (test fixture helper, imported only by tests)
 
 **Interfaces:**
+
 - Consumes: `Phrase`, `DateKey` (Task 1); `addDays` (Task 1)
 - Produces:
   - `PRACTICE_SESSION_SIZE = 10`
@@ -891,7 +918,9 @@ describe('practiceSet', () => {
   })
 
   it('defaults to 10 phrases', () => {
-    const many = Array.from({ length: 15 }, (_, i) => introduced(`2026-11-${String(i + 1).padStart(2, '0')}`))
+    const many = Array.from({ length: 15 }, (_, i) =>
+      introduced(`2026-11-${String(i + 1).padStart(2, '0')}`),
+    )
     expect(practiceSet(many, TODAY)).toHaveLength(10)
   })
 })
@@ -935,7 +964,9 @@ export function dueToday(
   today: DateKey,
   cap: number,
 ): { reviews: Phrase[]; fresh: Phrase[] } {
-  const reviews = phrases.filter((p) => p.due_on !== null && p.due_on <= today).sort(byDueThenCreated)
+  const reviews = phrases
+    .filter((p) => p.due_on !== null && p.due_on <= today)
+    .sort(byDueThenCreated)
   const fresh = phrases
     .filter((p) => p.due_on === null)
     .sort(byCreated)
@@ -1104,9 +1135,11 @@ git commit -m "feat(phrases): select today's due phrases and forecast upcoming d
 ### Task 4: Database migration
 
 **Files:**
+
 - Create: `supabase/migrations/0009_phrases.sql`
 
 **Interfaces:**
+
 - Consumes: existing `public.set_updated_at()`, `public.idioms`, `auth.users`
 - Produces (later tasks rely on these exact names):
   - tables `public.phrases`, `public.phrase_reviews`, `public.user_settings` with the columns in `src/types/phrase.ts`
@@ -1467,6 +1500,7 @@ git commit -m "feat(db): add phrases, phrase_reviews, user_settings, and record_
 ### Task 5: `grade-phrase` Edge Function, client caller, and deploy workflow
 
 **Files:**
+
 - Create: `supabase/functions/grade-phrase/jev.ts`
 - Create: `supabase/functions/grade-phrase/jev_test.ts`
 - Create: `supabase/functions/grade-phrase/index.ts`
@@ -1475,6 +1509,7 @@ git commit -m "feat(db): add phrases, phrase_reviews, user_settings, and record_
 - Modify: `README.md` (add an "Edge Functions" section after the migrations section)
 
 **Interfaces:**
+
 - Consumes: `JevGrader`, `JevGrade` from `@/features/phrases/grading` (Task 2)
 - Produces:
   - HTTP `POST /functions/v1/grade-phrase`, body `{ english, expected, typed }` → `200 { verdict, confidence }`. Body `{ warmup: true }` → `204`. `400` for an invalid body, `502` when Jev fails, `503` when the secret is missing.
@@ -1491,11 +1526,14 @@ import { assertEquals } from 'jsr:@std/assert@1'
 import { buildJevPayload, parseGradeRequest, parseJevResponse } from './jev.ts'
 
 Deno.test('parseGradeRequest accepts three non-empty strings', () => {
-  assertEquals(parseGradeRequest({ english: 'to blunder', expected: 'meter la pata', typed: 'meter la pta' }), {
-    english: 'to blunder',
-    expected: 'meter la pata',
-    typed: 'meter la pta',
-  })
+  assertEquals(
+    parseGradeRequest({ english: 'to blunder', expected: 'meter la pata', typed: 'meter la pta' }),
+    {
+      english: 'to blunder',
+      expected: 'meter la pata',
+      typed: 'meter la pta',
+    },
+  )
 })
 
 Deno.test('parseGradeRequest rejects missing, blank, non-string, or oversized fields', () => {
@@ -1507,7 +1545,11 @@ Deno.test('parseGradeRequest rejects missing, blank, non-string, or oversized fi
 })
 
 Deno.test('buildJevPayload asks one choice question over the four verdicts', () => {
-  const payload = buildJevPayload({ english: 'to blunder', expected: 'meter la pata', typed: 'meter la pta' })
+  const payload = buildJevPayload({
+    english: 'to blunder',
+    expected: 'meter la pata',
+    typed: 'meter la pta',
+  })
   assertEquals(payload.model, 'jev-latest')
   assertEquals(payload.state, {
     english_prompt: 'to blunder',
@@ -1527,14 +1569,19 @@ Deno.test('parseJevResponse reads the verdict answer', () => {
   assertEquals(
     parseJevResponse({
       model: 'jev-1.13',
-      answers: { verdict: { type: 'choice', choice: 'minor_slip', probabilities: {}, confidence: 0.82 } },
+      answers: {
+        verdict: { type: 'choice', choice: 'minor_slip', probabilities: {}, confidence: 0.82 },
+      },
     }),
     { verdict: 'minor_slip', confidence: 0.82 },
   )
 })
 
 Deno.test('parseJevResponse rejects unknown choices or malformed bodies', () => {
-  assertEquals(parseJevResponse({ answers: { verdict: { choice: 'maybe', confidence: 0.9 } } }), null)
+  assertEquals(
+    parseJevResponse({ answers: { verdict: { choice: 'maybe', confidence: 0.9 } } }),
+    null,
+  )
   assertEquals(parseJevResponse({ answers: { verdict: { choice: 'exact' } } }), null)
   assertEquals(parseJevResponse({}), null)
   assertEquals(parseJevResponse(null), null)
@@ -1639,8 +1686,9 @@ export function buildJevPayload(request: GradeRequest) {
 }
 
 export function parseJevResponse(json: unknown): GradeResponse | null {
-  const answer = (json as { answers?: { verdict?: { choice?: unknown; confidence?: unknown } } } | null)
-    ?.answers?.verdict
+  const answer = (
+    json as { answers?: { verdict?: { choice?: unknown; confidence?: unknown } } } | null
+  )?.answers?.verdict
   if (!answer) return null
   const { choice, confidence } = answer
   if (!VERDICTS.includes(choice as Verdict) || typeof confidence !== 'number') return null
@@ -1709,7 +1757,8 @@ Deno.serve(async (req) => {
   })
 
   if (!response?.ok) {
-    if (response) console.error('Jev responded', response.status, await response.text().catch(() => ''))
+    if (response)
+      console.error('Jev responded', response.status, await response.text().catch(() => ''))
     return json({ error: 'grader failed' }, 502)
   }
 
@@ -1847,12 +1896,14 @@ git commit -m "feat(phrases): add grade-phrase Edge Function proxying Jev, with 
 ### Task 6: Extract `TypedAnswerQuiz` and rebuild `QuizCard` on it
 
 **Files:**
+
 - Create: `src/components/typedAnswerState.ts`
 - Create: `src/components/typedAnswerState.test.ts`
 - Create: `src/components/TypedAnswerQuiz.tsx`
 - Modify: `src/features/study/QuizCard.tsx` (full rewrite below; external props unchanged)
 
 **Interfaces:**
+
 - Consumes: `AccentedCharPad`, `useCursorInsert`, shadcn `Button`/`Input`/`Label`
 - Produces:
   - `MAX_ATTEMPTS = 3`
@@ -1899,7 +1950,10 @@ describe('applyGrade', () => {
 
   it('asks for a retry with the attempts left, without resolving', () => {
     const { state, resolution } = applyGrade(INITIAL_ANSWER_STATE, 'x', wrong)
-    expect(state).toEqual({ attempts: 1, feedback: { kind: 'retry', attemptsLeft: MAX_ATTEMPTS - 1 } })
+    expect(state).toEqual({
+      attempts: 1,
+      feedback: { kind: 'retry', attemptsLeft: MAX_ATTEMPTS - 1 },
+    })
     expect(isLocked(state)).toBe(false)
     expect(resolution).toBeNull()
   })
@@ -2223,6 +2277,7 @@ Run: `bun run test && bun run lint && bun run build`
 Expected: all pass.
 
 Then run `bun run dev`, open any study set, and start a session. Check the following:
+
 - a correct answer shows "Correct!" and "Next"
 - a wrong answer shows "Not quite. 2 attempts left." and clears the input
 - three misses reveal the answer
@@ -2242,6 +2297,7 @@ git commit -m "refactor(study): extract TypedAnswerQuiz from QuizCard for reuse"
 ### Task 7: Phrase data layer (API modules and query hooks)
 
 **Files:**
+
 - Modify: `src/api/cardImages.ts` (add `phraseImagePath`)
 - Create: `src/api/cardImages.test.ts`
 - Create: `src/api/phrases.ts`
@@ -2252,6 +2308,7 @@ git commit -m "refactor(study): extract TypedAnswerQuiz from QuizCard for reuse"
 - Create: `src/features/phrases/hooks/useRecordPhraseReview.ts`
 
 **Interfaces:**
+
 - Consumes: Task 1 types, Task 2 `JevVerdict`/`PhraseGradeSource`, Task 1 `ScheduleUpdate`, Task 4 table/RPC names and SQLSTATEs, existing `uploadCardImage`/`deleteCardImages`/`optimizeImage`
 - Produces:
   - `phraseImagePath(ownerId: string, phraseId: string, filename: string): string`
@@ -2446,7 +2503,13 @@ export async function recordPhraseReview(input: RecordPhraseReviewInput): Promis
 ```ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { deleteCardImages, phraseImagePath, uploadCardImage } from '@/api/cardImages'
-import { addIdiomAsPhrase, createPhrase, deletePhrase, listPhrases, updatePhrase } from '@/api/phrases'
+import {
+  addIdiomAsPhrase,
+  createPhrase,
+  deletePhrase,
+  listPhrases,
+  updatePhrase,
+} from '@/api/phrases'
 import { optimizeImage } from '@/features/study-sets/optimizeImage'
 import type { Phrase } from '@/types/phrase'
 
@@ -2634,6 +2697,7 @@ git commit -m "feat(phrases): add phrase, settings, and review data layer" -m "C
 ### Task 8: `/phrases` page (today panel, calendar, list, form, setting)
 
 **Files:**
+
 - Create: `src/features/phrases/phraseSchema.ts`
 - Create: `src/features/phrases/phraseSchema.test.ts`
 - Create: `src/features/phrases/TodayPanel.tsx`
@@ -2646,6 +2710,7 @@ git commit -m "feat(phrases): add phrase, settings, and review data layer" -m "C
 - Modify: `src/app/router.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 1 date helpers; Task 3 `dueToday`, `practiceSet`, `forecast`, `FORECAST_DAYS`, `nextBusyDay`, `ForecastDay`; Task 7 hooks and `DEFAULT_NEW_PHRASES_PER_DAY`; `useSignedImageUrls`; `Calendar`/`CalendarDayButton`; `extractDroppedImageFile`/`extractPastedImageFile`; `IMAGE_ACCEPT`
 - Produces: `phraseSchema`, `type PhraseFormValues`; components `TodayPanel`, `PhraseCalendar`, `PhraseList`, `PhraseImageField`, `PhraseFormDialog`, `NewPerDaySetting`, `PhrasesPage`; route `/phrases`
 
@@ -2661,7 +2726,9 @@ describe('phraseSchema', () => {
   it('requires Spanish and English, trimmed', () => {
     expect(phraseSchema.safeParse({ spanish: '  ', english: 'x', example: '' }).success).toBe(false)
     expect(phraseSchema.safeParse({ spanish: 'x', english: ' ', example: '' }).success).toBe(false)
-    expect(phraseSchema.parse({ spanish: ' meter la pata ', english: ' to blunder ', example: '' })).toEqual({
+    expect(
+      phraseSchema.parse({ spanish: ' meter la pata ', english: ' to blunder ', example: '' }),
+    ).toEqual({
       spanish: 'meter la pata',
       english: 'to blunder',
       example: '',
@@ -2669,9 +2736,15 @@ describe('phraseSchema', () => {
   })
 
   it('caps lengths so a typed answer can always be stored', () => {
-    expect(phraseSchema.safeParse({ spanish: 'x'.repeat(201), english: 'y', example: '' }).success).toBe(false)
-    expect(phraseSchema.safeParse({ spanish: 'x', english: 'y'.repeat(301), example: '' }).success).toBe(false)
-    expect(phraseSchema.safeParse({ spanish: 'x', english: 'y', example: 'z'.repeat(501) }).success).toBe(false)
+    expect(
+      phraseSchema.safeParse({ spanish: 'x'.repeat(201), english: 'y', example: '' }).success,
+    ).toBe(false)
+    expect(
+      phraseSchema.safeParse({ spanish: 'x', english: 'y'.repeat(301), example: '' }).success,
+    ).toBe(false)
+    expect(
+      phraseSchema.safeParse({ spanish: 'x', english: 'y', example: 'z'.repeat(501) }).success,
+    ).toBe(false)
   })
 })
 ```
@@ -2687,8 +2760,16 @@ Expected: FAIL. `./phraseSchema` doesn't resolve.
 import { z } from 'zod'
 
 export const phraseSchema = z.object({
-  spanish: z.string().trim().min(1, 'Enter the Spanish phrase').max(200, 'Keep it under 200 characters'),
-  english: z.string().trim().min(1, 'Enter the English meaning').max(300, 'Keep it under 300 characters'),
+  spanish: z
+    .string()
+    .trim()
+    .min(1, 'Enter the Spanish phrase')
+    .max(200, 'Keep it under 200 characters'),
+  english: z
+    .string()
+    .trim()
+    .min(1, 'Enter the English meaning')
+    .max(300, 'Keep it under 300 characters'),
   example: z.string().trim().max(500, 'Keep it under 500 characters'),
 })
 
@@ -2753,7 +2834,9 @@ export function TodayPanel({
                 <Button asChild variant="outline">
                   <Link to="/phrases/practice">Practice anyway</Link>
                 </Button>
-                <p className="text-muted-foreground text-xs">Practice doesn't change your schedule.</p>
+                <p className="text-muted-foreground text-xs">
+                  Practice doesn't change your schedule.
+                </p>
               </div>
             )}
           </>
@@ -2890,7 +2973,9 @@ export function PhraseList({
                 </p>
                 <p className="text-muted-foreground truncate text-sm">{phrase.english}</p>
               </div>
-              <span className="text-muted-foreground shrink-0 text-xs">{dueTag(phrase, today)}</span>
+              <span className="text-muted-foreground shrink-0 text-xs">
+                {dueTag(phrase, today)}
+              </span>
             </button>
           </li>
         )
@@ -3130,7 +3215,12 @@ export function PhraseFormDialog({
             {onDelete ? (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button type="button" variant="ghost" className="text-destructive" disabled={deleting}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-destructive"
+                    disabled={deleting}
+                  >
                     Delete
                   </Button>
                 </AlertDialogTrigger>
@@ -3266,7 +3356,10 @@ export function PhrasesPage() {
   const deletePhrase = useDeletePhrase()
   const updateCap = useUpdateNewPhrasesPerDay(ownerId)
 
-  const queue = useMemo(() => (phrases ? dueToday(phrases, today, cap) : null), [phrases, today, cap])
+  const queue = useMemo(
+    () => (phrases ? dueToday(phrases, today, cap) : null),
+    [phrases, today, cap],
+  )
   const days = useMemo(
     () => (phrases ? forecast(phrases, today, cap, FORECAST_DAYS) : []),
     [phrases, today, cap],
@@ -3295,7 +3388,9 @@ export function PhrasesPage() {
 
       {isLoading && <div className="bg-muted h-24 animate-pulse rounded-xl" />}
       {isError && (
-        <p className="text-destructive text-sm">Couldn't load your phrases. Refresh to try again.</p>
+        <p className="text-destructive text-sm">
+          Couldn't load your phrases. Refresh to try again.
+        </p>
       )}
 
       {queue && (
@@ -3387,7 +3482,7 @@ import { PhrasesPage } from '@/features/phrases/PhrasesPage'
 ```
 
 ```tsx
-            <Route path="/phrases" element={<PhrasesPage />} />
+<Route path="/phrases" element={<PhrasesPage />} />
 ```
 
 - [ ] **Step 11: Verify**
@@ -3396,6 +3491,7 @@ Run: `bun run test && bun run lint && bun run build`
 Expected: all pass.
 
 With the local stack running (`bun run db:start`, `.env.local` pointed at it), run `bun run dev` and open `#/phrases`. Check the following:
+
 - An empty collection shows the empty-state text.
 - Adding three phrases (one with a pasted image) makes the Today panel say "3 due today (3 new)".
 - Setting new per day to 2 changes it to "2 due today (2 new)", and tomorrow's calendar cell shows 1.
@@ -3415,6 +3511,7 @@ git commit -m "feat(phrases): add phrases page with today panel, due calendar, a
 ### Task 9: Review and practice sessions
 
 **Files:**
+
 - Create: `src/features/phrases/sessionQueue.ts`
 - Create: `src/features/phrases/sessionQueue.test.ts`
 - Create: `src/features/phrases/PhraseQuizCard.tsx`
@@ -3422,6 +3519,7 @@ git commit -m "feat(phrases): add phrases page with today panel, due calendar, a
 - Modify: `src/app/router.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 1 `todayKey`, `relativeDayLabel`, `nextSchedule`; Task 2 `gradePhrase`, `ratingFor`, `feedbackNote`, `PhraseGrade`; Task 3 `dueToday`, `practiceSet`; Task 5 `callGradePhrase`, `warmUpGrader`; Task 6 `TypedAnswerQuiz`, `GradeOutcome`, `Resolution`; Task 7 `usePhrases`, `useUserSettings`, `useRecordPhraseReview`, `PhraseNotFoundError`, `DEFAULT_NEW_PHRASES_PER_DAY`
 - Produces:
   - `type SessionMode = 'review' | 'practice'`
@@ -3598,7 +3696,12 @@ export function PhraseQuizCard({
       {phrase.image_path && (
         <div className="bg-muted/30 flex min-h-48 items-center justify-center overflow-hidden rounded-lg border">
           {imageUrl ? (
-            <img src={imageUrl} alt="" decoding="async" className="max-h-72 w-full object-contain" />
+            <img
+              src={imageUrl}
+              alt=""
+              decoding="async"
+              className="max-h-72 w-full object-contain"
+            />
           ) : (
             <p className="text-muted-foreground p-8 text-sm">Loading image…</p>
           )}
@@ -3740,7 +3843,9 @@ export function PhraseSessionPage({ mode }: { mode: SessionMode }) {
       </Link>
 
       {mode === 'practice' && (
-        <p className="text-muted-foreground text-sm">Practice session. Your schedule won't change.</p>
+        <p className="text-muted-foreground text-sm">
+          Practice session. Your schedule won't change.
+        </p>
       )}
 
       {isLoading && <p className="text-muted-foreground">Loading…</p>}
@@ -3823,6 +3928,7 @@ Run: `bun run test && bun run lint && bun run build`
 Expected: all pass.
 
 Manual check against the local stack, with `supabase functions serve` running per Task 5:
+
 - Start today's session. Type one phrase exactly, misspell an accent on another, and miss a third three times.
 - Expect, in order: "Correct!"; "Accepted. Exact form: …"; and the reveal.
 - The missed phrase comes back once at the end as "One more try…", and missing it again doesn't bring it back a third time.
@@ -3843,12 +3949,14 @@ git commit -m "feat(phrases): add daily review and practice-ahead sessions" -m "
 ### Task 10: Dashboard tile and "Add to my phrases" on Idiom of the Day
 
 **Files:**
+
 - Create: `src/features/phrases/PhrasesTile.tsx`
 - Modify: `src/features/study-sets/DashboardPage.tsx`
 - Modify: `src/features/idioms/IdiomOfTheDayCard.tsx`
 - Modify: `src/features/idioms/IdiomOfTheDayBanner.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 3 `dueToday`; Task 1 `todayKey`; Task 7 `usePhrases`, `useUserSettings`, `useAddIdiomToPhrases`, `DEFAULT_NEW_PHRASES_PER_DAY`
 - Produces: `<PhrasesTile dueCount={number | null} />`; `IdiomOfTheDayCard` gains props `phraseStatus: 'add' | 'adding' | 'added' | null` and `onAddToPhrases: () => void`
 
@@ -3905,25 +4013,25 @@ import { PhrasesTile } from '@/features/phrases/PhrasesTile'
 At the top of `DashboardPage()`, after the `useStudySets()` line, add:
 
 ```tsx
-  const { data: phrases } = usePhrases()
-  const { data: settings } = useUserSettings()
-  const phrasesDue = useMemo(() => {
-    if (!phrases) return null
-    const { reviews, fresh } = dueToday(
-      phrases,
-      todayKey(),
-      settings?.new_phrases_per_day ?? DEFAULT_NEW_PHRASES_PER_DAY,
-    )
-    return reviews.length + fresh.length
-  }, [phrases, settings])
+const { data: phrases } = usePhrases()
+const { data: settings } = useUserSettings()
+const phrasesDue = useMemo(() => {
+  if (!phrases) return null
+  const { reviews, fresh } = dueToday(
+    phrases,
+    todayKey(),
+    settings?.new_phrases_per_day ?? DEFAULT_NEW_PHRASES_PER_DAY,
+  )
+  return reviews.length + fresh.length
+}, [phrases, settings])
 ```
 
 Directly after `<IdiomOfTheDayBanner />`, add:
 
 ```tsx
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        <PhrasesTile dueCount={phrasesDue} />
-      </div>
+<div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+  <PhrasesTile dueCount={phrasesDue} />
+</div>
 ```
 
 - [ ] **Step 3: Add the button to the idiom card**
@@ -3947,24 +4055,28 @@ In `src/features/idioms/IdiomOfTheDayCard.tsx`:
 3. Inside the middle column `<div className="col-span-2 flex flex-col gap-1 ...">`, directly after the `{idiom.example && (...)}` block and before `<Source idiom={idiom} className="lg:hidden" />`, insert:
 
 ```tsx
-            {phraseStatus === 'added' && (
-              <p className="text-muted-foreground flex items-center gap-1 text-sm">
-                <Check className="size-4" aria-hidden />
-                In your phrases
-              </p>
-            )}
-            {(phraseStatus === 'add' || phraseStatus === 'adding') && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="self-start"
-                disabled={phraseStatus === 'adding'}
-                onClick={onAddToPhrases}
-              >
-                <Plus data-icon="inline-start" />
-                Add to my phrases
-              </Button>
-            )}
+{
+  phraseStatus === 'added' && (
+    <p className="text-muted-foreground flex items-center gap-1 text-sm">
+      <Check className="size-4" aria-hidden />
+      In your phrases
+    </p>
+  )
+}
+{
+  ;(phraseStatus === 'add' || phraseStatus === 'adding') && (
+    <Button
+      variant="outline"
+      size="sm"
+      className="self-start"
+      disabled={phraseStatus === 'adding'}
+      onClick={onAddToPhrases}
+    >
+      <Plus data-icon="inline-start" />
+      Add to my phrases
+    </Button>
+  )
+}
 ```
 
 - [ ] **Step 4: Wire it in the banner**
@@ -3978,35 +4090,35 @@ import { useAddIdiomToPhrases, usePhrases } from '@/features/phrases/hooks/usePh
 In `IdiomOfTheDayBanner()`, after the `useIdiomOfTheDay` line, add:
 
 ```tsx
-  const { data: phrases } = usePhrases()
-  const addToPhrases = useAddIdiomToPhrases()
+const { data: phrases } = usePhrases()
+const addToPhrases = useAddIdiomToPhrases()
 ```
 
 Replace the final `return (<IdiomOfTheDayCard ... />)` with:
 
 ```tsx
-  const phraseStatus = !phrases
-    ? null
-    : phrases.some((p) => p.idiom_id === idiom.id)
-      ? 'added'
-      : addToPhrases.isPending && addToPhrases.variables?.id === idiom.id
-        ? 'adding'
-        : 'add'
+const phraseStatus = !phrases
+  ? null
+  : phrases.some((p) => p.idiom_id === idiom.id)
+    ? 'added'
+    : addToPhrases.isPending && addToPhrases.variables?.id === idiom.id
+      ? 'adding'
+      : 'add'
 
-  return (
-    <IdiomOfTheDayCard
-      idiom={idiom}
-      dateLabel={dayLabel(today, daysAgo)}
-      selectedDate={selectedDate}
-      minDate={subtractDays(today, MAX_DAYS_BACK)}
-      maxDate={subtractDays(today, 0)}
-      onSelectDate={(date) => setDaysAgo(daysBetween(today, date))}
-      onPrevious={() => setDaysAgo((d) => Math.min(d + 1, MAX_DAYS_BACK))}
-      onNext={() => setDaysAgo((d) => Math.max(d - 1, 0))}
-      phraseStatus={phraseStatus}
-      onAddToPhrases={() => addToPhrases.mutate(idiom)}
-    />
-  )
+return (
+  <IdiomOfTheDayCard
+    idiom={idiom}
+    dateLabel={dayLabel(today, daysAgo)}
+    selectedDate={selectedDate}
+    minDate={subtractDays(today, MAX_DAYS_BACK)}
+    maxDate={subtractDays(today, 0)}
+    onSelectDate={(date) => setDaysAgo(daysBetween(today, date))}
+    onPrevious={() => setDaysAgo((d) => Math.min(d + 1, MAX_DAYS_BACK))}
+    onNext={() => setDaysAgo((d) => Math.max(d - 1, 0))}
+    phraseStatus={phraseStatus}
+    onAddToPhrases={() => addToPhrases.mutate(idiom)}
+  />
+)
 ```
 
 - [ ] **Step 5: Verify**
@@ -4015,6 +4127,7 @@ Run: `bun run test && bun run lint && bun run build`
 Expected: all pass.
 
 In the local app's dashboard:
+
 - The Phrases tile shows the due count and links to `/phrases`.
 - Clicking "Add to my phrases" on the idiom turns it into "In your phrases ✓", and the idiom appears on `/phrases` as new.
 - Browsing back to a previous day's idiom shows its own add state.
@@ -4060,6 +4173,7 @@ Then sign back in as A and open a study set session. The quiz behaves exactly as
 - [ ] **Step 4: Note deployment prerequisites for the PR**
 
 The PR description must list the one-time setup from the README's Edge Functions section:
+
 - GitHub secrets `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_REF`
 - `TYPESAFE_API_KEY` as a Supabase function secret
 
