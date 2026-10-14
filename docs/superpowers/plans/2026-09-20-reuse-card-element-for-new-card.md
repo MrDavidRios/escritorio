@@ -23,9 +23,11 @@
 ### Task 1: Add `autoFocus` to `InlineText`
 
 **Files:**
+
 - Modify: `src/components/InlineText.tsx:8-44`
 
 **Interfaces:**
+
 - Produces: `InlineText` gains an optional prop `autoFocus?: boolean` (default `false`). When `true`, the field starts in editing mode on mount; the existing "focus + place cursor at end" effect (currently lines 54-61) then fires on mount, since it already runs whenever `editing` is true.
 
 - [ ] **Step 1: Add the prop and wire initial state**
@@ -76,11 +78,13 @@ git commit -m "feat: add autoFocus prop to InlineText" --trailer "Co-Authored-By
 ### Task 2: Make `CardTile` dumb, move persistence into `EditableCardTile`
 
 **Files:**
+
 - Modify: `src/features/study-sets/CardTile.tsx` (rewrite as presentational)
 - Create: `src/features/study-sets/EditableCardTile.tsx`
 - Modify: `src/features/study-sets/CardsSection.tsx:43-54`
 
 **Interfaces:**
+
 - Consumes: `InlineText` with the `autoFocus` prop from Task 1.
 - Produces: the dumb `CardTile` (props below), consumed by `EditableCardTile` here and by `AddCardTile` in Task 3; and `EditableCardTile`, which takes exactly the props `CardTile` takes today, so `CardsSection` only changes the component name it renders.
 
@@ -186,7 +190,7 @@ export function CardTile({
               e.stopPropagation()
               onRemoveImage()
             }}
-            className="absolute top-2 left-2 bg-black/40 text-white opacity-0 transition-opacity duration-150 hover:bg-black/60 hover:text-white group-focus-within/image:opacity-100 group-hover/image:opacity-100 [@media(hover:none)]:opacity-70"
+            className="absolute top-2 left-2 bg-black/40 text-white opacity-0 transition-opacity duration-150 group-focus-within/image:opacity-100 group-hover/image:opacity-100 hover:bg-black/60 hover:text-white [@media(hover:none)]:opacity-70"
           >
             <X />
           </Button>
@@ -387,18 +391,20 @@ import { EditableCardTile } from './EditableCardTile'
 ```
 
 ```tsx
-          {cards.map((card) => (
-            <EditableCardTile
-              key={card.id}
-              studySetId={studySetId}
-              ownerId={ownerId}
-              card={card}
-              imageUrl={card.image_path ? imageUrls?.[card.image_path] : undefined}
-              onSaving={onSaving}
-              onSaved={onSaved}
-              onError={onError}
-            />
-          ))}
+{
+  cards.map((card) => (
+    <EditableCardTile
+      key={card.id}
+      studySetId={studySetId}
+      ownerId={ownerId}
+      card={card}
+      imageUrl={card.image_path ? imageUrls?.[card.image_path] : undefined}
+      onSaving={onSaving}
+      onSaved={onSaved}
+      onError={onError}
+    />
+  ))
+}
 ```
 
 Remove the now-unused `import { CardTile } from './CardTile'`.
@@ -406,6 +412,7 @@ Remove the now-unused `import { CardTile } from './CardTile'`.
 - [ ] **Step 4: Manual check**
 
 Run `npm run dev` and open a study set with at least one existing card. Compared to before this task, confirm:
+
 - The card tile looks pixel-identical (image box, hover "Change" overlay, remove-image X where applicable, delete-card trash icon top-right, all four fields with their icons).
 - Each field still enters inline edit on click, autosaves on blur/Enter, reverts on Escape.
 - Changing and removing the image still work, and the saving/saved/error indicators driven by `onSaving`/`onSaved`/`onError` still fire.
@@ -424,9 +431,11 @@ git commit -m "refactor: make CardTile presentational, move persistence to Edita
 ### Task 3: Render `CardTile` for `AddCardTile`'s expanded state
 
 **Files:**
+
 - Modify: `src/features/study-sets/AddCardTile.tsx`
 
 **Interfaces:**
+
 - Consumes: the dumb `CardTile` from Task 2.
 
 - [ ] **Step 1: Replace the expanded-state JSX and drop the now-unused local wiring**
@@ -439,38 +448,38 @@ In `src/features/study-sets/AddCardTile.tsx`:
 4. Replace the entire second `return` block (the expanded state, currently lines 153-262) with:
 
 ```tsx
-  return (
-    <CardTile
-      imageUrl={previewUrl ?? undefined}
-      onPickImage={pickUpFile}
-      onRemoveImage={() => setImage(null)}
-      canRemoveImage={Boolean(image)}
-      spanishTerm={spanishTerm}
-      onSaveSpanishTerm={setSpanishTerm}
-      autoFocusSpanishTerm
-      englishEquivalent={englishEquivalent}
-      onSaveEnglishEquivalent={setEnglishEquivalent}
-      definition={definition}
-      onSaveDefinition={setDefinition}
-      hint={hint}
-      onSaveHint={setHint}
-      footer={
-        <div className="flex flex-col gap-2 p-3 pt-0">
-          {error && <p className="text-destructive text-xs">{error}</p>}
-          <div className="flex items-center gap-2">
-            <Button type="button" size="sm" onClick={submit} disabled={createCard.isPending}>
-              {createCard.isPending && <Loader2 data-icon="inline-start" className="animate-spin" />}
-              {createCard.isPending ? 'Adding…' : 'Add card'}
-            </Button>
-            <Button type="button" size="sm" variant="ghost" onClick={reset}>
-              <X data-icon="inline-start" />
-              Cancel
-            </Button>
-          </div>
+return (
+  <CardTile
+    imageUrl={previewUrl ?? undefined}
+    onPickImage={pickUpFile}
+    onRemoveImage={() => setImage(null)}
+    canRemoveImage={Boolean(image)}
+    spanishTerm={spanishTerm}
+    onSaveSpanishTerm={setSpanishTerm}
+    autoFocusSpanishTerm
+    englishEquivalent={englishEquivalent}
+    onSaveEnglishEquivalent={setEnglishEquivalent}
+    definition={definition}
+    onSaveDefinition={setDefinition}
+    hint={hint}
+    onSaveHint={setHint}
+    footer={
+      <div className="flex flex-col gap-2 p-3 pt-0">
+        {error && <p className="text-destructive text-xs">{error}</p>}
+        <div className="flex items-center gap-2">
+          <Button type="button" size="sm" onClick={submit} disabled={createCard.isPending}>
+            {createCard.isPending && <Loader2 data-icon="inline-start" className="animate-spin" />}
+            {createCard.isPending ? 'Adding…' : 'Add card'}
+          </Button>
+          <Button type="button" size="sm" variant="ghost" onClick={reset}>
+            <X data-icon="inline-start" />
+            Cancel
+          </Button>
         </div>
-      }
-    />
-  )
+      </div>
+    }
+  />
+)
 ```
 
 `pickUpFile` currently takes `File | null | undefined`; `onPickImage` passes a non-null `File`, which is assignable, so its signature can stay as-is.
@@ -482,6 +491,7 @@ Note: this drops the per-field `Escape` → `reset()` behavior the raw inputs ha
 - [ ] **Step 2: Manual check**
 
 Run `npm run dev`, open a study set, and verify:
+
 - "Add card" → "Add without an image": the expanded form is visually identical to an existing card tile (image placeholder box with centered icon + "Add image", no separate button row above the fields), and the Spanish term field opens already focused in edit mode — matching the old auto-focus behavior.
 - Type a Spanish term, then click through English equivalent, definition, and hint: each behaves like an existing card's field (click to edit, commit on blur/Enter, Escape reverts that field).
 - Click the image box → pick a file → the preview appears with the "Change" hover overlay and an X that clears it back to the placeholder.

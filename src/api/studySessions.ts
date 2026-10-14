@@ -2,11 +2,7 @@ import { supabase } from '@/lib/supabase'
 import type { StudySession, StudySessionInput } from '@/types/studySession'
 
 export async function createStudySession(input: StudySessionInput): Promise<StudySession> {
-  const { data, error } = await supabase
-    .from('study_sessions')
-    .insert(input)
-    .select('*')
-    .single()
+  const { data, error } = await supabase.from('study_sessions').insert(input).select('*').single()
   if (error) throw error
   return data
 }

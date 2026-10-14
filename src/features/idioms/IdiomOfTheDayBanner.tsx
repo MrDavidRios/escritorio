@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
+import { useAddIdiomToPhrases, usePhrases } from '@/features/phrases/hooks/usePhrases'
 import { dayLabel, daysAgo as daysBetween, subtractDays } from './idiomOfTheDay'
 import { IdiomOfTheDayCard } from './IdiomOfTheDayCard'
 import { useIdiomOfTheDay } from './useIdiomOfTheDay'
@@ -13,6 +14,8 @@ export function IdiomOfTheDayBanner() {
   const today = new Date()
   const selectedDate = subtractDays(today, daysAgo)
   const { idiom, isLoading } = useIdiomOfTheDay(selectedDate)
+  const { data: phrases } = usePhrases()
+  const addToPhrases = useAddIdiomToPhrases()
 
   if (isLoading) {
     return (
@@ -27,6 +30,15 @@ export function IdiomOfTheDayBanner() {
   }
 
   if (!idiom) return null
+
+  const phraseStatus = !phrases
+    ? null
+    : phrases.some((p) => p.idiom_id === idiom.id)
+      ? 'added'
+      : addToPhrases.isPending && addToPhrases.variables?.id === idiom.id
+        ? 'adding'
+        : 'add'
+
   return (
     <IdiomOfTheDayCard
       idiom={idiom}
@@ -37,6 +49,8 @@ export function IdiomOfTheDayBanner() {
       onSelectDate={(date) => setDaysAgo(daysBetween(today, date))}
       onPrevious={() => setDaysAgo((d) => Math.min(d + 1, MAX_DAYS_BACK))}
       onNext={() => setDaysAgo((d) => Math.max(d - 1, 0))}
+      phraseStatus={phraseStatus}
+      onAddToPhrases={() => addToPhrases.mutate(idiom)}
     />
   )
 }

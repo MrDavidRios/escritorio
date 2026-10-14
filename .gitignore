@@ -31,3 +31,6 @@ dist-ssr
 
 # Supabase CLI local state
 supabase/.temp/
+
+# Deno lockfile (tests run with --no-lock)
+deno.lock

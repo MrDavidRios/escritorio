@@ -39,6 +39,24 @@ checks them on every PR ("Supabase Preview") and applies them to production on
 merge to `develop` — **never run a migration by hand in the SQL editor**, or the
 integration will try to apply it again and fail.
 
+## Edge Functions
+
+`supabase/functions/` holds Supabase Edge Functions (Deno). They're deployed by
+`.github/workflows/deploy-functions.yml` on merge to `develop`, not by the Supabase
+GitHub integration (it only deploys functions declared in a committed `config.toml`,
+which we don't commit).
+
+One-time setup:
+
+- GitHub repo secrets `SUPABASE_ACCESS_TOKEN` (a Supabase personal access token) and
+  `SUPABASE_PROJECT_REF`.
+- The TypeSafe key as a function secret: `bunx supabase secrets set TYPESAFE_API_KEY=… --project-ref <ref>`
+  (or Dashboard → Edge Functions → Secrets). It never goes in `.env.local` or GitHub.
+
+Locally, put `TYPESAFE_API_KEY=…` in `supabase/functions/.env.local` (git-ignored) and run
+`bunx supabase functions serve grade-phrase --env-file supabase/functions/.env.local`
+alongside `bun run db:start`. Tests: `deno test --no-lock supabase/functions/grade-phrase/`.
+
 To try a migration locally first:
 
 1. Start Docker, then `bun run db:start`. The first run downloads the
