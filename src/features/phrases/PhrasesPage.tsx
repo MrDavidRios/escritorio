@@ -26,8 +26,10 @@ export function PhrasesPage() {
   const today = todayKey()
 
   const { data: phrases, isLoading, isError } = usePhrases()
-  const { data: settings } = useUserSettings()
+  const { data: settings, isError: settingsError } = useUserSettings()
   const cap = settings?.new_phrases_per_day ?? DEFAULT_NEW_PHRASES_PER_DAY
+  // Wait for the real cap so counts never flash computed from the default.
+  const ready = !!phrases && (!!settings || settingsError)
 
   const createPhrase = useCreatePhrase(ownerId)
   const updatePhrase = useUpdatePhrase(ownerId)
@@ -35,12 +37,12 @@ export function PhrasesPage() {
   const updateCap = useUpdateNewPhrasesPerDay(ownerId)
 
   const queue = useMemo(
-    () => (phrases ? dueToday(phrases, today, cap) : null),
-    [phrases, today, cap],
+    () => (ready && phrases ? dueToday(phrases, today, cap) : null),
+    [ready, phrases, today, cap],
   )
   const days = useMemo(
-    () => (phrases ? forecast(phrases, today, cap, FORECAST_DAYS) : []),
-    [phrases, today, cap],
+    () => (ready && phrases ? forecast(phrases, today, cap, FORECAST_DAYS) : []),
+    [ready, phrases, today, cap],
   )
   const canPractice = useMemo(
     () => (phrases ? practiceSet(phrases, today).length > 0 : false),
@@ -64,14 +66,16 @@ export function PhrasesPage() {
       </Link>
       <h1 className="text-xl font-semibold">Phrases</h1>
 
-      {isLoading && <div className="bg-muted h-24 animate-pulse rounded-xl" />}
+      {(isLoading || (!!phrases && !ready)) && (
+        <div className="bg-muted h-24 animate-pulse rounded-xl" />
+      )}
       {isError && (
         <p className="text-destructive text-sm">
           Couldn't load your phrases. Refresh to try again.
         </p>
       )}
 
-      {queue && (
+      {queue && phrases && phrases.length > 0 && (
         <TodayPanel
           reviewCount={queue.reviews.length}
           newCount={queue.fresh.length}
@@ -81,7 +85,7 @@ export function PhrasesPage() {
         />
       )}
 
-      {phrases && (
+      {ready && phrases && (
         <Card>
           <CardContent>
             <PhraseCalendar days={days} today={today} />
@@ -89,7 +93,7 @@ export function PhrasesPage() {
         </Card>
       )}
 
-      {phrases && (
+      {ready && phrases && (
         <section className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-semibold">Your phrases ({phrases.length})</h2>
