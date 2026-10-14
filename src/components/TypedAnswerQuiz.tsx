@@ -16,7 +16,8 @@ import {
 /**
  * A typed-answer question: caller-supplied prompt, an answer input, and
  * attempt/feedback handling (see applyGrade). Grading is delegated to
- * `grade`, which may be async (e.g. a network grader) and must not reject.
+ * `grade`, which may be async (e.g. a network grader) and should not reject;
+ * a rejection is treated as "try again" (no attempt consumed, input kept).
  * Mount fresh per question (parent keys it) so local state resets.
  */
 export function TypedAnswerQuiz<G extends GradeOutcome>({
@@ -52,8 +53,16 @@ export function TypedAnswerQuiz<G extends GradeOutcome>({
 
     const typed = value
     setChecking(true)
-    const outcome = await grade(typed)
-    setChecking(false)
+    let outcome: G
+    try {
+      outcome = await grade(typed)
+    } catch {
+      // Grader failure is "try again", not a graded attempt: keep the
+      // answer state and the typed value untouched.
+      return
+    } finally {
+      setChecking(false)
+    }
 
     const { state: next, resolution } = applyGrade(state, typed, outcome)
     setState(next)
