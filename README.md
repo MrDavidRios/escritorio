@@ -55,7 +55,7 @@ One-time setup:
 
 Locally, put `TYPESAFE_API_KEY=…` in `supabase/functions/.env.local` (git-ignored) and run
 `bunx supabase functions serve grade-phrase --env-file supabase/functions/.env.local`
-alongside `bun run db:start`. Tests: `deno test supabase/functions/grade-phrase/`.
+alongside `bun run db:start`. Tests: `deno test --no-lock supabase/functions/grade-phrase/`.
 
 To try a migration locally first:
 

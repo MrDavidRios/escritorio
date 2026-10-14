@@ -7,7 +7,7 @@ name: Deploy Edge Functions
 on:
   push:
     branches: [develop]
-    paths: ['supabase/functions/**']
+    paths: ['supabase/functions/**', '.github/workflows/deploy-functions.yml']
   workflow_dispatch:
 
 concurrency:
@@ -24,11 +24,11 @@ jobs:
         with:
           deno-version: v2.x
 
-      - run: deno test supabase/functions/grade-phrase/
+      - run: deno test --no-lock supabase/functions/grade-phrase/
 
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.120.0
 
       # Local CLI settings only; functions deploy doesn't push project config.
       - run: cp supabase/config.local.toml supabase/config.toml
