@@ -3,6 +3,7 @@ import { Layout } from '@/app/Layout'
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
 import { SignInPage } from '@/features/auth/SignInPage'
 import { SignUpPage } from '@/features/auth/SignUpPage'
+import { PhrasesPage } from '@/features/phrases/PhrasesPage'
 import { DashboardPage } from '@/features/study-sets/DashboardPage'
 import { StudySetPage } from '@/features/study-sets/StudySetPage'
 import { StudySessionPage } from '@/features/study/StudySessionPage'
@@ -19,6 +20,7 @@ export function AppRouter() {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/sets/:setId" element={<StudySetPage />} />
             <Route path="/sets/:setId/study" element={<StudySessionPage />} />
+            <Route path="/phrases" element={<PhrasesPage />} />
           </Route>
         </Route>
       </Routes>
