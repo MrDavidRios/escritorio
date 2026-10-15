@@ -13,18 +13,26 @@ as a static site to GitHub Pages.
 - react-router-dom (`HashRouter`, for GitHub Pages compatibility)
 - Supabase JS client
 
+## Repo layout
+
+- `apps/web` — the Vite web app (deployed to GitHub Pages)
+- `packages/core` — `@escritorio/core`: types, grading, study modes,
+  schemas, dictionary API and query keys shared by every app
+- `supabase/` — migrations, seed data and local stack config
+
 ## Local development
 
-1. Copy `.env.local.example` to `.env.local` and fill in your Supabase
-   project's URL and anon key.
+1. Copy `apps/web/.env.local.example` to `apps/web/.env.local` and fill
+   in your Supabase project's URL and anon key.
 2. `bun install`
 3. `bun run dev`
 
-## Scripts
+## Scripts (run from the repo root)
 
-- `bun run dev` — start the dev server
-- `bun run build` — typecheck and build for production
-- `bun run test` — run the unit test suite (Vitest)
+- `bun run dev` — start the web dev server
+- `bun run build` — typecheck every workspace and build the web app
+- `bun run typecheck` — typecheck every workspace
+- `bun run test` — run every workspace's tests (Vitest)
 - `bun run lint` — lint with oxlint
 - `bun run format` — format with Prettier
 - `bun run preview` — preview the production build locally
@@ -43,7 +51,7 @@ To try a migration locally first:
 
 1. Start Docker, then `bun run db:start`. The first run downloads the
    Supabase images and prints a local API URL and anon key.
-2. Point `.env.local` at the local stack — `VITE_SUPABASE_URL=http://127.0.0.1:54321`
+2. Point `apps/web/.env.local` at the local stack — `VITE_SUPABASE_URL=http://127.0.0.1:54321`
    and `VITE_SUPABASE_ANON_KEY` from the output (`bun run db:status` reprints
    it) — then `bun run dev`. Sign up with any email; local auth needs no
    confirmation. Google sign-in isn't configured locally.
