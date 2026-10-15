@@ -19,15 +19,15 @@ Supabase exactly once.
 
 ## Decisions made
 
-| Question | Decision |
-|---|---|
-| Technology | Expo / React Native (not PWA, Capacitor, or SwiftUI) |
-| v1 scope | Study-first: sign in, browse sets, study. Editing stays on web |
-| Offline | Automatic and complete: all of the user's sets, cards, and images are mirrored to the device whenever online |
-| Repo layout | Monorepo in this repo (Bun workspaces) |
-| Accounts | Sign-in only; sign-up and password reset link out to the web app |
-| Offline data layer | Persisted TanStack Query cache + local image store + write outbox |
-| Build / distribution | EAS Build + EAS Submit to TestFlight; EAS Update for JS-only fixes |
+| Question             | Decision                                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Technology           | Expo / React Native (not PWA, Capacitor, or SwiftUI)                                                         |
+| v1 scope             | Study-first: sign in, browse sets, study. Editing stays on web                                               |
+| Offline              | Automatic and complete: all of the user's sets, cards, and images are mirrored to the device whenever online |
+| Repo layout          | Monorepo in this repo (Bun workspaces)                                                                       |
+| Accounts             | Sign-in only; sign-up and password reset link out to the web app                                             |
+| Offline data layer   | Persisted TanStack Query cache + local image store + write outbox                                            |
+| Build / distribution | EAS Build + EAS Submit to TestFlight; EAS Update for JS-only fixes                                           |
 
 ## Non-goals (v1)
 
@@ -102,13 +102,13 @@ mobile hooks are offline-aware. Both use `queryKeys.ts` from core.
 
 ### Screens (Expo Router)
 
-| Route | Screen |
-|---|---|
-| `/sign-in` | Email + password. "Forgot password?" and "Create an account" open the web app in Safari |
-| `/` | List of the user's sets with a sync status line ("Synced 2 min ago" / "Offline" / "3 attempts pending") |
-| `/sets/[id]` | Title, card count, read-only card preview, study-mode picker (same options as web), **Study** |
+| Route              | Screen                                                                                                                                        |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/sign-in`         | Email + password. "Forgot password?" and "Create an account" open the web app in Safari                                                       |
+| `/`                | List of the user's sets with a sync status line ("Synced 2 min ago" / "Offline" / "3 attempts pending")                                       |
+| `/sets/[id]`       | Title, card count, read-only card preview, study-mode picker (same options as web), **Study**                                                 |
 | `/sets/[id]/study` | Quiz: image and/or prompt, answer field, accented-character pad, 3-attempt grading via core `studyMode.ts` + `grading.ts`, completion summary |
-| `/settings` | Signed-in account, last sync, storage used, **Sync now**, "couldn't sync" count, sign out |
+| `/settings`        | Signed-in account, last sync, storage used, **Sync now**, "couldn't sync" count, sign out                                                     |
 
 ### Auth
 
@@ -154,7 +154,7 @@ optimistically and enqueues an `updateStudySetMode` outbox op
 
 - TanStack Query with `@tanstack/react-query-persist-client` + an
   AsyncStorage persister. Cached data never expires (`gcTime:
-  Infinity`, persister `maxAge: Infinity`). All queries use
+Infinity`, persister `maxAge: Infinity`). All queries use
   `networkMode: 'offlineFirst'`. `onlineManager` is driven by
   `@react-native-community/netinfo`.
 - **Sync triggers:** app launch, app returning to the foreground,
@@ -213,12 +213,12 @@ optimistically and enqueues an `updateStudySetMode` outbox op
 
 ### Error handling
 
-| Failure | Behaviour |
-|---|---|
-| Network error / 5xx | Stop sending, keep the queue, retry on the next trigger with exponential backoff |
-| 401 / auth error | Try refreshing the token. If that fails, pause the outbox and prompt sign-in. The outbox is kept for the same user |
-| Other 4xx (e.g. card deleted on web → lineage trigger raises) | Move the op to a persisted "couldn't sync" list, continue with the next op, and show the count in Settings |
-| Image download fails | That card shows a placeholder, the image is retried next sync, and other downloads continue |
+| Failure                                                       | Behaviour                                                                                                          |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Network error / 5xx                                           | Stop sending, keep the queue, retry on the next trigger with exponential backoff                                   |
+| 401 / auth error                                              | Try refreshing the token. If that fails, pause the outbox and prompt sign-in. The outbox is kept for the same user |
+| Other 4xx (e.g. card deleted on web → lineage trigger raises) | Move the op to a persisted "couldn't sync" list, continue with the next op, and show the count in Settings         |
+| Image download fails                                          | That card shows a placeholder, the image is retried next sync, and other downloads continue                        |
 
 ## Build and distribution
 

@@ -1,5 +1,5 @@
 import { MasonryGrid } from '@/components/MasonryGrid'
-import { exclusionReason, type StudyConfig } from '@/features/study/studyMode'
+import { exclusionReason, type StudyConfig } from '@escritorio/core'
 import { AddCardTile } from './AddCardTile'
 import { EditableCardTile } from './EditableCardTile'
 import { useCards } from './hooks/useCards'

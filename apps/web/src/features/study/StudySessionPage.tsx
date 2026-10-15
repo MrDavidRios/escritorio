@@ -13,7 +13,7 @@ import {
   type Question,
   configFromStudySet,
   noEligibleCardsMessage,
-} from './studyMode'
+} from '@escritorio/core'
 import { useCompleteStudySession, useStartStudySession } from './hooks/useStudySessions'
 import { QuizCard } from './QuizCard'
 

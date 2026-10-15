@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { Card, CardInput } from '@/types/card'
+import type { Card, CardInput } from '@escritorio/core'
 
 export async function listCards(studySetId: string): Promise<Card[]> {
   const { data, error } = await supabase

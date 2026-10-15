@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Idiom } from '@/types/idiom'
+import type { Idiom } from '@escritorio/core'
 import { dayLabel, daysAgo, localDateKey, pickIdiomOfTheDay, subtractDays } from './idiomOfTheDay'
 
 function makeIdiom(seq: number, overrides: Partial<Idiom> = {}): Idiom {

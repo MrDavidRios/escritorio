@@ -1,7 +1,7 @@
 import { ImageIcon } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import type { StudySetSummary } from '@/types/studySet'
+import type { StudySetSummary } from '@escritorio/core'
 import { useSignedImageUrls } from './hooks/useSignedImageUrls'
 
 const PLACEHOLDER_BOX =

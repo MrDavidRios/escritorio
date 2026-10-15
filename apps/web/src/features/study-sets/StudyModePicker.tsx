@@ -7,9 +7,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import type { StudyConfig } from '@/features/study/studyMode'
-import { noEligibleCardsMessage, studyModeLabel } from '@/features/study/studyMode'
-import type { ConversionDirection, MeaningVisibility, StudyMode } from '@/types/studySet'
+import {
+  noEligibleCardsMessage,
+  studyModeLabel,
+  type ConversionDirection,
+  type MeaningVisibility,
+  type StudyConfig,
+  type StudyMode,
+} from '@escritorio/core'
 
 const DIRECTION_OPTIONS: { value: ConversionDirection; label: string }[] = [
   { value: 'en_es', label: 'English → Spanish' },

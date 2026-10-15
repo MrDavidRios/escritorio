@@ -1,9 +1,8 @@
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import type { Card } from '@/types/card'
+import { hasRequiredContent, type Card } from '@escritorio/core'
 import { CardTile } from './CardTile'
-import { hasRequiredContent } from './cardSchema'
 import { DeleteCardDialog } from './DeleteCardDialog'
 import { useUpdateCard } from './hooks/useCards'
 

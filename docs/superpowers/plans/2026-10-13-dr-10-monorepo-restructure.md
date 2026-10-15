@@ -5,6 +5,7 @@
 **Goal:** Turn the repo into a Bun-workspaces monorepo. The web app moves to `apps/web`, and its pure domain code (types, grading, study modes, schemas, dictionary API, query keys) is extracted into `packages/core` (`@escritorio/core`). The web app's behaviour must not change.
 
 **Architecture:**
+
 - **Web app:** moved with `git mv` so `git log --follow` keeps history.
 - **Shared tooling:** Prettier and oxlint stay at the repo root and cover every workspace.
 - **Per-workspace tooling:** each workspace owns its own `tsc`, `vite` and `vitest`, and root scripts fan out to every workspace with `bun run --filter`.
@@ -28,7 +29,7 @@
 ## Review Focus
 
 1. **Env loading after the move:** `.env.local` (untracked) must live in `apps/web/`, or `bun run dev` throws "Missing VITE_SUPABASE_URL…". Task 1, Step 6 moves it, and Step 9 checks that the dev server starts.
-2. **Failures propagate through `--filter`:** a failing test or typecheck in *any* workspace must make the root `bun run test` / `bun run build` exit non-zero, or CI goes green on broken code. Task 3, Step 3 breaks a core test on purpose and checks the exit code.
+2. **Failures propagate through `--filter`:** a failing test or typecheck in _any_ workspace must make the root `bun run test` / `bun run build` exit non-zero, or CI goes green on broken code. Task 3, Step 3 breaks a core test on purpose and checks the exit code.
 3. **Fresh-clone CI:** `bun install --frozen-lockfile` must succeed against the regenerated `bun.lock`. Task 3, Step 4 runs it from a clean `node_modules`.
 4. **Pages artifact path:** the deploy uploads `apps/web/dist`. If the path is wrong, the deploy succeeds but serves nothing or stale files. Task 3, Step 5 builds and lists `apps/web/dist/index.html`.
 5. **Core leaking DOM:** `dictionaryApi.ts` uses `fetch` and `Response`. These have to typecheck without the DOM lib, so React Native can consume the package later. Task 2, Step 9 runs core's own `tsc` with `lib: ["ES2023"]` only.
@@ -37,34 +38,36 @@
 
 ## File map
 
-| Path | Change |
-|---|---|
-| `package.json` | Rewritten as the workspace root (scripts fan out, shared lint/format devDeps) |
-| `apps/web/package.json` | New: the web app's former deps and scripts, named `@escritorio/web` |
-| `apps/web/{index.html,vite.config.ts,tsconfig*.json,components.json,public/,src/}` | Moved from the root with `git mv` |
-| `.oxlintrc.json` | `$schema` path is unchanged (oxlint stays a root devDep) |
-| `packages/core/package.json`, `tsconfig.json` | New |
-| `packages/core/src/index.ts` | New barrel |
-| `packages/core/src/types/*` | ← `src/types/*` |
-| `packages/core/src/grading.ts` (+ `.test.ts`) | ← `src/lib/grading.ts` |
-| `packages/core/src/studyMode.ts` (+ `.test.ts`) | ← `src/features/study/studyMode.ts` |
-| `packages/core/src/schemas/{card,studySet,auth}Schema.ts` | ← `src/features/study-sets/{card,studySet}Schema.ts`, `src/features/auth/authSchema.ts` |
-| `packages/core/src/dictionaryApi.ts` (+ `.test.ts`) | ← `src/features/study-sets/dictionaryApi.ts` |
-| `packages/core/src/queryKeys.ts` (+ `.test.ts`) | New: replaces `studySetsKey`, `studySetKey`, `cardsKey` and two inline keys |
-| `apps/web/src/**` | Imports rewritten to `@escritorio/core` |
-| `.github/workflows/deploy.yml` | Uploads `apps/web/dist`; root scripts unchanged in name |
-| `README.md` | Layout and `.env.local` location updated |
+| Path                                                                               | Change                                                                                  |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `package.json`                                                                     | Rewritten as the workspace root (scripts fan out, shared lint/format devDeps)           |
+| `apps/web/package.json`                                                            | New: the web app's former deps and scripts, named `@escritorio/web`                     |
+| `apps/web/{index.html,vite.config.ts,tsconfig*.json,components.json,public/,src/}` | Moved from the root with `git mv`                                                       |
+| `.oxlintrc.json`                                                                   | `$schema` path is unchanged (oxlint stays a root devDep)                                |
+| `packages/core/package.json`, `tsconfig.json`                                      | New                                                                                     |
+| `packages/core/src/index.ts`                                                       | New barrel                                                                              |
+| `packages/core/src/types/*`                                                        | ← `src/types/*`                                                                         |
+| `packages/core/src/grading.ts` (+ `.test.ts`)                                      | ← `src/lib/grading.ts`                                                                  |
+| `packages/core/src/studyMode.ts` (+ `.test.ts`)                                    | ← `src/features/study/studyMode.ts`                                                     |
+| `packages/core/src/schemas/{card,studySet,auth}Schema.ts`                          | ← `src/features/study-sets/{card,studySet}Schema.ts`, `src/features/auth/authSchema.ts` |
+| `packages/core/src/dictionaryApi.ts` (+ `.test.ts`)                                | ← `src/features/study-sets/dictionaryApi.ts`                                            |
+| `packages/core/src/queryKeys.ts` (+ `.test.ts`)                                    | New: replaces `studySetsKey`, `studySetKey`, `cardsKey` and two inline keys             |
+| `apps/web/src/**`                                                                  | Imports rewritten to `@escritorio/core`                                                 |
+| `.github/workflows/deploy.yml`                                                     | Uploads `apps/web/dist`; root scripts unchanged in name                                 |
+| `README.md`                                                                        | Layout and `.env.local` location updated                                                |
 
 ---
 
 ### Task 1: Move the web app into `apps/web` and set up the workspace root
 
 **Files:**
+
 - Move: `index.html`, `vite.config.ts`, `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json`, `components.json`, `public/`, `src/` → `apps/web/`
 - Create: `apps/web/package.json`
 - Modify: `package.json`, `bun.lock` (regenerated)
 
 **Interfaces:**
+
 - Produces: root scripts `dev`, `build`, `test`, `lint`, `format`, `format:check`, `typecheck`, all of which work from the repo root. Workspace `@escritorio/web` has scripts `dev`, `build`, `test`, `preview`, `typecheck`.
 
 - [ ] **Step 1: Branch from `develop`**
@@ -214,11 +217,13 @@ Then confirm history followed the move: `git log --follow --oneline apps/web/src
 ### Task 2: Extract `@escritorio/core` and point the web app at it
 
 **Files:**
+
 - Create: `packages/core/package.json`, `packages/core/tsconfig.json`, `packages/core/src/index.ts`, `packages/core/src/queryKeys.ts`, `packages/core/src/queryKeys.test.ts`, `packages/core/src/index.test.ts`
 - Move (`git mv`): `apps/web/src/types/*` → `packages/core/src/types/`. `apps/web/src/lib/grading.ts` and `grading.test.ts` → `packages/core/src/`. `apps/web/src/features/study/studyMode.ts` and `studyMode.test.ts` → `packages/core/src/`. `apps/web/src/features/study-sets/dictionaryApi.ts` and `dictionaryApi.test.ts` → `packages/core/src/`. The three schemas → `packages/core/src/schemas/`.
 - Modify: `apps/web/package.json` (adds the core dependency and `--passWithNoTests`), `apps/web/src/features/study-sets/hooks/useStudySets.ts`, `useCards.ts`, `useSignedImageUrls.ts`, `useStudySetFallbackImagePaths.ts`, and every file importing a moved module (found by grep in Step 7)
 
 **Interfaces:**
+
 - Consumes: the workspace root from Task 1.
 - Produces, all importable from `'@escritorio/core'`:
   - **Everything previously exported by** `types/card`, `types/quizAttempt`, `types/studySession`, `types/studySet`, `grading`, `studyMode`, `dictionaryApi`, `cardSchema`, `studySetSchema` and `authSchema`, under unchanged names, e.g. `Card`, `StudyConfig`, `isAnswerCorrect`, `eligibleCards`, `buildQuestion`, `exclusionReason`, `studyModeLabel`, `fetchEnglishDefinition`, `cardSchema`, `studySetSchema`, `authSchema`, `AuthFormValues`, `StudySetFormValues`.
@@ -446,6 +451,7 @@ grep -rc "from '@escritorio/core'" apps/web/src | grep -v ':0$' | grep -v ':1$'
 - [ ] **Step 8: Replace the query-key helpers with `queryKeys`**
 
 First delete the old helper definitions:
+
 - In `apps/web/src/features/study-sets/hooks/useStudySets.ts`, delete the `export function studySetsKey()` and `export function studySetKey(id: string)` blocks (lines 15–21).
 - In `apps/web/src/features/study-sets/hooks/useCards.ts`, delete the `export function cardsKey(studySetId: string)` block (lines 6–8).
 
@@ -506,9 +512,11 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ### Task 3: CI, failure propagation and docs
 
 **Files:**
+
 - Modify: `.github/workflows/deploy.yml`, `README.md`
 
 **Interfaces:**
+
 - Consumes: root scripts from Task 1 (`lint`, `test`, `build`).
 - Produces: a Pages deploy that builds from the workspace layout.
 
@@ -517,9 +525,9 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 In `.github/workflows/deploy.yml`, only the artifact path changes. The root scripts keep their names.
 
 ```yaml
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: apps/web/dist
+- uses: actions/upload-pages-artifact@v3
+  with:
+    path: apps/web/dist
 ```
 
 Leave the `bun run build` step's `env:` block as-is. Vite reads `VITE_*` values from `process.env` as well as `.env` files, and environment variables pass through `bun run --filter`.

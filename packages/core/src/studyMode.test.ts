@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Card } from '@/types/card'
+import type { Card } from './types/card'
 import { buildQuestion, eligibleCards, exclusionReason, isCardEligible } from './studyMode'
 
 function makeCard(overrides: Partial<Card> = {}): Card {
@@ -134,13 +134,13 @@ describe('buildQuestion / conversion', () => {
     expect(q.resolvedDirection).toBe('es_en')
   })
 
-  it("random: resolves to en_es when rng() < 0.5", () => {
+  it('random: resolves to en_es when rng() < 0.5', () => {
     const q = buildQuestion(card, { mode: 'conversion', direction: 'random' }, () => 0.1)
     expect(q.resolvedDirection).toBe('en_es')
     expect(q.prompt).toBe('dog')
   })
 
-  it("random: resolves to es_en when rng() >= 0.5", () => {
+  it('random: resolves to es_en when rng() >= 0.5', () => {
     const q = buildQuestion(card, { mode: 'conversion', direction: 'random' }, () => 0.9)
     expect(q.resolvedDirection).toBe('es_en')
     expect(q.prompt).toBe('perro')

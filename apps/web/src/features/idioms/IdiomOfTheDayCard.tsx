@@ -5,7 +5,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Card, CardContent } from '@/components/ui/card'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import type { Idiom } from '@/types/idiom'
+import type { Idiom } from '@escritorio/core'
 
 /** Wiktionary credit. CC BY-SA requires naming the source and linking the licence. */
 function Source({ idiom, className }: { idiom: Idiom; className?: string }) {

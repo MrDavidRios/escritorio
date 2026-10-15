@@ -1,5 +1,5 @@
-import type { Card } from '@/types/card'
-import type { ConversionDirection, MeaningVisibility, StudySet, StudyMode } from '@/types/studySet'
+import type { Card } from './types/card'
+import type { ConversionDirection, MeaningVisibility, StudySet, StudyMode } from './types/studySet'
 
 export type StudyConfig =
   | { mode: 'conversion'; direction: ConversionDirection }

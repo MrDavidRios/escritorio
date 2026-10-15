@@ -22,7 +22,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { describeDefinitionChoice } from './definitionChoice'
-import { fetchEnglishDefinition, fetchSpanishDefinition, manualLookupLinks } from './dictionaryApi'
+import { fetchEnglishDefinition, fetchSpanishDefinition, manualLookupLinks } from '@escritorio/core'
 
 type Language = 'es' | 'en'
 

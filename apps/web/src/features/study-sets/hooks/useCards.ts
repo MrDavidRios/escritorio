@@ -1,17 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cardImagePath, deleteCardImages, uploadCardImage } from '@/api/cardImages'
 import { createCard, deleteCard, listCards, updateCard } from '@/api/cards'
-import type { Card } from '@/types/card'
-import { REQUIRED_CONTENT_MESSAGE, hasRequiredContent } from '../cardSchema'
+import {
+  REQUIRED_CONTENT_MESSAGE,
+  hasRequiredContent,
+  queryKeys,
+  type Card,
+} from '@escritorio/core'
 import { optimizeImage } from '../optimizeImage'
-
-export function cardsKey(studySetId: string) {
-  return ['cards', studySetId] as const
-}
 
 export function useCards(studySetId: string | undefined) {
   return useQuery({
-    queryKey: cardsKey(studySetId ?? ''),
+    queryKey: queryKeys.cards(studySetId ?? ''),
     queryFn: () => listCards(studySetId!),
     enabled: !!studySetId,
   })
@@ -48,7 +48,7 @@ export function useCreateCard(studySetId: string, ownerId: string) {
 
       // Existing cards determine the new card's position (appended to the
       // end); read from the cache rather than refetching.
-      const existing = queryClient.getQueryData<Card[]>(cardsKey(studySetId)) ?? []
+      const existing = queryClient.getQueryData<Card[]>(queryKeys.cards(studySetId)) ?? []
 
       const image = rawImage ? await optimizeImage(rawImage) : null
       const id = crypto.randomUUID()
@@ -72,7 +72,7 @@ export function useCreateCard(studySetId: string, ownerId: string) {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cardsKey(studySetId) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.cards(studySetId) })
     },
   })
 }
@@ -125,9 +125,9 @@ export function useUpdateCard(studySetId: string, ownerId: string) {
       })
     },
     onMutate: async ({ card, hint, spanish_term, english_equivalent, definition, removeImage }) => {
-      await queryClient.cancelQueries({ queryKey: cardsKey(studySetId) })
-      const previous = queryClient.getQueryData<Card[]>(cardsKey(studySetId))
-      queryClient.setQueryData<Card[]>(cardsKey(studySetId), (cards) =>
+      await queryClient.cancelQueries({ queryKey: queryKeys.cards(studySetId) })
+      const previous = queryClient.getQueryData<Card[]>(queryKeys.cards(studySetId))
+      queryClient.setQueryData<Card[]>(queryKeys.cards(studySetId), (cards) =>
         cards?.map((c) =>
           c.id === card.id
             ? {
@@ -144,10 +144,10 @@ export function useUpdateCard(studySetId: string, ownerId: string) {
       return previous
     },
     onError: (_err, _variables, context) => {
-      queryClient.setQueryData(cardsKey(studySetId), context)
+      queryClient.setQueryData(queryKeys.cards(studySetId), context)
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: cardsKey(studySetId) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.cards(studySetId) })
     },
   })
 }
@@ -166,10 +166,10 @@ export function useDeleteCard(studySetId: string) {
     // Drop the card from the cache only once the backend has confirmed the
     // delete, and keep the mutation pending until the list has refreshed.
     onSuccess: (_data, card) => {
-      queryClient.setQueryData<Card[]>(cardsKey(studySetId), (cards) =>
+      queryClient.setQueryData<Card[]>(queryKeys.cards(studySetId), (cards) =>
         cards?.filter((c) => c.id !== card.id),
       )
-      return queryClient.invalidateQueries({ queryKey: cardsKey(studySetId) })
+      return queryClient.invalidateQueries({ queryKey: queryKeys.cards(studySetId) })
     },
   })
 }

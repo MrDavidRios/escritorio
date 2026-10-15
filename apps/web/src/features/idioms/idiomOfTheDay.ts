@@ -1,4 +1,4 @@
-import type { Idiom } from '@/types/idiom'
+import type { Idiom } from '@escritorio/core'
 
 const MS_PER_DAY = 86_400_000
 

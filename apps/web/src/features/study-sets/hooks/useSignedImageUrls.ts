@@ -1,5 +1,6 @@
 import { useQueries, type UseQueryResult } from '@tanstack/react-query'
 import { getSignedImageUrl, SIGNED_URL_STALE_TIME_MS } from '@/api/cardImages'
+import { queryKeys } from '@escritorio/core'
 
 interface SignedImage {
   path: string
@@ -26,7 +27,7 @@ function combineUrls(results: UseQueryResult<SignedImage>[]) {
 export function useSignedImageUrls(paths: string[]) {
   return useQueries({
     queries: [...new Set(paths)].map((path) => ({
-      queryKey: ['signed-image-url', path],
+      queryKey: queryKeys.signedImageUrl(path),
       queryFn: async (): Promise<SignedImage> => ({ path, url: await getSignedImageUrl(path) }),
       staleTime: SIGNED_URL_STALE_TIME_MS,
     })),

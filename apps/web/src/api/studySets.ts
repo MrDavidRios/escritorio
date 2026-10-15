@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { StudySet, StudySetInput, StudySetSummary } from '@/types/studySet'
+import type { StudySet, StudySetInput, StudySetSummary } from '@escritorio/core'
 
 const FALLBACK_IMAGE_COUNT = 3
 

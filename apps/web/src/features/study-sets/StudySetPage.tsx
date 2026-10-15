@@ -11,7 +11,7 @@ import {
   saveStudySettings,
   type StoredStudySettings,
 } from '@/features/study/studyConfigStorage'
-import { configFromFields, eligibleCards } from '@/features/study/studyMode'
+import { configFromFields, eligibleCards } from '@escritorio/core'
 import { useSaveStatus } from '@/hooks/useSaveStatus'
 import { cn } from '@/lib/utils'
 import { CardsSection } from './CardsSection'

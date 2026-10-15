@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { StudySession, StudySessionInput } from '@/types/studySession'
+import type { StudySession, StudySessionInput } from '@escritorio/core'
 
 export async function createStudySession(input: StudySessionInput): Promise<StudySession> {
   const { data, error } = await supabase

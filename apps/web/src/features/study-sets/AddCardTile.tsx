@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CardTile } from './CardTile'
-import { REQUIRED_CONTENT_MESSAGE, cardSchema, hasRequiredContent } from './cardSchema'
+import { REQUIRED_CONTENT_MESSAGE, cardSchema, hasRequiredContent } from '@escritorio/core'
 import { useCreateCard } from './hooks/useCards'
 import { extractDroppedImageFile, extractPastedImageFile } from './imageDrop'
 

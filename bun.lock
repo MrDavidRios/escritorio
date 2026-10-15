@@ -15,6 +15,7 @@
       "name": "@escritorio/web",
       "version": "0.0.0",
       "dependencies": {
+        "@escritorio/core": "workspace:*",
         "@floating-ui/dom": "^1.8.0",
         "@fontsource-variable/geist": "^5.3.0",
         "@hookform/resolvers": "^5.9.1",
@@ -42,6 +43,18 @@
         "@vitejs/plugin-react": "^6.1.1",
         "typescript": "~6.0.2",
         "vite": "^8.3.0",
+        "vitest": "^5.0.0",
+      },
+    },
+    "packages/core": {
+      "name": "@escritorio/core",
+      "version": "0.0.0",
+      "dependencies": {
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@types/node": "^24.13.3",
+        "typescript": "~6.0.2",
         "vitest": "^5.0.0",
       },
     },
@@ -110,6 +123,8 @@
     "@dotenvx/primitives": ["@dotenvx/primitives@0.8.0", "", {}, "sha512-VYJy0uhFm9zTJ1TxBaW/pA8bjbOM/OttaNMwZ1RHG4JKyRG7DhSdiqD1ipQoAyoD22olUtxbP78W9xY3Wd11bg=="],
 
     "@ecies/ciphers": ["@ecies/ciphers@0.2.6", "", { "peerDependencies": { "@noble/ciphers": "^1.0.0" } }, "sha512-patgsRPKGkhhoBjETV4XxD0En4ui5fbX0hzayqI3M8tvNMGUoUvmyYAIWwlxBc1KX5cturfqByYdj5bYGRpN9g=="],
+
+    "@escritorio/core": ["@escritorio/core@workspace:packages/core"],
 
     "@escritorio/web": ["@escritorio/web@workspace:apps/web"],
 

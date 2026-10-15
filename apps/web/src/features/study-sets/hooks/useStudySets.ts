@@ -10,27 +10,19 @@ import {
 } from '@/api/studySets'
 import { deleteStudySetImages, studySetImagePath, uploadStudySetImage } from '@/api/studySetImages'
 import { useAuth } from '@/features/auth/AuthContext'
-import type { StudySet, StudySetInput } from '@/types/studySet'
+import { queryKeys, type StudySet, type StudySetInput } from '@escritorio/core'
 import { optimizeImage } from '../optimizeImage'
-
-export function studySetsKey() {
-  return ['study-sets'] as const
-}
-
-export function studySetKey(id: string) {
-  return ['study-set', id] as const
-}
 
 export function useStudySets() {
   return useQuery({
-    queryKey: studySetsKey(),
+    queryKey: queryKeys.studySets(),
     queryFn: listStudySets,
   })
 }
 
 export function useStudySet(id: string | undefined) {
   return useQuery({
-    queryKey: studySetKey(id ?? ''),
+    queryKey: queryKeys.studySet(id ?? ''),
     queryFn: () => getStudySet(id!),
     enabled: !!id,
   })
@@ -43,7 +35,7 @@ export function useCreateStudySet() {
   return useMutation({
     mutationFn: (input: StudySetInput) => createStudySet(user!.id, input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: studySetsKey() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.studySets() })
     },
   })
 }
@@ -91,8 +83,8 @@ export function useUpdateStudySet(id: string) {
       return updateStudySet(id, { title, description, image_path: imagePath })
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: studySetsKey() })
-      queryClient.setQueryData(studySetKey(id), data)
+      queryClient.invalidateQueries({ queryKey: queryKeys.studySets() })
+      queryClient.setQueryData(queryKeys.studySet(id), data)
     },
   })
 }
@@ -103,17 +95,20 @@ export function usePatchStudySet(id: string) {
   return useMutation({
     mutationFn: (patch: Partial<StudySetInput>) => updateStudySet(id, patch),
     onMutate: async (patch) => {
-      await queryClient.cancelQueries({ queryKey: studySetKey(id) })
-      const previous = queryClient.getQueryData<StudySet>(studySetKey(id))
-      queryClient.setQueryData<StudySet>(studySetKey(id), (prev) => prev && { ...prev, ...patch })
+      await queryClient.cancelQueries({ queryKey: queryKeys.studySet(id) })
+      const previous = queryClient.getQueryData<StudySet>(queryKeys.studySet(id))
+      queryClient.setQueryData<StudySet>(
+        queryKeys.studySet(id),
+        (prev) => prev && { ...prev, ...patch },
+      )
       return previous
     },
     onError: (_err, _patch, context) => {
-      queryClient.setQueryData(studySetKey(id), context)
+      queryClient.setQueryData(queryKeys.studySet(id), context)
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: studySetKey(id) })
-      queryClient.invalidateQueries({ queryKey: studySetsKey() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.studySet(id) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.studySets() })
     },
   })
 }
@@ -135,7 +130,7 @@ export function useDeleteStudySet() {
       await deleteStudySet(id)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: studySetsKey() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.studySets() })
     },
   })
 }

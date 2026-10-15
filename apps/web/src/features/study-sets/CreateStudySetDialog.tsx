@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useCreateStudySet } from './hooks/useStudySets'
-import { studySetSchema, type StudySetFormValues } from './studySetSchema'
+import { studySetSchema, type StudySetFormValues } from '@escritorio/core'
 
 export function CreateStudySetDialog() {
   const [open, setOpen] = useState(false)

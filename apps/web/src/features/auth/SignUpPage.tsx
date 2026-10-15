@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './AuthContext'
-import { authSchema, type AuthFormValues } from './authSchema'
+import { authSchema, type AuthFormValues } from '@escritorio/core'
 
 export function SignUpPage() {
   const { user } = useAuth()

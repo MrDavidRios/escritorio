@@ -35,7 +35,7 @@ export async function fetchEnglishDefinition(word: string): Promise<string | nul
 
   let data: EnglishDictionaryResponse
   try {
-    data = await response.json()
+    data = (await response.json()) as EnglishDictionaryResponse
   } catch {
     return null
   }
@@ -73,7 +73,7 @@ export async function fetchSpanishDefinition(word: string): Promise<string | nul
 
   let data: RaeResponse
   try {
-    data = await response.json()
+    data = (await response.json()) as RaeResponse
   } catch {
     return null
   }

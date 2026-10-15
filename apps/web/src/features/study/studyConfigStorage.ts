@@ -1,4 +1,4 @@
-import type { ConversionDirection, MeaningVisibility, StudyMode } from '@/types/studySet'
+import type { ConversionDirection, MeaningVisibility, StudyMode } from '@escritorio/core'
 
 export interface StoredStudySettings {
   study_mode: StudyMode

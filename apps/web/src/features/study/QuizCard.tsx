@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCursorInsert } from '@/hooks/useCursorInsert'
-import { isAnswerCorrect } from '@/lib/grading'
-import type { Question } from './studyMode'
+import { isAnswerCorrect, type Question } from '@escritorio/core'
 import { useLogQuizAttempt } from './hooks/useLogQuizAttempt'
 
 const MAX_ATTEMPTS = 3

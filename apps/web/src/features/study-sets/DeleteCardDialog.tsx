@@ -12,7 +12,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import type { Card } from '@/types/card'
+import type { Card } from '@escritorio/core'
 import { useDeleteCard } from './hooks/useCards'
 
 export function DeleteCardDialog({
