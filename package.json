@@ -3,52 +3,29 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "bun run --filter @escritorio/web dev",
+    "build": "bun run --filter '*' typecheck && bun run --filter @escritorio/web build",
+    "typecheck": "bun run --filter '*' typecheck",
+    "test": "bun run --filter '*' test",
+    "preview": "bun run --filter @escritorio/web preview",
     "lint": "oxlint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "preview": "vite preview",
-    "test": "vitest run",
     "db:config": "cp supabase/config.local.toml supabase/config.toml",
     "db:start": "bun run db:config && supabase start",
     "db:stop": "supabase stop",
     "db:reset": "bun run db:config && supabase db reset",
     "db:status": "supabase status"
   },
-  "dependencies": {
-    "@floating-ui/dom": "^1.8.0",
-    "@fontsource-variable/geist": "^5.3.0",
-    "@hookform/resolvers": "^5.9.1",
-    "@supabase/supabase-js": "^2.116.0",
-    "@tailwindcss/vite": "^4.3.3",
-    "@tanstack/react-query": "^5.102.8",
-    "class-variance-authority": "^0.7.1",
-    "cn": "^0.3.0",
-    "lucide-react": "^1.46.0",
-    "radix-ui": "^1.6.7",
-    "react": "^19.2.8",
-    "react-day-picker": "^10.0.2",
-    "react-dom": "^19.2.8",
-    "react-hook-form": "^7.88.0",
-    "react-router-dom": "^7.18.3",
-    "shadcn": "^4.21.0",
-    "tailwindcss": "^4.3.3",
-    "tw-animate-css": "^1.4.0",
-    "zod": "^4.6.5"
-  },
   "devDependencies": {
-    "@types/node": "^24.13.3",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
-    "@vitejs/plugin-react": "^6.1.1",
     "oxlint": "^1.81.0",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
-    "supabase": "^2.120.0",
-    "typescript": "~6.0.2",
-    "vite": "^8.3.0",
-    "vitest": "^5.0.0"
+    "supabase": "^2.120.0"
   }
 }
