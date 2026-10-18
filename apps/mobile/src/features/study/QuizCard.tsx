@@ -37,6 +37,9 @@ export function QuizCard({
   const [feedback, setFeedback] = useState<AnswerFeedback | null>(null)
   const [hintShown, setHintShown] = useState(false)
   const advancedRef = useRef(false)
+  // Set as the card ends, before the re-render: a second submit in the same
+  // frame must not count the answer again.
+  const endedRef = useRef(false)
   const ended = feedback === 'correct' || feedback === 'revealed'
 
   function show(next: AnswerFeedback) {
@@ -45,7 +48,7 @@ export function QuizCard({
   }
 
   function submit() {
-    if (ended) {
+    if (endedRef.current) {
       // A double tap (or return + tap) in one frame must advance one card.
       if (advancedRef.current) return
       advancedRef.current = true
@@ -56,6 +59,7 @@ export function QuizCard({
 
     const attemptCount = attempts + 1
     if (isAnswerCorrect(value, question.expectedAnswer)) {
+      endedRef.current = true
       show('correct')
       onAnswered({ isCorrect: true, attemptCount })
       return
@@ -63,6 +67,7 @@ export function QuizCard({
 
     setAttempts(attemptCount)
     if (attemptCount >= MAX_ATTEMPTS) {
+      endedRef.current = true
       show('revealed')
       onAnswered({ isCorrect: false, attemptCount })
     } else {

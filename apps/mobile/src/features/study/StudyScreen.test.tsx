@@ -187,6 +187,22 @@ test('explains an empty deck and starts no session', async () => {
   expect(writer.startSession).not.toHaveBeenCalled()
 })
 
+test('a failed background refetch does not replace a quiz in progress', async () => {
+  const { client } = await setup()
+  await screen.findByText('Card 1 of 2')
+
+  jest.mocked(api.studySets.getStudySet).mockRejectedValue(new Error('offline'))
+  await act(async () => {
+    await client.refetchQueries({ queryKey: queryKeys.studySet('s1') })
+    // Let the cache's next-tick notify reach the screen.
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  })
+  expect(client.getQueryState(queryKeys.studySet('s1'))?.status).toBe('error')
+
+  expect(screen.getByText('Card 1 of 2')).toBeOnTheScreen()
+  expect(screen.queryByText("Couldn't load this set. Check your connection.")).not.toBeOnTheScreen()
+})
+
 test('says so when the set fails to load, and Close still works', async () => {
   jest.mocked(api.studySets.getStudySet).mockRejectedValue(new Error('offline'))
   jest.mocked(api.cards.listCards).mockResolvedValue([hablar])

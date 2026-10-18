@@ -112,7 +112,9 @@ export function StudyScreen({
   const finished = run != null && total > 0 && index >= total
 
   let body: ReactNode
-  if (setFailed || cardsFailed) {
+  // Only before the run starts: a failed background refetch keeps the cached
+  // data, so a quiz in progress carries on.
+  if (!run && (setFailed || cardsFailed)) {
     body = (
       <Centered>
         <Text className="text-center text-muted-foreground">

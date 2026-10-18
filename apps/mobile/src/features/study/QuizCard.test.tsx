@@ -131,6 +131,17 @@ test('shows a placeholder while the image URL loads', async () => {
   expect(screen.getByText('Loading image…')).toBeOnTheScreen()
 })
 
+test('two submits of a right answer in one frame count it once', async () => {
+  const { onAnswered } = await setup()
+  await fireEvent.changeText(answerField(), 'hablar')
+  const field = answerField()
+  await act(async () => {
+    field.props.onSubmitEditing()
+    field.props.onSubmitEditing()
+  })
+  expect(onAnswered).toHaveBeenCalledTimes(1)
+})
+
 test('two submits in one frame after the card ends advance only once', async () => {
   const { onNext } = await setup()
   await submit('hablar')
