@@ -14,8 +14,8 @@ export function phrasesKey() {
   return ['phrases'] as const
 }
 
-export function usePhrases() {
-  return useQuery({ queryKey: phrasesKey(), queryFn: listPhrases })
+export function usePhrases({ enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery({ queryKey: phrasesKey(), queryFn: listPhrases, enabled })
 }
 
 export interface PhraseFormInput {

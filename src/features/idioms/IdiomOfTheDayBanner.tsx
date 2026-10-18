@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
+import { useFeatureFlag } from '@/features/feature-flags/useFeatureFlag'
 import { useAddIdiomToPhrases, usePhrases } from '@/features/phrases/hooks/usePhrases'
 import { dayLabel, daysAgo as daysBetween, subtractDays } from './idiomOfTheDay'
 import { IdiomOfTheDayCard } from './IdiomOfTheDayCard'
@@ -14,7 +15,8 @@ export function IdiomOfTheDayBanner() {
   const today = new Date()
   const selectedDate = subtractDays(today, daysAgo)
   const { idiom, isLoading } = useIdiomOfTheDay(selectedDate)
-  const { data: phrases } = usePhrases()
+  const { on: phrasesOn } = useFeatureFlag('phrases')
+  const { data: phrases } = usePhrases({ enabled: phrasesOn })
   const addToPhrases = useAddIdiomToPhrases()
 
   if (isLoading) {
@@ -31,13 +33,14 @@ export function IdiomOfTheDayBanner() {
 
   if (!idiom) return null
 
-  const phraseStatus = !phrases
-    ? null
-    : phrases.some((p) => p.idiom_id === idiom.id)
-      ? 'added'
-      : addToPhrases.isPending && addToPhrases.variables?.id === idiom.id
-        ? 'adding'
-        : 'add'
+  const phraseStatus =
+    !phrasesOn || !phrases
+      ? null
+      : phrases.some((p) => p.idiom_id === idiom.id)
+        ? 'added'
+        : addToPhrases.isPending && addToPhrases.variables?.id === idiom.id
+          ? 'adding'
+          : 'add'
 
   return (
     <IdiomOfTheDayCard

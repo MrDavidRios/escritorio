@@ -3,6 +3,7 @@ import { Link, Outlet } from 'react-router-dom'
 import { Logo } from '@/components/Logo'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/AuthContext'
+import { DevFeatureFlags } from '@/features/feature-flags/DevFeatureFlags'
 
 export function Layout() {
   const { signOut } = useAuth()
@@ -14,10 +15,13 @@ export function Layout() {
           <Logo />
           <span className="relative top-px">Escritorio</span>
         </Link>
-        <Button variant="outline" size="sm" onClick={signOut}>
-          <LogOut data-icon="inline-start" />
-          Sign out
-        </Button>
+        <div className="flex items-center gap-2">
+          {import.meta.env.DEV && <DevFeatureFlags />}
+          <Button variant="outline" size="sm" onClick={signOut}>
+            <LogOut data-icon="inline-start" />
+            Sign out
+          </Button>
+        </div>
       </header>
       <main className="flex-1">
         <Outlet />
