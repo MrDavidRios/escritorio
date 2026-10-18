@@ -8,7 +8,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "sh scripts/test-integration.sh"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

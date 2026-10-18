@@ -19,4 +19,7 @@ export interface StudySessionInput {
   direction: ConversionDirection | null
   visibility: MeaningVisibility | null
   deck_size: number
+  // See QuizAttemptInput.id.
+  id?: string
+  started_at?: string
 }
