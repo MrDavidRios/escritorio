@@ -30,8 +30,8 @@ as a static site to GitHub Pages.
 
 ## Mobile app (iOS)
 
-1. Copy `apps/mobile/.env.local.example` to `apps/mobile/.env.local` and fill
-   in the same Supabase URL and anon key as the web app.
+1. Put `SUPABASE_URL` and `SUPABASE_ANON_KEY` in the repo-root `.env.local`
+   (the app falls back to `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` there).
 2. `bun install`, then `bun run dev:mobile` and scan the QR code with the Expo Go app on your iPhone.
 
 ## Scripts (run from the repo root)

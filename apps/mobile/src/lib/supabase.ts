@@ -1,14 +1,18 @@
 import 'react-native-get-random-values'
 import 'react-native-url-polyfill/auto'
+import Constants from 'expo-constants'
 import { createClient } from '@supabase/supabase-js'
 import { createLargeSecureStore } from './largeSecureStore'
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+// Set by app.config.ts from the repo-root .env.local.
+const extra = Constants.expoConfig?.extra as
+  { supabaseUrl?: string; supabaseAnonKey?: string } | undefined
+const supabaseUrl = extra?.supabaseUrl
+const supabaseAnonKey = extra?.supabaseAnonKey
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
-    'Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY. Copy apps/mobile/.env.local.example to apps/mobile/.env.local and fill in your Supabase project values.',
+    'Missing SUPABASE_URL or SUPABASE_ANON_KEY. Set them (or VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY) in the repo-root .env.local.',
   )
 }
 

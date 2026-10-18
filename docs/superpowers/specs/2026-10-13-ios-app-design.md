@@ -232,7 +232,7 @@ Infinity`, persister `maxAge: Infinity`). All queries use
 - Native changes (new native module, SDK upgrade, app config) need a
   new TestFlight build. Builds expire after 90 days, so a new build is
   needed at least every ~80 days.
-- Config: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+- Config: `SUPABASE_URL`, `SUPABASE_ANON_KEY` from the repo-root `.env.local`, passed via `app.config.ts` `extra`
   as EAS environment variables. Bundle id (e.g.
   `com.davidrios.escritorio`) chosen at scaffold time. Needs a
   1024×1024 app icon source; the current 512px favicon is too small.
