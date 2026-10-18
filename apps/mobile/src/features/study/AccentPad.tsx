@@ -1,6 +1,5 @@
 import { Pressable, Text, View } from 'react-native'
-
-export const SPANISH_ACCENTS = ['á', 'é', 'í', 'ó', 'ú', 'ñ'] as const
+import { SPANISH_ACCENTS } from './spanishAccents'
 
 /**
  * The accented letters Spanish uses, as a row that sits above the

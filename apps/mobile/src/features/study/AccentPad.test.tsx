@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
-import { AccentPad, SPANISH_ACCENTS } from './AccentPad'
+import { AccentPad } from './AccentPad'
+import { SPANISH_ACCENTS } from './spanishAccents'
 
 test('offers every Spanish accented letter', async () => {
   await render(<AccentPad onInsert={jest.fn()} />)
