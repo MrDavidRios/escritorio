@@ -3,10 +3,13 @@ import { Linking } from 'react-native'
 import { WEB_SIGN_UP_URL } from '@/config'
 import { SignInScreen } from './SignInScreen'
 
-async function setup(result: { error: { message: string } | null } = { error: null }) {
+type Result = { error: { message: string } | null }
+
+async function setup(result: Result = { error: null }, googleResult: Result = { error: null }) {
   const signIn = jest.fn().mockResolvedValue(result)
-  await render(<SignInScreen signIn={signIn} />)
-  return { signIn }
+  const signInWithGoogle = jest.fn().mockResolvedValue(googleResult)
+  await render(<SignInScreen signIn={signIn} signInWithGoogle={signInWithGoogle} />)
+  return { signIn, signInWithGoogle }
 }
 
 async function fill(email: string, password: string) {
@@ -35,9 +38,23 @@ test('shows the Supabase error when sign-in fails', async () => {
   expect(await screen.findByText('Invalid login credentials')).toBeOnTheScreen()
 })
 
-test('"Create an account" opens the web app', async () => {
+test('"Sign up" opens the web app', async () => {
   const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined)
   await setup()
-  await fireEvent.press(screen.getByRole('link', { name: 'Create an account' }))
+  await fireEvent.press(screen.getByRole('link', { name: 'Sign up' }))
   expect(open).toHaveBeenCalledWith(WEB_SIGN_UP_URL)
+})
+
+test('"Continue with Google" starts Google sign-in', async () => {
+  const { signIn, signInWithGoogle } = await setup()
+  await fireEvent.press(screen.getByRole('button', { name: 'Continue with Google' }))
+  expect(signInWithGoogle).toHaveBeenCalledTimes(1)
+  expect(signIn).not.toHaveBeenCalled()
+})
+
+test('shows the error when Google sign-in fails, and lets you retry', async () => {
+  await setup({ error: null }, { error: { message: 'Provider is not enabled' } })
+  await fireEvent.press(screen.getByRole('button', { name: 'Continue with Google' }))
+  expect(await screen.findByText('Provider is not enabled')).toBeOnTheScreen()
+  expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeEnabled()
 })

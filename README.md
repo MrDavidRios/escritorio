@@ -33,6 +33,8 @@ as a static site to GitHub Pages.
 1. Put `SUPABASE_URL` and `SUPABASE_ANON_KEY` in the repo-root `.env.local`
    (the app falls back to `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` there).
 2. `bun install`, then `bun run dev:mobile` and scan the QR code with the Expo Go app on your iPhone.
+3. For Google sign-in, add `escritorio://**` to the hosted project's redirect
+   URLs (Supabase dashboard → Authentication → URL Configuration).
 
 ## Scripts (run from the repo root)
 

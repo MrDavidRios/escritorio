@@ -29,5 +29,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: false,
+    // Google sign-in returns a ?code= to exchange (see features/auth/googleSignIn).
+    flowType: 'pkce',
   },
 })
