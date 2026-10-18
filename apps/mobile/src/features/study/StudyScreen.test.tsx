@@ -67,6 +67,13 @@ async function answer(text: string) {
 
 const next = () => fireEvent.press(screen.getByRole('button', { name: 'Next' }))
 
+// The progress bar reads as "Card i of n" to VoiceOver.
+async function expectCard(current: number, total: number) {
+  expect(await screen.findByRole('progressbar')).toHaveAccessibilityValue({
+    text: `Card ${current} of ${total}`,
+  })
+}
+
 beforeEach(async () => {
   await AsyncStorage.clear()
   let n = 0
@@ -76,7 +83,7 @@ beforeEach(async () => {
 
 test('starts a session with a client id and the set mode before any attempt', async () => {
   const { writer } = await setup()
-  expect(await screen.findByText('Card 1 of 2')).toBeOnTheScreen()
+  await expectCard(1, 2)
   expect(screen.getByText('hablar')).toBeOnTheScreen()
   expect(writer.startSession).toHaveBeenCalledWith({
     id: 'id-1',
@@ -106,13 +113,24 @@ test("uses this device's stored mode over the set's own fields", async () => {
   )
 })
 
+test('the progress bar fills as cards are answered', async () => {
+  await setup()
+  await expectCard(1, 2)
+  expect(screen.getByRole('progressbar')).toHaveAccessibilityValue({ min: 0, max: 2, now: 0 })
+  await answer('to speak')
+  expect(screen.getByRole('progressbar')).toHaveAccessibilityValue({ now: 1 })
+  await next()
+  await expectCard(2, 2)
+  expect(screen.queryByText(/Card \d of \d/)).not.toBeOnTheScreen()
+})
+
 test('records one attempt per card, in order, then completes the session', async () => {
   const { calls } = await setup()
-  await screen.findByText('Card 1 of 2')
+  await expectCard(1, 2)
 
   await answer('to speak')
   await next()
-  expect(screen.getByText('Card 2 of 2')).toBeOnTheScreen()
+  await expectCard(2, 2)
   await answer('x')
   await answer('y')
   await answer('z')
@@ -150,7 +168,7 @@ test('records one attempt per card, in order, then completes the session', async
 
 test('a cards refetch mid-session does not restart or resize the deck', async () => {
   const { client } = await setup()
-  await screen.findByText('Card 1 of 2')
+  await expectCard(1, 2)
   await answer('to speak')
   await next()
 
@@ -159,13 +177,13 @@ test('a cards refetch mid-session does not restart or resize the deck', async ()
     client.setQueryData(queryKeys.cards('s1'), [hablar, comer, extra])
   })
 
-  expect(screen.getByText('Card 2 of 2')).toBeOnTheScreen()
+  await expectCard(2, 2)
   expect(screen.getByText('comer')).toBeOnTheScreen()
 })
 
 test('"Study again" starts a fresh session and a fresh first card', async () => {
   const { writer } = await setup({ cards: [hablar] })
-  await screen.findByText('Card 1 of 1')
+  await expectCard(1, 1)
   await answer('to speak')
   await next()
 
@@ -173,7 +191,7 @@ test('"Study again" starts a fresh session and a fresh first card', async () => 
 
   expect(writer.startSession).toHaveBeenCalledTimes(2)
   expect(jest.mocked(writer.startSession).mock.calls[1][0].id).toBe('id-3')
-  expect(screen.getByText('Card 1 of 1')).toBeOnTheScreen()
+  await expectCard(1, 1)
   expect(screen.getByLabelText('Your answer')).toHaveDisplayValue('')
   expect(screen.getByRole('button', { name: 'Check' })).toBeOnTheScreen()
 })
@@ -189,7 +207,7 @@ test('explains an empty deck and starts no session', async () => {
 
 test('a failed background refetch does not replace a quiz in progress', async () => {
   const { client } = await setup()
-  await screen.findByText('Card 1 of 2')
+  await expectCard(1, 2)
 
   jest.mocked(api.studySets.getStudySet).mockRejectedValue(new Error('offline'))
   await act(async () => {
@@ -199,7 +217,7 @@ test('a failed background refetch does not replace a quiz in progress', async ()
   })
   expect(client.getQueryState(queryKeys.studySet('s1'))?.status).toBe('error')
 
-  expect(screen.getByText('Card 1 of 2')).toBeOnTheScreen()
+  await expectCard(1, 2)
   expect(screen.queryByText("Couldn't load this set. Check your connection.")).not.toBeOnTheScreen()
 })
 

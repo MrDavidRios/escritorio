@@ -27,6 +27,37 @@ function imagePathFor(question: Question | undefined): string | null {
   return question?.showImage ? question.card.image_path : null
 }
 
+/** Fills as cards are answered; VoiceOver reads it as "Card i of n". */
+function ProgressBar({
+  answered,
+  current,
+  total,
+}: {
+  answered: number
+  current: number
+  total: number
+}) {
+  return (
+    <View
+      accessible
+      accessibilityRole="progressbar"
+      accessibilityLabel="Progress"
+      accessibilityValue={{
+        min: 0,
+        max: total,
+        now: answered,
+        text: `Card ${current} of ${total}`,
+      }}
+      className="h-2 flex-1 overflow-hidden rounded-full bg-muted"
+    >
+      <View
+        className="h-full rounded-full bg-primary"
+        style={{ width: `${(answered / total) * 100}%` }}
+      />
+    </View>
+  )
+}
+
 function Centered({ children }: { children: ReactNode }) {
   return <View className="flex-1 items-center justify-center gap-4 px-6">{children}</View>
 }
@@ -46,6 +77,7 @@ export function StudyScreen({
   const [run, setRun] = useState<Run | null>(null)
   const [index, setIndex] = useState(0)
   const [correct, setCorrect] = useState(0)
+  const [answered, setAnswered] = useState(0)
   const startedRef = useRef(false)
 
   function start(set: StudySet, deckCards: Card[], chosen: StudySettings) {
@@ -69,6 +101,7 @@ export function StudyScreen({
     setRun({ sessionId, config, questions })
     setIndex(0)
     setCorrect(0)
+    setAnswered(0)
   }
 
   useEffect(() => {
@@ -96,6 +129,7 @@ export function StudyScreen({
       session_id: run.sessionId,
       resolved_direction: question.resolvedDirection,
     })
+    setAnswered((n) => n + 1)
     if (result.isCorrect) setCorrect((c) => c + 1)
   }
 
@@ -175,14 +209,13 @@ export function StudyScreen({
   return (
     <Screen edges={['top', 'bottom']}>
       <KeyboardAvoidingView behavior="padding" className="flex-1">
-        <View className="flex-row items-center justify-between px-4 py-2">
-          <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} className="w-16">
+        <View className="h-11 flex-row items-center gap-4 px-4">
+          <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8}>
             <Text className="text-base text-foreground">Close</Text>
           </Pressable>
           {total > 0 && !finished ? (
-            <Text className="text-sm text-muted-foreground">{`Card ${index + 1} of ${total}`}</Text>
+            <ProgressBar answered={answered} current={index + 1} total={total} />
           ) : null}
-          <View className="w-16" />
         </View>
         {body}
       </KeyboardAvoidingView>
