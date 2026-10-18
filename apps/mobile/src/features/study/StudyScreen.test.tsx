@@ -1,6 +1,7 @@
 import { noEligibleCardsMessage, queryKeys, studySettingsKey } from '@escritorio/core'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { act, fireEvent, screen } from '@testing-library/react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { api } from '@/lib/api'
 import { newId } from '@/lib/ids'
 import { makeCard, makeStudySet } from '@/test/fixtures'
@@ -16,6 +17,10 @@ jest.mock('@/lib/api', () => ({
   },
 }))
 jest.mock('@/lib/ids', () => ({ newId: jest.fn() }))
+jest.mock('react-native-safe-area-context', () => ({
+  ...jest.requireActual('react-native-safe-area-context'),
+  useSafeAreaInsets: jest.fn(() => ({ top: 0, bottom: 0, left: 0, right: 0 })),
+}))
 jest.mock('@/lib/haptics', () => ({ feedbackHaptic: jest.fn() }))
 jest.mock('expo-image', () => {
   const actual = jest.requireActual('expo-image')
@@ -219,6 +224,13 @@ test('a failed background refetch does not replace a quiz in progress', async ()
 
   await expectCard(1, 2)
   expect(screen.queryByText("Couldn't load this set. Check your connection.")).not.toBeOnTheScreen()
+})
+
+test("keeps the header below the status bar, using the window's top inset", async () => {
+  jest.mocked(useSafeAreaInsets).mockReturnValue({ top: 47, bottom: 34, left: 0, right: 0 })
+  await setup()
+  await expectCard(1, 2)
+  expect(screen.getByTestId('study-header')).toHaveStyle({ paddingTop: 47 })
 })
 
 test('says so when the set fails to load, and Close still works', async () => {
