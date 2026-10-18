@@ -51,11 +51,12 @@ One-time setup:
 - GitHub repo secrets `SUPABASE_ACCESS_TOKEN` (a Supabase personal access token) and
   `SUPABASE_PROJECT_REF`.
 - The TypeSafe key as a function secret: `bunx supabase secrets set TYPESAFE_API_KEY=… --project-ref <ref>`
-  (or Dashboard → Edge Functions → Secrets). It never goes in `.env.local` or GitHub.
+  (or Dashboard → Edge Functions → Secrets). It never goes in GitHub, and never under a
+  `VITE_` name (Vite would bundle it into the frontend).
 
-Locally, put `TYPESAFE_API_KEY=…` in `supabase/functions/.env.local` (git-ignored) and run
-`bunx supabase functions serve grade-phrase --env-file supabase/functions/.env.local`
-alongside `bun run db:start`. Tests: `deno test --no-lock supabase/functions/grade-phrase/`.
+Locally, all secrets live in the root `.env.local` (git-ignored; see `.env.local.example`).
+Add `TYPESAFE_API_KEY=…` there and run `bun run functions:serve` alongside
+`bun run db:start`. Tests: `deno test --no-lock supabase/functions/grade-phrase/`.
 
 To try a migration locally first:
 
