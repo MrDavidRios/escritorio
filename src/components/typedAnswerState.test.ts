@@ -31,10 +31,27 @@ describe('applyGrade', () => {
     const { state, resolution } = applyGrade(INITIAL_ANSWER_STATE, 'x', wrong)
     expect(state).toEqual({
       attempts: 1,
-      feedback: { kind: 'retry', attemptsLeft: MAX_ATTEMPTS - 1 },
+      feedback: { kind: 'retry', attemptsLeft: MAX_ATTEMPTS - 1, missNote: null, hint: null },
     })
     expect(isLocked(state)).toBe(false)
     expect(resolution).toBeNull()
+  })
+
+  it('carries the miss note and hint into the retry feedback', () => {
+    const outcome = { correct: false, missNote: 'Spelling is off.', hint: 'h_la' }
+    expect(applyGrade(INITIAL_ANSWER_STATE, 'hla', outcome).state.feedback).toEqual({
+      kind: 'retry',
+      attemptsLeft: MAX_ATTEMPTS - 1,
+      missNote: 'Spelling is off.',
+      hint: 'h_la',
+    })
+  })
+
+  it('carries the miss note into the reveal', () => {
+    let state = INITIAL_ANSWER_STATE
+    for (const typed of ['a', 'b']) state = applyGrade(state, typed, wrong).state
+    const last = applyGrade(state, 'hla', { correct: false, missNote: 'Spelling is off.' })
+    expect(last.state.feedback).toEqual({ kind: 'revealed', missNote: 'Spelling is off.' })
   })
 
   it('reveals after the third miss and resolves incorrect', () => {
@@ -43,7 +60,7 @@ describe('applyGrade', () => {
     for (const typed of ['a', 'b', 'c']) {
       ;({ state, resolution } = applyGrade(state, typed, wrong))
     }
-    expect(state.feedback).toEqual({ kind: 'revealed' })
+    expect(state.feedback).toEqual({ kind: 'revealed', missNote: null })
     expect(isLocked(state)).toBe(true)
     expect(resolution).toEqual({ correct: false, attemptCount: 3, typed: 'c', outcome: wrong })
   })

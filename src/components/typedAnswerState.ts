@@ -4,12 +4,16 @@ export interface GradeOutcome {
   correct: boolean
   /** Shown in place of "Correct!" (e.g. the exact form after a near miss). */
   note?: string | null
+  /** Shown in place of "Not quite." when the answer is rejected. */
+  missNote?: string | null
+  /** Shown under a retry prompt (e.g. the answer with misspelled letters blanked). */
+  hint?: string | null
 }
 
 export type Feedback =
   | { kind: 'correct'; note: string | null }
-  | { kind: 'retry'; attemptsLeft: number }
-  | { kind: 'revealed' }
+  | { kind: 'retry'; attemptsLeft: number; missNote: string | null; hint: string | null }
+  | { kind: 'revealed'; missNote: string | null }
 
 export interface AnswerState {
   attempts: number
@@ -48,12 +52,20 @@ export function applyGrade<G extends GradeOutcome>(
   }
   if (attempts >= MAX_ATTEMPTS) {
     return {
-      state: { attempts, feedback: { kind: 'revealed' } },
+      state: { attempts, feedback: { kind: 'revealed', missNote: outcome.missNote ?? null } },
       resolution: { correct: false, attemptCount: attempts, typed, outcome },
     }
   }
   return {
-    state: { attempts, feedback: { kind: 'retry', attemptsLeft: MAX_ATTEMPTS - attempts } },
+    state: {
+      attempts,
+      feedback: {
+        kind: 'retry',
+        attemptsLeft: MAX_ATTEMPTS - attempts,
+        missNote: outcome.missNote ?? null,
+        hint: outcome.hint ?? null,
+      },
+    },
     resolution: null,
   }
 }

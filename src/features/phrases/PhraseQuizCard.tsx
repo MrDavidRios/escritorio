@@ -1,8 +1,12 @@
+import { useRef } from 'react'
 import { callGradePhrase } from '@/api/gradePhrase'
 import { TypedAnswerQuiz } from '@/components/TypedAnswerQuiz'
 import type { GradeOutcome, Resolution } from '@/components/typedAnswerState'
 import type { Phrase } from '@/types/phrase'
-import { feedbackNote, gradePhrase, type PhraseGrade } from './grading'
+import { feedbackNote, gradePhrase, isMisspelling, type PhraseGrade } from './grading'
+import { spellingHint } from './spellingHint'
+
+const MISSPELLING_NOTE = 'The content is correct, but the spelling is wrong.'
 
 export interface PhraseOutcome extends GradeOutcome {
   grade: PhraseGrade
@@ -10,7 +14,9 @@ export interface PhraseOutcome extends GradeOutcome {
 
 /**
  * One phrase question: English (+ optional image) prompt, typed Spanish
- * answer graded by exact match then Jev. Saving is the parent's job. Mount
+ * answer graded by exact match then Jev. A misspelling is rejected with its
+ * own message; from the second one on, a hint blanks the wrong letters.
+ * Saving is the parent's job. Mount
  * fresh per item (parent keys it).
  */
 export function PhraseQuizCard({
@@ -24,6 +30,8 @@ export function PhraseQuizCard({
   onResolved: (resolution: Resolution<PhraseOutcome>) => void
   onNext: () => void
 }) {
+  const misspellings = useRef(0)
+
   const prompt = (
     <>
       {phrase.image_path && (
@@ -54,7 +62,16 @@ export function PhraseQuizCard({
       showAccentPad
       grade={async (typed) => {
         const grade = await gradePhrase(typed, phrase, callGradePhrase)
-        return { correct: grade.correct, note: feedbackNote(grade, phrase.spanish), grade }
+        const misspelled = !grade.correct && isMisspelling(grade)
+        if (misspelled) misspellings.current++
+        return {
+          correct: grade.correct,
+          note: feedbackNote(grade, phrase.spanish),
+          missNote: misspelled ? MISSPELLING_NOTE : null,
+          hint:
+            misspelled && misspellings.current >= 2 ? spellingHint(typed, phrase.spanish) : null,
+          grade,
+        }
       }}
       onResolved={onResolved}
       onNext={onNext}

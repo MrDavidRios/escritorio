@@ -48,16 +48,20 @@ export function buildJevPayload(request: GradeRequest) {
         criteria: {
           exact: {
             what: 'The same phrase as expected_spanish, ignoring capitalization, punctuation and spacing.',
+            not_for:
+              'Any difference in letters or accents, even a single missing, extra or wrong ' +
+              'letter. That is minor_slip.',
             examples: ['expected "meter la pata", typed "Meter la pata."'],
           },
           minor_slip: {
             what:
               'The intended phrase with a small mechanical error: a missing or wrong accent, ' +
-              'a one-letter typo, or a dropped or wrong article.',
+              'a misspelled word (missing, extra or wrong letters), or a dropped or wrong article.',
             not_for: 'A different word, a wrong verb, or a change that alters the meaning.',
             examples: [
               'expected "llover a cántaros", typed "llover a cantaros"',
               'expected "meter la pata", typed "meter la pta"',
+              'expected "una hemorragia de placer", typed "una hemoragia de placer"',
               'expected "echar una mano", typed "echar mano"',
             ],
           },

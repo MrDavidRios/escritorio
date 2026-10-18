@@ -69,7 +69,6 @@ export function PhraseSessionPage({ mode }: { mode: SessionMode }) {
     const rating = ratingFor({
       correct: resolution.correct,
       attemptCount: resolution.attemptCount,
-      verdict: grade.verdict,
     })
 
     if (!item.isRepeat) {

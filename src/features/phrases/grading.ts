@@ -67,9 +67,13 @@ export async function gradePhrase(
   try {
     const grade = await Promise.race([call, timeout])
     if (grade.confidence < JEV_CONFIDENCE_THRESHOLD) return strictFallback(grade.verdict)
+    // A minor slip is the right phrase misspelled: rejected so the learner
+    // fixes the spelling (see isMisspelling), not accepted as a near miss.
+    // An exact match never gets here, so Jev saying "exact" is a slip too.
+    const verdict = grade.verdict === 'exact' ? 'minor_slip' : grade.verdict
     return {
-      correct: grade.verdict !== 'wrong',
-      verdict: grade.verdict,
+      correct: verdict === 'valid_variant',
+      verdict,
       source: 'jev',
       jevVerdict: grade.verdict,
     }
@@ -83,21 +87,28 @@ export async function gradePhrase(
 export function ratingFor({
   correct,
   attemptCount,
-  verdict,
 }: {
   correct: boolean
   attemptCount: number
-  verdict: JevVerdict
 }): PhraseRating {
   if (!correct) return 'again'
-  if (attemptCount > 1 || verdict === 'minor_slip') return 'hard'
+  if (attemptCount > 1) return 'hard'
   return 'good'
+}
+
+/**
+ * Jev judged the answer the right phrase with a spelling slip ("exact" on a
+ * non-matching answer counts too). Ignores confidence: it only changes the
+ * feedback wording on a rejected answer.
+ */
+export function isMisspelling(grade: PhraseGrade): boolean {
+  return grade.jevVerdict === 'minor_slip' || grade.jevVerdict === 'exact'
 }
 
 /** Shown instead of "Correct!" when an answer was accepted but wasn't the exact form. */
 export function feedbackNote(grade: PhraseGrade, expected: string): string | null {
   if (!grade.correct) return null
-  if (grade.verdict === 'minor_slip' || grade.verdict === 'valid_variant') {
+  if (grade.verdict === 'valid_variant') {
     return `Accepted. Exact form: ${expected}`
   }
   return null

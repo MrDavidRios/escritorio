@@ -99,13 +99,22 @@ export function TypedAnswerQuiz<G extends GradeOutcome>({
           </p>
         )}
         {feedback?.kind === 'retry' && (
-          <p className="text-destructive text-sm font-medium">
-            Not quite. {feedback.attemptsLeft} attempt{feedback.attemptsLeft === 1 ? '' : 's'} left.
-          </p>
+          <div className="flex flex-col gap-1">
+            <p className="text-destructive text-sm font-medium">
+              {feedback.missNote ? `${feedback.missNote} Try again.` : 'Not quite.'}{' '}
+              {feedback.attemptsLeft} attempt{feedback.attemptsLeft === 1 ? '' : 's'} left.
+            </p>
+            {feedback.hint && (
+              <p lang={answerLang} className="font-mono text-sm tracking-wider">
+                {feedback.hint}
+              </p>
+            )}
+          </div>
         )}
         {feedback?.kind === 'revealed' && (
           <p className="text-destructive text-sm font-medium">
-            Not quite. The answer was: <span lang={answerLang}>{expectedAnswer}</span>
+            {feedback.missNote ?? 'Not quite.'} The answer was:{' '}
+            <span lang={answerLang}>{expectedAnswer}</span>
           </p>
         )}
       </div>

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { feedbackNote, gradePhrase, ratingFor, type JevGrader } from './grading'
+import { feedbackNote, gradePhrase, isMisspelling, ratingFor, type JevGrader } from './grading'
 
 const phrase = { english: "to put one's foot in it", spanish: 'meter la pata' }
 
@@ -40,9 +40,8 @@ describe('gradePhrase', () => {
   })
 
   it.each([
-    ['minor_slip', true],
+    ['minor_slip', false],
     ['valid_variant', true],
-    ['exact', true],
     ['wrong', false],
   ] as const)('uses a confident Jev verdict %s (correct: %s)', async (verdict, correct) => {
     const callJev = vi.fn<JevGrader>().mockResolvedValue({ verdict, confidence: 0.9 })
@@ -51,6 +50,16 @@ describe('gradePhrase', () => {
       verdict,
       source: 'jev',
       jevVerdict: verdict,
+    })
+  })
+
+  it('treats a Jev "exact" as a misspelling, since an exact match never reaches Jev', async () => {
+    const callJev = vi.fn<JevGrader>().mockResolvedValue({ verdict: 'exact', confidence: 0.9 })
+    await expect(gradePhrase('meter la pada', phrase, callJev)).resolves.toEqual({
+      correct: false,
+      verdict: 'minor_slip',
+      source: 'jev',
+      jevVerdict: 'exact',
     })
   })
 
@@ -103,37 +112,29 @@ describe('gradePhrase', () => {
 })
 
 describe('ratingFor', () => {
-  it('is good for a first-try exact or valid variant', () => {
-    expect(ratingFor({ correct: true, attemptCount: 1, verdict: 'exact' })).toBe('good')
-    expect(ratingFor({ correct: true, attemptCount: 1, verdict: 'valid_variant' })).toBe('good')
-  })
-
-  it('is hard for a minor slip, even on the first try', () => {
-    expect(ratingFor({ correct: true, attemptCount: 1, verdict: 'minor_slip' })).toBe('hard')
+  it('is good when correct on the first try', () => {
+    expect(ratingFor({ correct: true, attemptCount: 1 })).toBe('good')
   })
 
   it('is hard when it took a second or third try', () => {
-    expect(ratingFor({ correct: true, attemptCount: 2, verdict: 'exact' })).toBe('hard')
-    expect(ratingFor({ correct: true, attemptCount: 3, verdict: 'exact' })).toBe('hard')
+    expect(ratingFor({ correct: true, attemptCount: 2 })).toBe('hard')
+    expect(ratingFor({ correct: true, attemptCount: 3 })).toBe('hard')
   })
 
   it('is again when the answer was revealed', () => {
-    expect(ratingFor({ correct: false, attemptCount: 3, verdict: 'wrong' })).toBe('again')
+    expect(ratingFor({ correct: false, attemptCount: 3 })).toBe('again')
   })
 })
 
 describe('feedbackNote', () => {
-  it('shows the exact form for slips and variants', () => {
+  it('shows the exact form for an accepted variant', () => {
     const grade = {
       correct: true,
-      verdict: 'minor_slip',
+      verdict: 'valid_variant',
       source: 'jev',
-      jevVerdict: 'minor_slip',
+      jevVerdict: 'valid_variant',
     } as const
     expect(feedbackNote(grade, 'meter la pata')).toBe('Accepted. Exact form: meter la pata')
-    expect(feedbackNote({ ...grade, verdict: 'valid_variant' }, 'meter la pata')).toBe(
-      'Accepted. Exact form: meter la pata',
-    )
   })
 
   it('has no note for an exact answer or a wrong one', () => {
@@ -143,5 +144,41 @@ describe('feedbackNote', () => {
     expect(
       feedbackNote({ correct: false, verdict: 'wrong', source: 'jev', jevVerdict: 'wrong' }, 'x'),
     ).toBeNull()
+  })
+})
+
+describe('isMisspelling', () => {
+  it('is true whenever Jev called it a minor slip, however sure it was', () => {
+    expect(
+      isMisspelling({
+        correct: false,
+        verdict: 'minor_slip',
+        source: 'jev',
+        jevVerdict: 'minor_slip',
+      }),
+    ).toBe(true)
+    expect(
+      isMisspelling({
+        correct: false,
+        verdict: 'wrong',
+        source: 'fallback',
+        jevVerdict: 'minor_slip',
+      }),
+    ).toBe(true)
+  })
+
+  it('is true when Jev called a non-matching answer exact', () => {
+    expect(
+      isMisspelling({ correct: false, verdict: 'wrong', source: 'fallback', jevVerdict: 'exact' }),
+    ).toBe(true)
+  })
+
+  it('is false for other verdicts and when Jev never answered', () => {
+    expect(
+      isMisspelling({ correct: false, verdict: 'wrong', source: 'jev', jevVerdict: 'wrong' }),
+    ).toBe(false)
+    expect(
+      isMisspelling({ correct: false, verdict: 'wrong', source: 'fallback', jevVerdict: null }),
+    ).toBe(false)
   })
 })

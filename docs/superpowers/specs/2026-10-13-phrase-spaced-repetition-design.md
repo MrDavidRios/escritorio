@@ -218,10 +218,21 @@ record_phrase_review(
 2. Otherwise call `grade-phrase` with a **~4 s timeout**.
 3. Confidence < **0.6**, error, or timeout → `wrong`,
    `grade_source = fallback`.
-4. Otherwise use Jev's verdict, `grade_source = jev`.
+4. Otherwise use Jev's verdict, `grade_source = jev`. Jev sometimes
+   says `exact` for a misspelled answer; since an exact match never
+   reaches Jev, the client treats a Jev `exact` as `minor_slip`.
 
-`minor_slip` and `valid_variant` count as correct. Feedback always
-shows the exact expected form ("Accepted. Exact form: _meter la pata_").
+`valid_variant` counts as correct, and its feedback shows the exact
+expected form ("Accepted. Exact form: _meter la pata_").
+
+`minor_slip` (the right phrase, misspelled) counts as **wrong** and uses
+an attempt, with its own message: "The content is correct, but the
+spelling is wrong. Try again." This shows whenever Jev says `minor_slip`,
+even below the confidence threshold, since it only changes the wording of
+a rejection. From the second misspelling on, the retry also shows a hint:
+the expected answer with each misspelled word blanked from its first wrong
+letter ("una hemorra\_\_\_ de placer"). An accent counts as part of the
+letter. A misspelling on the last attempt reveals the answer as usual.
 
 At session start, fire one background request to `grade-phrase` to
 warm a cold Edge Function.
@@ -230,11 +241,11 @@ warm a cold Edge Function.
 
 Up to 3 attempts per phrase, as in the existing quiz.
 
-| Outcome                                            | Rating |
-| -------------------------------------------------- | ------ |
-| Correct on 1st try via `exact` or `valid_variant`  | good   |
-| `minor_slip` on any try, or correct on 2nd/3rd try | hard   |
-| Revealed after 3 misses                            | again  |
+| Outcome                                           | Rating |
+| ------------------------------------------------- | ------ |
+| Correct on 1st try via `exact` or `valid_variant` | good   |
+| Correct on 2nd/3rd try                            | hard   |
+| Revealed after 3 misses                           | again  |
 
 ## Scheduling (`src/features/phrases/scheduler.ts`)
 
