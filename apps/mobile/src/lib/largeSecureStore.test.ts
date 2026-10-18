@@ -67,3 +67,28 @@ test('removeItem clears both stores', async () => {
   expect(stores.data.size).toBe(0)
   expect(stores.keys.size).toBe(0)
 })
+
+// Each write must touch only one store, so a read mid-write or a crash
+// between two writes can never pair a new key with old ciphertext.
+test('a later write leaves the Keychain key unchanged', async () => {
+  const stores = memoryStores()
+  const store = createLargeSecureStore(stores)
+  await store.setItem('escritorio-auth', SESSION)
+  const key = stores.keys.get('escritorio-auth')
+
+  await store.setItem('escritorio-auth', JSON.stringify({ refreshed: true }))
+
+  expect(stores.keys.get('escritorio-auth')).toBe(key)
+  expect(await store.getItem('escritorio-auth')).toBe(JSON.stringify({ refreshed: true }))
+})
+
+test('writing the same value twice never reuses a keystream', async () => {
+  const stores = memoryStores()
+  const store = createLargeSecureStore(stores)
+  await store.setItem('escritorio-auth', SESSION)
+  const first = stores.data.get('escritorio-auth')
+
+  await store.setItem('escritorio-auth', SESSION)
+
+  expect(stores.data.get('escritorio-auth')).not.toBe(first)
+})

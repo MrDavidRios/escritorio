@@ -24,8 +24,13 @@ const defaultRandomBytes = (n: number) => crypto.getRandomValues(new Uint8Array(
 
 /**
  * Supabase session storage that fits the Keychain's 2 KB item limit: the
- * session is AES-256-CTR encrypted into AsyncStorage, and only the per-write
- * random key lives in the Keychain (Supabase's LargeSecureStore pattern).
+ * session is AES-256-CTR encrypted into AsyncStorage, and only the key lives
+ * in the Keychain (Supabase's LargeSecureStore pattern).
+ *
+ * The key is created once per item and then left alone. Every write stores
+ * a fresh random counter block next to its ciphertext (`<counter>:<cipher>`),
+ * so a write changes only AsyncStorage: a read in the middle of a write, or a
+ * crash between writes, can never pair a new key with old ciphertext.
  */
 export function createLargeSecureStore({
   keyStore = SecureStore,
@@ -36,23 +41,36 @@ export function createLargeSecureStore({
   dataStore?: DataStore
   randomBytes?: (n: number) => Uint8Array
 } = {}): SessionStorage {
-  function cipher(key: Uint8Array) {
-    return new aesjs.ModeOfOperation.ctr(key, new aesjs.Counter(1))
+  const { hex, utf8 } = aesjs.utils
+
+  function cipher(key: Uint8Array, counter: Uint8Array) {
+    return new aesjs.ModeOfOperation.ctr(key, new aesjs.Counter(counter))
+  }
+
+  async function keyFor(name: string): Promise<Uint8Array> {
+    const existing = await keyStore.getItemAsync(name)
+    if (existing) return hex.toBytes(existing)
+    const key = randomBytes(32)
+    await keyStore.setItemAsync(name, hex.fromBytes(key))
+    return key
   }
 
   return {
     async getItem(name) {
-      const encrypted = await dataStore.getItem(name)
-      if (!encrypted) return null
+      const stored = await dataStore.getItem(name)
+      if (!stored) return null
       const keyHex = await keyStore.getItemAsync(name)
-      // A missing key (or one from a different write) can't decrypt the
+      const [counterHex, encryptedHex] = stored.split(':')
+      // A missing key (or one from a different install) can't decrypt the
       // data. Treat it as no session instead of handing auth-js garbage.
-      if (!keyHex) return null
+      if (!keyHex || !counterHex || !encryptedHex) return null
       try {
-        const bytes = cipher(aesjs.utils.hex.toBytes(keyHex)).decrypt(
-          aesjs.utils.hex.toBytes(encrypted),
+        const bytes = cipher(hex.toBytes(keyHex), hex.toBytes(counterHex)).decrypt(
+          hex.toBytes(encryptedHex),
         )
-        const value = aesjs.utils.utf8.fromBytes(bytes)
+        const value = utf8.fromBytes(bytes)
+        // auth-js only stores JSON, so a value that doesn't parse means the
+        // key didn't match.
         JSON.parse(value)
         return value
       } catch {
@@ -61,13 +79,14 @@ export function createLargeSecureStore({
     },
 
     async setItem(name, value) {
-      const key = randomBytes(32)
-      const encrypted = cipher(key).encrypt(aesjs.utils.utf8.toBytes(value))
-      await keyStore.setItemAsync(name, aesjs.utils.hex.fromBytes(key))
-      await dataStore.setItem(name, aesjs.utils.hex.fromBytes(encrypted))
+      const key = await keyFor(name)
+      const counter = randomBytes(16)
+      const encrypted = cipher(key, counter).encrypt(utf8.toBytes(value))
+      await dataStore.setItem(name, `${hex.fromBytes(counter)}:${hex.fromBytes(encrypted)}`)
     },
 
     async removeItem(name) {
+      // Data first: a crash in between leaves a key with no data, which reads as no session.
       await dataStore.removeItem(name)
       await keyStore.deleteItemAsync(name)
     },

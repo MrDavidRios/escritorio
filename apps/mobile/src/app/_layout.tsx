@@ -9,6 +9,8 @@ import { queryClient } from '@/lib/queryClient'
 import { SESSION_STORAGE_KEY, sessionStorage, supabase } from '@/lib/supabase'
 
 const readUser = () => readStoredUser(sessionStorage, SESSION_STORAGE_KEY)
+const clearStoredSession = () => sessionStorage.removeItem(SESSION_STORAGE_KEY)
+const clearCache = () => queryClient.clear()
 
 function Routes() {
   const auth = useAuth()
@@ -31,7 +33,12 @@ export default function RootLayout() {
   useEffect(() => bindAutoRefresh(supabase.auth), [])
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider auth={supabase.auth} readStoredUser={readUser}>
+      <AuthProvider
+        auth={supabase.auth}
+        readStoredUser={readUser}
+        clearStoredSession={clearStoredSession}
+        onSignedOut={clearCache}
+      >
         <Routes />
       </AuthProvider>
     </QueryClientProvider>

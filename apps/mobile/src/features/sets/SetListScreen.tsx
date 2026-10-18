@@ -18,7 +18,9 @@ export function SetListScreen({
         contentInsetAdjustmentBehavior="automatic"
         data={data ?? []}
         keyExtractor={(set) => set.id}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} />}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} />
+        }
         renderItem={({ item }) => (
           <Pressable
             accessibilityRole="button"

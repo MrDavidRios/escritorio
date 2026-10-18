@@ -1,7 +1,9 @@
 import { act, render, screen } from '@testing-library/react-native'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { Text } from 'react-native'
-import { AuthProvider, useAuth, type AuthLike } from './AuthProvider'
+import { Pressable } from 'react-native'
+import { fireEvent } from '@testing-library/react-native'
+import { AuthProvider, useAuth, useSignOut, type AuthLike } from './AuthProvider'
 import { readStoredUser } from './storedUser'
 
 function fakeAuth() {
@@ -11,6 +13,7 @@ function fakeAuth() {
       callback = cb
       return { data: { subscription: { unsubscribe: () => (callback = undefined) } } }
     },
+    signOut: jest.fn().mockResolvedValue({ error: null }),
   }
   return {
     auth,
@@ -20,15 +23,29 @@ function fakeAuth() {
 
 function Status() {
   const state = useAuth()
-  return <Text>{state.status === 'signedIn' ? `in:${state.user.id}` : state.status}</Text>
+  const signOut = useSignOut()
+  return (
+    <>
+      <Text>{state.status === 'signedIn' ? `in:${state.user.id}` : state.status}</Text>
+      <Pressable accessibilityRole="button" onPress={signOut}>
+        <Text>Sign out</Text>
+      </Pressable>
+    </>
+  )
 }
+
+const noop = async () => {}
 
 const session = { user: { id: 'u1', email: 'a@b.c' } } as Session
 
 test('a stored session counts as signed in even when auth-js reports none (offline, expired token)', async () => {
   const { auth, emit } = fakeAuth()
   await render(
-    <AuthProvider auth={auth} readStoredUser={async () => ({ id: 'u1', email: 'a@b.c' })}>
+    <AuthProvider
+      auth={auth}
+      readStoredUser={async () => ({ id: 'u1', email: 'a@b.c' })}
+      clearStoredSession={noop}
+    >
       <Status />
     </AuthProvider>,
   )
@@ -41,7 +58,11 @@ test('a stored session counts as signed in even when auth-js reports none (offli
 
 test('no stored session means signed out', async () => {
   await render(
-    <AuthProvider auth={fakeAuth().auth} readStoredUser={async () => null}>
+    <AuthProvider
+      auth={fakeAuth().auth}
+      readStoredUser={async () => null}
+      clearStoredSession={noop}
+    >
       <Status />
     </AuthProvider>,
   )
@@ -51,7 +72,7 @@ test('no stored session means signed out', async () => {
 test('signing in and out updates the state', async () => {
   const { auth, emit } = fakeAuth()
   await render(
-    <AuthProvider auth={auth} readStoredUser={async () => null}>
+    <AuthProvider auth={auth} readStoredUser={async () => null} clearStoredSession={noop}>
       <Status />
     </AuthProvider>,
   )
@@ -63,6 +84,67 @@ test('signing in and out updates the state', async () => {
   // Also what auth-js emits when the refresh token is rejected online.
   await act(() => emit('SIGNED_OUT', null))
   expect(screen.getByText('signedOut')).toBeOnTheScreen()
+})
+
+const storedUser = async () => ({ id: 'u1', email: 'a@b.c' })
+
+test('sign-out ends the session locally and clears cached data', async () => {
+  const { auth } = fakeAuth()
+  const onSignedOut = jest.fn()
+  await render(
+    <AuthProvider
+      auth={auth}
+      readStoredUser={storedUser}
+      clearStoredSession={noop}
+      onSignedOut={onSignedOut}
+    >
+      <Status />
+    </AuthProvider>,
+  )
+  await screen.findByText('in:u1')
+
+  await fireEvent.press(screen.getByRole('button', { name: 'Sign out' }))
+
+  expect(auth.signOut).toHaveBeenCalledWith({ scope: 'local' })
+  expect(screen.getByText('signedOut')).toBeOnTheScreen()
+  expect(onSignedOut).toHaveBeenCalledTimes(1)
+})
+
+test('sign-out still works offline with an expired token, when auth-js gives up without removing the session', async () => {
+  const { auth } = fakeAuth()
+  jest.mocked(auth.signOut).mockResolvedValue({ error: new Error('Failed to fetch') })
+  const clearStoredSession = jest.fn().mockResolvedValue(undefined)
+  await render(
+    <AuthProvider auth={auth} readStoredUser={storedUser} clearStoredSession={clearStoredSession}>
+      <Status />
+    </AuthProvider>,
+  )
+  await screen.findByText('in:u1')
+
+  await fireEvent.press(screen.getByRole('button', { name: 'Sign out' }))
+
+  expect(clearStoredSession).toHaveBeenCalledTimes(1)
+  expect(screen.getByText('signedOut')).toBeOnTheScreen()
+})
+
+test("a session ended by the server (refresh token rejected) clears the previous user's cached data", async () => {
+  const { auth, emit } = fakeAuth()
+  const onSignedOut = jest.fn()
+  await render(
+    <AuthProvider
+      auth={auth}
+      readStoredUser={storedUser}
+      clearStoredSession={noop}
+      onSignedOut={onSignedOut}
+    >
+      <Status />
+    </AuthProvider>,
+  )
+  await screen.findByText('in:u1')
+
+  await act(() => emit('SIGNED_OUT', null))
+
+  expect(onSignedOut).toHaveBeenCalledTimes(1)
 })
 
 describe('readStoredUser', () => {
