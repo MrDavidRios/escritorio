@@ -14,12 +14,17 @@ export function cardImagePath(ownerId: string, cardId: string, filename: string)
 }
 
 export function createCardImagesApi(supabase: SupabaseClient) {
+  // Blob (web File) uploads as multipart and keeps the blob's own type;
+  // ArrayBuffer (React Native, which can't upload Blobs) is sent raw with
+  // contentType, so images are served with the right MIME type either way.
   async function uploadCardImage(
     path: string,
-    file: Blob,
-    { upsert = false }: { upsert?: boolean } = {},
+    body: Blob | ArrayBuffer,
+    { contentType, upsert = false }: { contentType: string; upsert?: boolean },
   ): Promise<void> {
-    const { error } = await supabase.storage.from(IMAGE_BUCKET).upload(path, file, { upsert })
+    const { error } = await supabase.storage
+      .from(IMAGE_BUCKET)
+      .upload(path, body, { contentType, upsert })
     if (error) throw error
   }
 

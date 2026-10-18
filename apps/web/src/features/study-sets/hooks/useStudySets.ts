@@ -58,9 +58,12 @@ export function useUpdateStudySet(id: string) {
         const newPath = studySetImagePath(user!.id, id, image.name)
         if (newPath === currentImagePath) {
           // Same extension: overwrite in place.
-          await api.studySetImages.uploadStudySetImage(newPath, image, { upsert: true })
+          await api.studySetImages.uploadStudySetImage(newPath, image, {
+            contentType: image.type,
+            upsert: true,
+          })
         } else {
-          await api.studySetImages.uploadStudySetImage(newPath, image)
+          await api.studySetImages.uploadStudySetImage(newPath, image, { contentType: image.type })
           if (currentImagePath) {
             await api.studySetImages.deleteStudySetImages([currentImagePath]).catch(() => {})
           }

@@ -56,7 +56,8 @@ export function useCreateCard(studySetId: string, ownerId: string) {
 
       // Upload first, then insert the DB row -- avoids a row ever
       // referencing a missing storage object.
-      if (image && imagePath) await api.cardImages.uploadCardImage(imagePath, image)
+      if (image && imagePath)
+        await api.cardImages.uploadCardImage(imagePath, image, { contentType: image.type })
       try {
         return await api.cards.createCard(id, studySetId, {
           image_path: imagePath,
@@ -105,9 +106,12 @@ export function useUpdateCard(studySetId: string, ownerId: string) {
         const newPath = cardImagePath(ownerId, card.id, image.name)
         if (newPath === card.image_path) {
           // Same extension: overwrite in place.
-          await api.cardImages.uploadCardImage(newPath, image, { upsert: true })
+          await api.cardImages.uploadCardImage(newPath, image, {
+            contentType: image.type,
+            upsert: true,
+          })
         } else {
-          await api.cardImages.uploadCardImage(newPath, image)
+          await api.cardImages.uploadCardImage(newPath, image, { contentType: image.type })
           if (card.image_path)
             await api.cardImages.deleteCardImages([card.image_path]).catch(() => {})
           imagePath = newPath
