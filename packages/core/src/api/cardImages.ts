@@ -9,6 +9,8 @@ const SIGNED_URL_EXPIRES_IN_SECONDS = 60 * 60
 
 export const SIGNED_URL_STALE_TIME_MS = (SIGNED_URL_EXPIRES_IN_SECONDS - 10 * 60) * 1000
 
+const LIST_PAGE_SIZE = 100
+
 export function cardImagePath(ownerId: string, cardId: string, filename: string): string {
   return `${ownerId}/${cardId}.${extensionOf(filename)}`
 }
@@ -48,8 +50,36 @@ export function createCardImagesApi(supabase: SupabaseClient) {
     return map
   }
 
+  /**
+   * Storage path → updated_at for every image the user has stored: card
+   * images (`owner/<card>.ext`) and set images (`owner/sets/<set>.ext`).
+   * Images are overwritten in place, so updated_at is how the offline
+   * mirror notices a replaced image.
+   */
+  async function listImageVersions(ownerId: string): Promise<Record<string, string>> {
+    const versions: Record<string, string> = {}
+    for (const folder of [ownerId, `${ownerId}/sets`]) {
+      for (let offset = 0; ; offset += LIST_PAGE_SIZE) {
+        const { data, error } = await supabase.storage.from(IMAGE_BUCKET).list(folder, {
+          limit: LIST_PAGE_SIZE,
+          offset,
+          sortBy: { column: 'name', order: 'asc' },
+        })
+        if (error) throw error
+        for (const object of data) {
+          // Sub-folders (like `sets`) are listed with a null id.
+          if (object.id && object.updated_at)
+            versions[`${folder}/${object.name}`] = object.updated_at
+        }
+        if (data.length < LIST_PAGE_SIZE) break
+      }
+    }
+    return versions
+  }
+
   return {
     uploadCardImage,
+    listImageVersions,
     deleteCardImages,
     getSignedImageUrls,
     // One signed URL per path, batched with any others requested in the same
