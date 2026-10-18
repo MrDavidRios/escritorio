@@ -14,6 +14,7 @@ module.exports = {
         primary: { DEFAULT: token('primary'), foreground: token('primary-foreground') },
         border: token('border'),
         destructive: token('destructive'),
+        accent: token('accent'),
       },
     },
   },
