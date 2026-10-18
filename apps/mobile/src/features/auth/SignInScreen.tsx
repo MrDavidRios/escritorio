@@ -11,8 +11,10 @@ type FieldErrors = Partial<Record<keyof AuthFormValues, string>>
 
 const logo = require('../../../assets/logo.png')
 
+// Font size only: a line height on an iOS TextInput makes the caret taller
+// than the text and pushes the text to the bottom.
 const inputClassName =
-  'rounded-lg border border-border bg-background px-3 py-3 text-base text-foreground'
+  'rounded-lg border border-border bg-background px-3 py-3 text-[16px] text-foreground'
 
 export function SignInScreen({
   signIn,

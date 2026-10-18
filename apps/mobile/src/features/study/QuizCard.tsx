@@ -170,7 +170,9 @@ export function QuizCard({
           }}
           selection={forcedSelection}
           onSubmitEditing={submit}
-          className="rounded-lg border border-border bg-background px-3 py-3 text-lg text-foreground"
+          // Font size only: a line height on an iOS TextInput makes the caret
+          // taller than the text and pushes the text to the bottom.
+          className="rounded-lg border border-border bg-background px-3 py-3 text-[18px] text-foreground"
         />
         <Pressable
           accessibilityRole="button"
