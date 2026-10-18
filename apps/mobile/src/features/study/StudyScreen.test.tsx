@@ -6,7 +6,7 @@ import { api } from '@/lib/api'
 import { newId } from '@/lib/ids'
 import { makeCard, makeStudySet } from '@/test/fixtures'
 import { renderWithQuery } from '@/test/renderWithQuery'
-import type { StudyWriter } from './createStudyWriter'
+import type { StudyWriter } from './writer'
 import { StudyScreen } from './StudyScreen'
 
 jest.mock('@/lib/api', () => ({
@@ -49,7 +49,6 @@ function fakeWriter() {
     completeSession: jest.fn((id, patch) => {
       calls.push(['completeSession', id, patch])
     }),
-    idle: jest.fn(() => Promise.resolve()),
   }
   return { writer, calls }
 }

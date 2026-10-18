@@ -18,7 +18,7 @@ import { Screen } from '@/components/Screen'
 import { useCards, useSignedImageUrl, useStudySet } from '@/features/sets/hooks'
 import { useStudySettings } from '@/features/sets/studySettings'
 import { newId } from '@/lib/ids'
-import type { StudyWriter } from './createStudyWriter'
+import type { StudyWriter } from './writer'
 import { QuizCard, type AnswerResult } from './QuizCard'
 
 type Run = { sessionId: string | null; config: StudyConfig; questions: Question[] }
