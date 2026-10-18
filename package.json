@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "dev": "bun run --filter @escritorio/web dev",
+    "dev:mobile": "cd apps/mobile && bun run start",
     "build": "bun run --filter '*' typecheck && bun run --filter @escritorio/web build",
     "typecheck": "bun run --filter '*' typecheck",
     "test": "bun run --filter '*' test",

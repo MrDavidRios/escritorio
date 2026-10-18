@@ -16,6 +16,7 @@ as a static site to GitHub Pages.
 ## Repo layout
 
 - `apps/web` — the Vite web app (deployed to GitHub Pages)
+- `apps/mobile` — the Expo iOS app (`@escritorio/mobile`)
 - `packages/core` — `@escritorio/core`: types, grading, study modes,
   schemas, dictionary API and query keys shared by every app
 - `supabase/` — migrations, seed data and local stack config
@@ -27,9 +28,16 @@ as a static site to GitHub Pages.
 2. `bun install`
 3. `bun run dev`
 
+## Mobile app (iOS)
+
+1. Put `SUPABASE_URL` and `SUPABASE_ANON_KEY` in the repo-root `.env.local`
+   (the app falls back to `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` there).
+2. `bun install`, then `bun run dev:mobile` and scan the QR code with the Expo Go app on your iPhone.
+
 ## Scripts (run from the repo root)
 
 - `bun run dev` — start the web dev server
+- `bun run dev:mobile` — start the Expo dev server for the iOS app
 - `bun run build` — typecheck every workspace and build the web app
 - `bun run typecheck` — typecheck every workspace
 - `bun run test` — run every workspace's tests (Vitest)

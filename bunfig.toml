@@ -1,0 +1,4 @@
+[install]
+# Hoisted (one copy per package) rather than isolated: isolated installs split
+# react-native into peer variants, and Metro would bundle both copies.
+linker = "hoisted"
