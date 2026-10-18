@@ -1,7 +1,13 @@
-import { useLocalSearchParams } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { SetDetailScreen } from '@/features/sets/SetDetailScreen'
 
 export default function SetDetailRoute() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  return <SetDetailScreen id={id} />
+  const router = useRouter()
+  return (
+    <SetDetailScreen
+      id={id}
+      onStudy={() => router.push({ pathname: '/sets/[id]/study', params: { id } })}
+    />
+  )
 }
