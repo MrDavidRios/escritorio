@@ -132,9 +132,12 @@ mobile hooks are offline-aware. Both use `queryKeys.ts` from core.
 
 ### Study mode picker
 
-Changing mode/direction/visibility updates the cached `study_sets` row
-optimistically and enqueues an `updateStudySetMode` outbox op
-(last write wins), so it works offline.
+Same as web: the choice is kept on the device, per set (AsyncStorage
+under web's `study-config:<id>` key, parsed by core's
+`parseStudySettings`), and falls back to the set's own
+`study_mode` / `conversion_direction` / `meaning_visibility` fields. It
+is never written to Supabase, so it works offline and doesn't change
+other devices. (Web moved to this in PR #11; DR-13 matches it.)
 
 ### UI
 
@@ -197,7 +200,6 @@ Infinity`, persister `maxAge: Infinity`). All queries use
   - `createStudySession { id, study_set_id, mode, direction, visibility, deck_size, started_at }`
   - `completeStudySession { id, completed_at, cards_correct }`
   - `createQuizAttempt { id, card_id, is_correct, attempt_count, session_id, resolved_direction, answered_at }`
-  - `updateStudySetMode { study_set_id, study_mode, conversion_direction, meaning_visibility }`
 - Ids come from `expo-crypto` `randomUUID()` and timestamps are taken
   when the event happens, so analytics reflect when the learner
   actually studied, not when the sync happened.

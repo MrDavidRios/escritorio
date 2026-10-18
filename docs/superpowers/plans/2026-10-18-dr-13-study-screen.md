@@ -16,7 +16,7 @@ The session and every attempt are saved to Supabase.
 - **Quiz logic** comes from `@escritorio/core` (`studyMode.ts`, `grading.ts`), so mobile grades exactly like web.
 - **Screens:** `QuizCard` handles one card (attempts, feedback, accent pad); `StudyScreen` handles one run (deck built once, session lifecycle, summary).
 - **Saving:** all writes go through a `StudyWriter` that sends them one at a time, in order, with client-generated ids. DR-14 swaps its in-memory queue for the persisted outbox without touching the screens.
-- **Mode picker:** it updates the cached `study_sets` row optimistically and saves it with a serialized mutation (last write wins).
+- **Mode picker:** it works like web. The choice is kept on the device, per set (AsyncStorage on the phone, `localStorage` on web), and falls back to the set's own fields. It is never written to Supabase. The key format and the check that rejects bad stored values come from core, so both apps read the same data the same way.
 
 **Tech Stack:** Expo SDK 58, Expo Router 58, NativeWind 4, TanStack Query 5, `expo-haptics`, `expo-crypto`, `expo-image`, `jest-expo` + React Native Testing Library 14 (async `render`/`fireEvent`).
 
@@ -32,11 +32,11 @@ The session and every attempt are saved to Supabase.
 
 ## Global Constraints
 
-- **Core rules:** grading and deck building come from `@escritorio/core` (`isAnswerCorrect`, `eligibleCards`, `buildQuestion`, `configFromStudySet`, `exclusionReason`, `noEligibleCardsMessage`, `studyModeLabel`). Don't reimplement them in the app.
+- **Core rules:** grading and deck building come from `@escritorio/core` (`isAnswerCorrect`, `eligibleCards`, `buildQuestion`, `configFromFields`, `parseStudySettings`, `exclusionReason`, `noEligibleCardsMessage`, `studyModeLabel`). Don't reimplement them in the app.
 - **Answer field:** `autoCapitalize="none"`, `autoCorrect={false}`, `spellCheck={false}`, `returnKeyType="go"`, and the return key submits. The accented-character pad sits above the keyboard (`KeyboardAvoidingView`).
 - **Haptics:** `expo-haptics` gives success on correct, warning on retry, and error on revealed.
 - **Attempts:** 3 per card. A correct answer, or the 3rd wrong one, ends the card. One `quiz_attempts` row is written per card.
-- **Mode picker:** changing mode, direction or visibility updates the cached `study_sets` row optimistically. The save is last-write-wins.
+- **Mode picker:** changing mode, direction or visibility saves it on the device for that set, as web does. Nothing is written to `study_sets`. The quiz uses the same saved choice as the set page.
 - **Writes:** sessions and attempts carry client-generated ids (`id`, `started_at` / `answered_at`). Core's upserts make a re-send a no-op.
 - **UI:** NativeWind with the theme tokens in `global.css`. The theme follows the system light/dark setting.
 - **Tests:** `jest-expo` + RNTL 14. `render`, `fireEvent` and `act` are async, so always `await` them.
@@ -45,8 +45,9 @@ The session and every attempt are saved to Supabase.
 
 ### Rulings made while planning (spec gaps)
 
-- **Writes are online-only in DR-13.** The spec's `updateStudySetMode` outbox op and offline queue are DR-14. Here, sessions and attempts go through an in-memory serial queue (`createStudyWriter`), and the mode is saved with a direct `updateStudySet` call. Client ids are generated now, so DR-14 can persist the same ops unchanged.
-- **The mode is saved to the server row, as the spec says.** Web keeps a per-device override in `localStorage` (`studyConfigStorage.ts`) that wins over the row. On a browser where the mode was changed, web won't show the phone's choice. That's existing web behaviour and out of scope here.
+- **Writes are online-only in DR-13.** The offline queue is DR-14. Here, sessions and attempts go through an in-memory serial queue (`createStudyWriter`). Client ids are generated now, so DR-14 can persist the same ops unchanged.
+- **The mode is kept on the device, matching web.** The spec said to save it to `study_sets`, but web stopped doing that in PR #11 ("so switching modes is instant and doesn't touch shared state"). The user wants both apps to behave the same, so the spec's `updateStudySetMode` op is dropped and no migration is needed. Each device starts from the set's own fields until the learner picks something there. The spec is updated to match.
+- **Stored-setting parsing moves to core.** `studySettingsKey` and `parseStudySettings` live in `@escritorio/core`, and web's `studyConfigStorage.ts` uses them. The only change on web is that the stored direction and visibility must now be valid values, not just any string. A bad value falls back to the set's fields instead of producing a broken config.
 - **The study screen is a full-screen modal with a "Close" button**, not a pushed screen with a header. This keeps `KeyboardAvoidingView` free of a header-height offset, and a quiz is a focused task.
 - **An empty answer is ignored**, not counted as a wrong attempt (web counts it). A stray return-key press shouldn't use up one of the 3 attempts.
 - **After a card ends, the return key goes to the next card.** The field stays focused, so the keyboard doesn't drop and come back between cards; typing into the finished card is ignored.
@@ -54,15 +55,15 @@ The session and every attempt are saved to Supabase.
 - **Card order is the set's order, with no shuffling.** This matches web.
 - **The accent pad has web's six letters** (á é í ó ú ñ). It's shown only when the answer is in Spanish, as on web.
 - **Card rows on the set page show web's exclusion badge** ("No image", …) for cards the current mode skips.
-- **The stale comment in `features/sets/hooks.ts`** says offline is "DR-15". It's DR-14; fix it in Task 5.
+- **The stale comment in `features/sets/hooks.ts`** says offline is "DR-15". It's DR-14; fix it in Task 6.
 
 ## Review Focus
 
-1. **Cards refetch mid-session.** A focus refetch or a cache update must not restart the deck, change its length, or re-roll `random` directions. Pinned by a Task 4 test.
+1. **Cards refetch mid-session.** A focus refetch or a cache update must not restart the deck, change its length, or re-roll `random` directions. Pinned by a Task 5 test.
 2. **Writes reach Supabase out of order.** An attempt sent before its session row exists fails the `session_id` foreign key. Writes must go one at a time, in the order they were made. Pinned by a Task 1 test.
 3. **Empty or accidental return-key submit.** Submitting an empty field must not use up one of the 3 attempts. Pinned by a Task 3 test.
 4. **Next tapped twice in one frame.** A double tap, or return plus a tap, must advance exactly one card. Pinned by a Task 3 test.
-5. **Mode save fails** (offline, or an RLS error). The picker must go back to the mode the server still has and say the save failed, rather than showing a mode that was never saved. Pinned by a Task 5 test.
+5. **Stored mode is missing, corrupt, or storage throws.** The set page and the quiz must fall back to the set's own fields, as web does, and must not get stuck loading. The quiz must also use the device's choice, not the set's fields, when both exist. Pinned by Task 4 tests (fallback) and a Task 5 test (the quiz uses the stored choice).
 
 ---
 
@@ -988,7 +989,326 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task 4: `StudyScreen` and the `/sets/[id]/study` route
+### Task 4: Per-device study settings (shared with web)
+
+**Files:**
+
+- Create: `packages/core/src/studySettings.ts`
+- Test: `packages/core/src/studySettings.test.ts`
+- Modify: `packages/core/src/index.ts` (export it)
+- Modify: `apps/web/src/features/study/studyConfigStorage.ts` (use the core key and parser)
+- Create: `apps/mobile/src/features/sets/studySettings.ts`
+- Test: `apps/mobile/src/features/sets/studySettings.test.tsx`
+
+**Interfaces:**
+
+- Consumes:
+  - `useStudySet(id)` from `@/features/sets/hooks`
+  - `makeStudySet` (Task 3)
+  - AsyncStorage, already a dependency and mocked in `jest.setup.js`
+- Produces:
+  - `@escritorio/core`:
+    - `type StudySettings = Pick<StudySet, 'study_mode' | 'conversion_direction' | 'meaning_visibility'>`
+    - `studySettingsKey(studySetId: string): string`, which returns `study-config:<id>` (web's existing key)
+    - `parseStudySettings(raw: string | null): StudySettings | null`
+  - `apps/mobile/src/features/sets/studySettings.ts`:
+    - `useStudySettings(id: string): { settings: StudySettings | undefined; update: (patch: Partial<StudySettings>) => void }`
+    - `settings` is `undefined` until both the stored value has been read and the set has loaded. The stored value wins; otherwise it's the set's own fields.
+
+- [ ] **Step 1: Write the failing core test**
+
+`packages/core/src/studySettings.test.ts`:
+
+```ts
+import { describe, expect, it } from 'vitest'
+import { parseStudySettings, studySettingsKey } from './studySettings'
+
+const valid = { study_mode: 'meaning', conversion_direction: 'es_en', meaning_visibility: 'image' }
+
+describe('studySettingsKey', () => {
+  it("uses web's existing localStorage key", () => {
+    expect(studySettingsKey('set-1')).toBe('study-config:set-1')
+  })
+})
+
+describe('parseStudySettings', () => {
+  it('reads a stored value', () => {
+    expect(parseStudySettings(JSON.stringify(valid))).toEqual(valid)
+  })
+
+  it('keeps only the three settings fields', () => {
+    expect(parseStudySettings(JSON.stringify({ ...valid, title: 'x' }))).toEqual(valid)
+  })
+
+  it.each([
+    ['nothing stored', null],
+    ['not JSON', '{oops'],
+    ['not an object', '"meaning"'],
+    ['an unknown mode', JSON.stringify({ ...valid, study_mode: 'typing' })],
+    ['an unknown direction', JSON.stringify({ ...valid, conversion_direction: 'sideways' })],
+    ['an unknown visibility', JSON.stringify({ ...valid, meaning_visibility: 'audio' })],
+  ])('returns null for %s', (_label, raw) => {
+    expect(parseStudySettings(raw)).toBeNull()
+  })
+})
+```
+
+- [ ] **Step 2: Run it to verify it fails**
+
+Run: `bun run --filter @escritorio/core test -- studySettings`
+Expected: FAIL with "Failed to resolve import './studySettings'".
+
+- [ ] **Step 3: Write the core module**
+
+`packages/core/src/studySettings.ts`:
+
+```ts
+import type { ConversionDirection, MeaningVisibility, StudyMode, StudySet } from './types/studySet'
+
+/**
+ * The study mode a learner picked for a set. Each device keeps its own
+ * (web: localStorage, mobile: AsyncStorage) and falls back to the set's own
+ * fields; it is never written to Supabase.
+ */
+export type StudySettings = Pick<
+  StudySet,
+  'study_mode' | 'conversion_direction' | 'meaning_visibility'
+>
+
+const MODES: readonly StudyMode[] = ['conversion', 'meaning']
+const DIRECTIONS: readonly ConversionDirection[] = ['en_es', 'es_en', 'random']
+const VISIBILITIES: readonly MeaningVisibility[] = ['image', 'definition', 'both']
+
+export function studySettingsKey(studySetId: string): string {
+  return `study-config:${studySetId}`
+}
+
+/** Returns null for anything that isn't a complete, valid stored value. */
+export function parseStudySettings(raw: string | null): StudySettings | null {
+  if (!raw) return null
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    return null
+  }
+  if (typeof parsed !== 'object' || parsed === null) return null
+  const { study_mode, conversion_direction, meaning_visibility } = parsed as Record<string, unknown>
+  if (
+    !MODES.includes(study_mode as StudyMode) ||
+    !DIRECTIONS.includes(conversion_direction as ConversionDirection) ||
+    !VISIBILITIES.includes(meaning_visibility as MeaningVisibility)
+  ) {
+    return null
+  }
+  return { study_mode, conversion_direction, meaning_visibility } as StudySettings
+}
+```
+
+In `packages/core/src/index.ts`, add after `export * from './studyMode'`:
+
+```ts
+export * from './studySettings'
+```
+
+- [ ] **Step 4: Run the core tests**
+
+Run: `bun run --filter @escritorio/core test`
+Expected: PASS, including the 8 new tests. `index.test.ts` still passes. If it snapshots the export list, add the three new exports to it.
+
+- [ ] **Step 5: Point web at the core key and parser**
+
+Replace `apps/web/src/features/study/studyConfigStorage.ts` with:
+
+```ts
+import { parseStudySettings, studySettingsKey, type StudySettings } from '@escritorio/core'
+
+export type StoredStudySettings = StudySettings
+
+export function loadStudySettings(studySetId: string): StoredStudySettings | null {
+  try {
+    return parseStudySettings(localStorage.getItem(studySettingsKey(studySetId)))
+  } catch {
+    return null
+  }
+}
+
+export function saveStudySettings(studySetId: string, settings: StoredStudySettings): void {
+  try {
+    localStorage.setItem(studySettingsKey(studySetId), JSON.stringify(settings))
+  } catch {
+    // Ignore write failures (e.g. private browsing) -- the setting just won't persist.
+  }
+}
+```
+
+Run: `bun run --filter @escritorio/web test && bun run --filter @escritorio/web typecheck`
+Expected: PASS, no type errors. The callers (`StudySetPage`, `StudySessionPage`) are unchanged.
+
+- [ ] **Step 6: Write the failing mobile test**
+
+`apps/mobile/src/features/sets/studySettings.test.tsx`:
+
+```tsx
+import { studySettingsKey } from '@escritorio/core'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { act, renderHook, waitFor } from '@testing-library/react-native'
+import type { ReactNode } from 'react'
+import { api } from '@/lib/api'
+import { makeStudySet } from '@/test/fixtures'
+import { useStudySettings } from './studySettings'
+
+jest.mock('@/lib/api', () => ({
+  api: { studySets: { getStudySet: jest.fn(), updateStudySet: jest.fn() } },
+}))
+
+// makeStudySet's own fields: conversion, es_en, image.
+const fromSet = {
+  study_mode: 'conversion',
+  conversion_direction: 'es_en',
+  meaning_visibility: 'image',
+}
+const stored = { study_mode: 'meaning', conversion_direction: 'en_es', meaning_visibility: 'both' }
+
+async function setup() {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: Infinity } },
+  })
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  )
+  return renderHook(() => useStudySettings('s1'), { wrapper })
+}
+
+beforeEach(async () => {
+  await AsyncStorage.clear()
+  jest.mocked(api.studySets.getStudySet).mockResolvedValue(makeStudySet())
+})
+
+test("falls back to the set's own fields when nothing is stored", async () => {
+  const { result } = await setup()
+  await waitFor(() => expect(result.current.settings).toEqual(fromSet))
+})
+
+test('a stored choice wins over the set', async () => {
+  await AsyncStorage.setItem(studySettingsKey('s1'), JSON.stringify(stored))
+  const { result } = await setup()
+  await waitFor(() => expect(result.current.settings).toEqual(stored))
+})
+
+test("a corrupt stored value falls back to the set's fields", async () => {
+  await AsyncStorage.setItem(studySettingsKey('s1'), '{oops')
+  const { result } = await setup()
+  await waitFor(() => expect(result.current.settings).toEqual(fromSet))
+})
+
+test("a storage read that throws falls back to the set's fields", async () => {
+  jest.spyOn(AsyncStorage, 'getItem').mockRejectedValueOnce(new Error('disk'))
+  const { result } = await setup()
+  await waitFor(() => expect(result.current.settings).toEqual(fromSet))
+})
+
+test('a change shows right away and is stored on the device, not in Supabase', async () => {
+  const { result } = await setup()
+  await waitFor(() => expect(result.current.settings).toBeDefined())
+
+  await act(async () => result.current.update({ conversion_direction: 'random' }))
+
+  const expected = { ...fromSet, conversion_direction: 'random' }
+  expect(result.current.settings).toEqual(expected)
+  expect(JSON.parse((await AsyncStorage.getItem(studySettingsKey('s1')))!)).toEqual(expected)
+  expect(api.studySets.updateStudySet).not.toHaveBeenCalled()
+})
+```
+
+- [ ] **Step 7: Run it to verify it fails**
+
+Run from `apps/mobile`: `bunx jest src/features/sets/studySettings`
+Expected: FAIL with "Cannot find module './studySettings'".
+
+- [ ] **Step 8: Write the mobile hook**
+
+`apps/mobile/src/features/sets/studySettings.ts`:
+
+```ts
+import { parseStudySettings, studySettingsKey, type StudySettings } from '@escritorio/core'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useStudySet } from './hooks'
+
+const storedSettingsKey = (id: string) => ['study-settings', id] as const
+
+async function loadStudySettings(id: string): Promise<StudySettings | null> {
+  try {
+    return parseStudySettings(await AsyncStorage.getItem(studySettingsKey(id)))
+  } catch {
+    return null
+  }
+}
+
+async function saveStudySettings(id: string, settings: StudySettings): Promise<void> {
+  try {
+    await AsyncStorage.setItem(studySettingsKey(id), JSON.stringify(settings))
+  } catch {
+    // Ignore write failures; the choice just won't survive a restart.
+  }
+}
+
+/**
+ * The study mode for a set on this device, the same way web does it: a
+ * choice made here wins, otherwise the set's own fields. Never written to
+ * Supabase, so it works offline and doesn't change other devices.
+ */
+export function useStudySettings(id: string) {
+  const queryClient = useQueryClient()
+  const { data: studySet } = useStudySet(id)
+  const stored = useQuery({
+    queryKey: storedSettingsKey(id),
+    queryFn: () => loadStudySettings(id),
+    staleTime: Infinity,
+    // Local storage: don't pause the read while the device is offline.
+    networkMode: 'always',
+  })
+
+  const settings: StudySettings | undefined = !stored.isSuccess
+    ? undefined
+    : (stored.data ??
+      (studySet && {
+        study_mode: studySet.study_mode,
+        conversion_direction: studySet.conversion_direction,
+        meaning_visibility: studySet.meaning_visibility,
+      }))
+
+  function update(patch: Partial<StudySettings>) {
+    if (!settings) return
+    const next = { ...settings, ...patch }
+    queryClient.setQueryData(storedSettingsKey(id), next)
+    void saveStudySettings(id, next)
+  }
+
+  return { settings, update }
+}
+```
+
+- [ ] **Step 9: Run tests, typecheck, lint, format**
+
+Run from `apps/mobile`: `bunx jest src/features/sets && bun run typecheck`
+Then from the root: `bun run test && bunx oxlint apps/mobile packages/core apps/web && bunx prettier --check apps/mobile/src packages/core/src apps/web/src/features/study`
+Expected: 5 new mobile tests PASS. Every workspace's tests PASS, with no type errors and no new lint or formatting issues.
+
+- [ ] **Step 10: Commit**
+
+```bash
+git add packages/core/src apps/web/src/features/study/studyConfigStorage.ts apps/mobile/src/features/sets/studySettings.ts apps/mobile/src/features/sets/studySettings.test.tsx
+git commit -m "feat: share per-device study settings between web and mobile
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 5: `StudyScreen` and the `/sets/[id]/study` route
 
 **Files:**
 
@@ -1007,6 +1327,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `QuizCard` and `AnswerResult` (Task 3)
   - `makeCard` and `makeStudySet` (Task 3)
   - `useStudySet`, `useCards`, `useSignedImageUrl` from `@/features/sets/hooks`
+  - `useStudySettings(id)` (Task 4)
 - Produces:
   - `<StudyScreen id={string} writer={StudyWriter} onClose={() => void} />`
   - The route `/sets/[id]/study`, a full-screen modal with no header
@@ -1038,7 +1359,8 @@ Expected: the existing set list and detail tests still PASS. They already `await
 `apps/mobile/src/features/study/StudyScreen.test.tsx`:
 
 ```tsx
-import { noEligibleCardsMessage, queryKeys } from '@escritorio/core'
+import { noEligibleCardsMessage, queryKeys, studySettingsKey } from '@escritorio/core'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { act, fireEvent, screen } from '@testing-library/react-native'
 import { api } from '@/lib/api'
 import { newId } from '@/lib/ids'
@@ -1106,7 +1428,8 @@ async function answer(text: string) {
 
 const next = () => fireEvent.press(screen.getByRole('button', { name: 'Next' }))
 
-beforeEach(() => {
+beforeEach(async () => {
+  await AsyncStorage.clear()
   let n = 0
   jest.mocked(newId).mockImplementation(() => `id-${++n}`)
   jest.mocked(api.cardImages.getSignedImageUrl).mockResolvedValue('https://example.test/i.webp')
@@ -1125,6 +1448,23 @@ test('starts a session with a client id and the set mode before any attempt', as
     visibility: null,
     deck_size: 2,
   })
+})
+
+test("uses this device's stored mode over the set's own fields", async () => {
+  await AsyncStorage.setItem(
+    studySettingsKey('s1'),
+    JSON.stringify({
+      study_mode: 'conversion',
+      conversion_direction: 'en_es',
+      meaning_visibility: 'image',
+    }),
+  )
+  const { writer } = await setup()
+  // English prompt now, instead of the set's Spanish → English.
+  expect(await screen.findByText('to speak')).toBeOnTheScreen()
+  expect(writer.startSession).toHaveBeenCalledWith(
+    expect.objectContaining({ mode: 'conversion', direction: 'en_es' }),
+  )
 })
 
 test('records one attempt per card, in order, then completes the session', async () => {
@@ -1235,19 +1575,21 @@ Expected: FAIL with "Cannot find module './StudyScreen'".
 ```tsx
 import {
   buildQuestion,
-  configFromStudySet,
+  configFromFields,
   eligibleCards,
   noEligibleCardsMessage,
   type Card,
   type Question,
   type StudyConfig,
   type StudySet,
+  type StudySettings,
 } from '@escritorio/core'
 import { Image } from 'expo-image'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { KeyboardAvoidingView, Pressable, Text, View } from 'react-native'
 import { Screen } from '@/components/Screen'
 import { useCards, useSignedImageUrl, useStudySet } from '@/features/sets/hooks'
+import { useStudySettings } from '@/features/sets/studySettings'
 import { newId } from '@/lib/ids'
 import type { StudyWriter } from './createStudyWriter'
 import { QuizCard, type AnswerResult } from './QuizCard'
@@ -1275,13 +1617,14 @@ export function StudyScreen({
 }) {
   const { data: studySet, isError: setFailed } = useStudySet(id)
   const { data: cards, isError: cardsFailed } = useCards(id)
+  const { settings } = useStudySettings(id)
   const [run, setRun] = useState<Run | null>(null)
   const [index, setIndex] = useState(0)
   const [correct, setCorrect] = useState(0)
   const startedRef = useRef(false)
 
-  function start(set: StudySet, deckCards: Card[]) {
-    const config = configFromStudySet(set)
+  function start(set: StudySet, deckCards: Card[], chosen: StudySettings) {
+    const config = configFromFields(chosen)
     // Built once per run: rebuilding on a refetch would restart the deck
     // and re-roll 'random' directions mid-session.
     const questions = eligibleCards(deckCards, config).map((card) => buildQuestion(card, config))
@@ -1304,11 +1647,11 @@ export function StudyScreen({
   }
 
   useEffect(() => {
-    if (startedRef.current || !studySet || !cards) return
+    if (startedRef.current || !studySet || !cards || !settings) return
     startedRef.current = true
-    start(studySet, cards)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once, when both queries first have data
-  }, [studySet, cards])
+    start(studySet, cards, settings)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once, when the set, cards and settings first load
+  }, [studySet, cards, settings])
 
   const question = run?.questions[index]
   const { data: imageUrl } = useSignedImageUrl(imagePathFor(question))
@@ -1376,7 +1719,7 @@ export function StudyScreen({
         </Text>
         <Pressable
           accessibilityRole="button"
-          onPress={() => studySet && cards && start(studySet, cards)}
+          onPress={() => studySet && cards && settings && start(studySet, cards, settings)}
           className="border-border bg-background w-full items-center rounded-lg border py-3"
         >
           <Text className="text-foreground text-base font-semibold">Study again</Text>
@@ -1424,7 +1767,7 @@ export function StudyScreen({
 - [ ] **Step 5: Run the screen test**
 
 Run from `apps/mobile`: `bunx jest src/features/study/StudyScreen`
-Expected: 6 tests PASS.
+Expected: 7 tests PASS.
 
 - [ ] **Step 6: Add the route**
 
@@ -1491,11 +1834,10 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task 5: Mode picker, exclusion badges and the Study button on the set page
+### Task 6: Mode picker, exclusion badges and the Study button on the set page
 
 **Files:**
 
-- Create: `apps/mobile/src/features/sets/useUpdateStudyMode.ts`
 - Create: `apps/mobile/src/features/sets/StudyModePicker.tsx`
 - Modify: `apps/mobile/src/features/sets/SetDetailScreen.tsx`
 - Modify: `apps/mobile/src/features/sets/hooks.ts` (comment only: "DR-15" → "DR-14")
@@ -1505,14 +1847,11 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 **Interfaces:**
 
 - Consumes:
-  - `api.studySets.updateStudySet(id: string, input: Partial<StudySetInput>): Promise<StudySet>`
-  - `queryKeys.studySet(id)`
+  - `useStudySettings(id)` and `type StudySettings` (Task 4)
   - `makeCard` and `makeStudySet` (Task 3)
-  - the route `/sets/[id]/study` (Task 4)
+  - the route `/sets/[id]/study` (Task 5)
 - Produces:
-  - `type StudyModeFields = Pick<StudySet, 'study_mode' | 'conversion_direction' | 'meaning_visibility'>`
-  - `useUpdateStudyMode(id: string)`, a mutation over `Partial<StudyModeFields>`
-  - `<StudyModePicker settings={StudyModeFields} onChange={(patch: Partial<StudyModeFields>) => void} />`. Its options are buttons with `accessibilityState.selected`.
+  - `<StudyModePicker settings={StudySettings} onChange={(patch: Partial<StudySettings>) => void} />`. Its options are buttons with `accessibilityState.selected`.
   - `<SetDetailScreen id={string} onStudy={() => void} />`
 
 - [ ] **Step 1: Write the failing tests**
@@ -1520,7 +1859,8 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 Replace `apps/mobile/src/features/sets/SetDetailScreen.test.tsx` with:
 
 ```tsx
-import { noEligibleCardsMessage } from '@escritorio/core'
+import { noEligibleCardsMessage, studySettingsKey } from '@escritorio/core'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { fireEvent, screen } from '@testing-library/react-native'
 import { api } from '@/lib/api'
 import { makeCard, makeStudySet } from '@/test/fixtures'
@@ -1556,7 +1896,8 @@ async function setup({
   return { onStudy }
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  await AsyncStorage.clear()
   jest.mocked(api.cardImages.getSignedImageUrl).mockResolvedValue('https://example.test/img.webp')
 })
 
@@ -1577,42 +1918,43 @@ test('uses the singular for one card', async () => {
 
 test("shows the set's current mode and direction as selected", async () => {
   await setup()
-  expect(screen.getByRole('button', { name: 'Word conversion', selected: true })).toBeOnTheScreen()
+  expect(
+    await screen.findByRole('button', { name: 'Word conversion', selected: true }),
+  ).toBeOnTheScreen()
   expect(
     screen.getByRole('button', { name: 'Spanish → English', selected: true }),
   ).toBeOnTheScreen()
   expect(screen.getByRole('button', { name: 'Random', selected: false })).toBeOnTheScreen()
 })
 
-test('changing the direction saves it and shows it right away', async () => {
-  jest.mocked(api.studySets.updateStudySet).mockReturnValue(new Promise(() => {}))
+test('changing the direction shows it right away and keeps it on this device', async () => {
   await setup()
-  await fireEvent.press(screen.getByRole('button', { name: 'Random' }))
-  expect(api.studySets.updateStudySet).toHaveBeenCalledWith('s1', {
+  await fireEvent.press(await screen.findByRole('button', { name: 'Random' }))
+  expect(screen.getByRole('button', { name: 'Random', selected: true })).toBeOnTheScreen()
+  expect(JSON.parse((await AsyncStorage.getItem(studySettingsKey('s1')))!)).toMatchObject({
     conversion_direction: 'random',
   })
-  expect(screen.getByRole('button', { name: 'Random', selected: true })).toBeOnTheScreen()
+  expect(api.studySets.updateStudySet).not.toHaveBeenCalled()
 })
 
 test('switching to Definition to word shows its visibility options', async () => {
-  jest.mocked(api.studySets.updateStudySet).mockReturnValue(new Promise(() => {}))
   await setup()
-  await fireEvent.press(screen.getByRole('button', { name: 'Definition to word' }))
-  expect(api.studySets.updateStudySet).toHaveBeenCalledWith('s1', { study_mode: 'meaning' })
+  await fireEvent.press(await screen.findByRole('button', { name: 'Definition to word' }))
   expect(screen.getByRole('button', { name: 'Show image', selected: true })).toBeOnTheScreen()
   expect(screen.getByRole('button', { name: 'Show definition' })).toBeOnTheScreen()
 })
 
-test('a failed save goes back to the saved mode and says so', async () => {
-  jest.mocked(api.studySets.updateStudySet).mockRejectedValue(new Error('offline'))
+test("opens with this device's stored choice", async () => {
+  await AsyncStorage.setItem(
+    studySettingsKey('s1'),
+    JSON.stringify({
+      study_mode: 'conversion',
+      conversion_direction: 'random',
+      meaning_visibility: 'image',
+    }),
+  )
   await setup()
-  await fireEvent.press(screen.getByRole('button', { name: 'Random' }))
-  expect(
-    await screen.findByText("Couldn't save the study mode. Check your connection and try again."),
-  ).toBeOnTheScreen()
-  expect(
-    screen.getByRole('button', { name: 'Spanish → English', selected: true }),
-  ).toBeOnTheScreen()
+  expect(await screen.findByRole('button', { name: 'Random', selected: true })).toBeOnTheScreen()
 })
 
 test('marks cards the current mode skips', async () => {
@@ -1653,48 +1995,7 @@ Expected:
 - The new ones FAIL; for example, "Unable to find an element with role: button, name: Word conversion".
 - TypeScript isn't run by jest, so the missing `onStudy` prop doesn't fail the run.
 
-- [ ] **Step 3: Write `useUpdateStudyMode`**
-
-`apps/mobile/src/features/sets/useUpdateStudyMode.ts`:
-
-```ts
-import { queryKeys, type StudySet } from '@escritorio/core'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
-
-export type StudyModeFields = Pick<
-  StudySet,
-  'study_mode' | 'conversion_direction' | 'meaning_visibility'
->
-
-/**
- * Saves a mode/direction/visibility change, showing it immediately. One
- * scope per set runs saves one at a time, so the server ends on the last
- * tap (last write wins). Online-only for now; DR-14 sends this through
- * the outbox as `updateStudySetMode`.
- */
-export function useUpdateStudyMode(id: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    scope: { id: `study-mode:${id}` },
-    mutationFn: (patch: Partial<StudyModeFields>) => api.studySets.updateStudySet(id, patch),
-    onMutate: async (patch) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.studySet(id) })
-      const previous = queryClient.getQueryData<StudySet>(queryKeys.studySet(id))
-      queryClient.setQueryData<StudySet>(
-        queryKeys.studySet(id),
-        (current) => current && { ...current, ...patch },
-      )
-      return { previous }
-    },
-    onError: (_error, _patch, context) => {
-      if (context?.previous) queryClient.setQueryData(queryKeys.studySet(id), context.previous)
-    },
-  })
-}
-```
-
-- [ ] **Step 4: Write `StudyModePicker`**
+- [ ] **Step 3: Write `StudyModePicker`**
 
 `apps/mobile/src/features/sets/StudyModePicker.tsx`:
 
@@ -1706,7 +2007,7 @@ import {
   type StudyMode,
 } from '@escritorio/core'
 import { Pressable, Text, View } from 'react-native'
-import type { StudyModeFields } from './useUpdateStudyMode'
+import type { StudySettings } from '@escritorio/core'
 
 type Option<T extends string> = { value: T; label: string }
 
@@ -1767,8 +2068,8 @@ export function StudyModePicker({
   settings,
   onChange,
 }: {
-  settings: StudyModeFields
-  onChange: (patch: Partial<StudyModeFields>) => void
+  settings: StudySettings
+  onChange: (patch: Partial<StudySettings>) => void
 }) {
   return (
     <View className="gap-2">
@@ -1795,13 +2096,13 @@ export function StudyModePicker({
 }
 ```
 
-- [ ] **Step 5: Update `SetDetailScreen`**
+- [ ] **Step 4: Update `SetDetailScreen`**
 
 Replace `apps/mobile/src/features/sets/SetDetailScreen.tsx` with:
 
 ```tsx
 import {
-  configFromStudySet,
+  configFromFields,
   eligibleCards,
   exclusionReason,
   noEligibleCardsMessage,
@@ -1813,7 +2114,7 @@ import { FlatList, Pressable, Text, View } from 'react-native'
 import { Screen } from '@/components/Screen'
 import { useCards, useSignedImageUrl, useStudySet } from './hooks'
 import { StudyModePicker } from './StudyModePicker'
-import { useUpdateStudyMode } from './useUpdateStudyMode'
+import { useStudySettings } from './studySettings'
 
 function CardRow({ card, config }: { card: Card; config: StudyConfig | null }) {
   const { data: imageUrl } = useSignedImageUrl(card.image_path)
@@ -1844,9 +2145,9 @@ function CardRow({ card, config }: { card: Card; config: StudyConfig | null }) {
 export function SetDetailScreen({ id, onStudy }: { id: string; onStudy: () => void }) {
   const { data: studySet } = useStudySet(id)
   const { data: cards } = useCards(id)
-  const updateMode = useUpdateStudyMode(id)
+  const { settings, update } = useStudySettings(id)
   const count = cards?.length
-  const config = studySet ? configFromStudySet(studySet) : null
+  const config = settings ? configFromFields(settings) : null
   const eligibleCount = config && cards ? eligibleCards(cards, config).length : 0
 
   return (
@@ -1869,17 +2170,9 @@ export function SetDetailScreen({ id, onStudy }: { id: string; onStudy: () => vo
               ) : null}
             </View>
 
-            {studySet ? (
+            {settings ? (
               <>
-                <StudyModePicker
-                  settings={studySet}
-                  onChange={(patch) => updateMode.mutate(patch)}
-                />
-                {updateMode.isError ? (
-                  <Text className="text-destructive text-sm">
-                    Couldn't save the study mode. Check your connection and try again.
-                  </Text>
-                ) : null}
+                <StudyModePicker settings={settings} onChange={update} />
                 <Pressable
                   accessibilityRole="button"
                   disabled={eligibleCount === 0}
@@ -1928,7 +2221,7 @@ export default function SetDetailRoute() {
 }
 ```
 
-- [ ] **Step 6: Run tests, typecheck, lint, format, bundle**
+- [ ] **Step 5: Run tests, typecheck, lint, format, bundle**
 
 Run from `apps/mobile`: `bunx jest src/features/sets && bun run typecheck && bun run export:ios && rm -rf dist-export`
 Then from the root: `bun run test && bunx oxlint apps/mobile && bunx prettier --check apps/mobile/src docs/superpowers/plans`
@@ -1938,7 +2231,7 @@ Expected:
 - Every workspace's tests PASS.
 - No type errors, the export succeeds, and no new lint warnings or formatting issues.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add apps/mobile/src/features/sets "apps/mobile/src/app/(app)/sets/[id]/index.tsx"
@@ -1949,9 +2242,9 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ---
 
-## On-device check (after Task 5, in the dev build or Expo Go)
+## On-device check (after Task 6, in the dev build or Expo Go)
 
-1. Open a set and switch the mode, direction and visibility. Each change shows at once. Reopen the set on the web app (in a browser without a local override) and it shows the same mode.
+1. Open a set and switch the mode, direction and visibility. Each change shows at once, including in airplane mode. Force-quit and reopen the app: the set keeps the choice. The web app's mode for that set is unchanged, as it would be with a second browser.
 2. Tap **Study**. The quiz opens full screen with the keyboard up and the accent pad sitting just above it.
 3. Tapping **ñ** mid-word inserts it at the cursor and the keyboard stays up.
 4. Correct, retry and revealed answers each give a different haptic.
