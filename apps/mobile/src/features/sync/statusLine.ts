@@ -6,7 +6,8 @@ function plural(count: number, word: string) {
   return `${count} ${word}${count === 1 ? '' : 's'}`
 }
 
-function ago(at: string, now: Date): string {
+/** "just now", "2 min ago", "3 h ago", "2 days ago". */
+export function timeAgo(at: string, now: Date): string {
   const elapsed = now.getTime() - Date.parse(at)
   if (elapsed < MINUTE) return 'just now'
   if (elapsed < HOUR) return `${Math.floor(elapsed / MINUTE)} min ago`
@@ -36,5 +37,5 @@ export function statusLine({
   if (pendingAnswers > 0) return waiting
   if (failed) return "Couldn't sync. Pull down to try again."
   if (!lastSyncedAt) return 'Not synced yet'
-  return `Synced ${ago(lastSyncedAt, now)}`
+  return `Synced ${timeAgo(lastSyncedAt, now)}`
 }

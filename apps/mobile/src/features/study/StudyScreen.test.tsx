@@ -1,6 +1,7 @@
 import { noEligibleCardsMessage, queryKeys, studySettingsKey } from '@escritorio/core'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { act, fireEvent, screen } from '@testing-library/react-native'
+import { Text } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { api } from '@/lib/api'
 import { newId } from '@/lib/ids'
@@ -224,6 +225,21 @@ test("keeps the header below the status bar, using the window's top inset", asyn
   await setup()
   await expectCard(1, 2)
   expect(screen.getByTestId('study-header')).toHaveStyle({ paddingTop: 47 })
+})
+
+test('shows what the route puts on the right of the header', async () => {
+  jest.mocked(api.studySets.getStudySet).mockResolvedValue(makeStudySet())
+  jest.mocked(api.cards.listCards).mockResolvedValue([hablar])
+  const { writer } = fakeWriter()
+  await renderWithQuery(
+    <StudyScreen
+      id="s1"
+      writer={writer}
+      onClose={jest.fn()}
+      headerRight={<Text>Offline icon</Text>}
+    />,
+  )
+  expect(await screen.findByText('Offline icon')).toBeOnTheScreen()
 })
 
 test('says so when the set fails to load, and Close still works', async () => {
