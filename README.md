@@ -32,12 +32,12 @@ as a static site to GitHub Pages.
 
 1. Copy `apps/mobile/.env.local.example` to `apps/mobile/.env.local` and fill
    in the same Supabase URL and anon key as the web app.
-2. `bun install`, then `bun run --filter @escritorio/mobile start` and scan
-   the QR code with the Expo Go app on your iPhone.
+2. `bun install`, then `bun run dev:mobile` and scan the QR code with the Expo Go app on your iPhone.
 
 ## Scripts (run from the repo root)
 
 - `bun run dev` — start the web dev server
+- `bun run dev:mobile` — start the Expo dev server for the iOS app
 - `bun run build` — typecheck every workspace and build the web app
 - `bun run typecheck` — typecheck every workspace
 - `bun run test` — run every workspace's tests (Vitest)
