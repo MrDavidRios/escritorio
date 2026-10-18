@@ -1,10 +1,18 @@
-import { Text } from 'react-native'
-import { Screen } from '@/components/Screen'
+import { useRouter } from 'expo-router'
+import { SetListScreen } from '@/features/sets/SetListScreen'
+import { queryClient } from '@/lib/queryClient'
+import { supabase } from '@/lib/supabase'
 
-export default function Home() {
+export default function SetListRoute() {
+  const router = useRouter()
   return (
-    <Screen>
-      <Text className="p-4 text-lg text-foreground">Escritorio</Text>
-    </Screen>
+    <SetListScreen
+      onOpenSet={(id) => router.push({ pathname: '/sets/[id]', params: { id } })}
+      onSignOut={async () => {
+        // Temporary until Settings (DR-15) owns sign-out and the outbox warning.
+        await supabase.auth.signOut()
+        queryClient.clear()
+      }}
+    />
   )
 }
