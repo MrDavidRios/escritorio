@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
+import { ProgressBar } from '@/components/ProgressBar'
 import { Button } from '@/components/ui/button'
 import { useCards } from '@/features/study-sets/hooks/useCards'
 import { useSignedImageUrls } from '@/features/study-sets/hooks/useSignedImageUrls'
@@ -11,7 +12,6 @@ import {
   eligibleCards,
   buildQuestion,
   type Question,
-  configFromStudySet,
   noEligibleCardsMessage,
 } from '@escritorio/core'
 import { useCompleteStudySession, useStartStudySession } from './hooks/useStudySessions'
@@ -23,6 +23,7 @@ export function StudySessionPage() {
   const { data: cards, isLoading, isError, error } = useCards(setId)
   const [index, setIndex] = useState(0)
   const [correctCount, setCorrectCount] = useState(0)
+  const [answeredCount, setAnsweredCount] = useState(0)
 
   // Built once per (cards, config) pair, not recomputed on every
   // render -- under conversion mode's 'random' direction, recomputing
@@ -47,6 +48,7 @@ export function StudySessionPage() {
     setQuestions(deck.map((card) => buildQuestion(card, config)))
     setIndex(0)
     setCorrectCount(0)
+    setAnsweredCount(0)
 
     if (!sessionStartedRef.current && deck.length > 0) {
       sessionStartedRef.current = true
@@ -95,11 +97,13 @@ export function StudySessionPage() {
 
   function restart() {
     if (!cards || !studySet) return
-    const config = configFromStudySet(studySet)
+    // Same choice the first run used: this browser's stored mode, else the set's.
+    const config = configFromFields(loadStudySettings(studySet.id) ?? studySet)
     const deck = eligibleCards(cards, config)
     setQuestions(deck.map((card) => buildQuestion(card, config)))
     setIndex(0)
     setCorrectCount(0)
+    setAnsweredCount(0)
     sessionStartedRef.current = true
     setSessionId(null)
     completedSessionRef.current = null
@@ -140,9 +144,7 @@ export function StudySessionPage() {
 
       {currentQuestion && (
         <>
-          <p className="text-muted-foreground text-sm">
-            Card {index + 1} of {questions!.length}
-          </p>
+          <ProgressBar answered={answeredCount} current={index + 1} total={questions!.length} />
           <QuizCard
             key={currentQuestion.card.id}
             question={currentQuestion}
@@ -152,7 +154,10 @@ export function StudySessionPage() {
                 : undefined
             }
             sessionId={sessionId}
-            onCorrect={() => setCorrectCount((c) => c + 1)}
+            onAnswered={(isCorrect) => {
+              setAnsweredCount((n) => n + 1)
+              if (isCorrect) setCorrectCount((c) => c + 1)
+            }}
             onNext={() => setIndex((i) => i + 1)}
           />
         </>

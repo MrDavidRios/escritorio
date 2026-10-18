@@ -25,13 +25,14 @@ export function QuizCard({
   question,
   imageUrl,
   sessionId,
-  onCorrect,
+  onAnswered,
   onNext,
 }: {
   question: Question
   imageUrl: string | undefined
   sessionId: string | null
-  onCorrect: () => void
+  /** Called once, when the card ends: correct, or the last wrong attempt. */
+  onAnswered: (isCorrect: boolean) => void
   onNext: () => void
 }) {
   const { card } = question
@@ -64,7 +65,7 @@ export function QuizCard({
     if (isAnswerCorrect(value, question.expectedAnswer)) {
       setFeedback('correct')
       logResult(true, attempts + 1)
-      onCorrect()
+      onAnswered(true)
       return
     }
 
@@ -73,6 +74,7 @@ export function QuizCard({
     if (nextAttempts >= MAX_ATTEMPTS) {
       setFeedback('revealed')
       logResult(false, nextAttempts)
+      onAnswered(false)
     } else {
       setFeedback('retry')
       setValue('')
