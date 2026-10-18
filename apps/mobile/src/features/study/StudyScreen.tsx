@@ -11,7 +11,8 @@ import {
 } from '@escritorio/core'
 import { Image } from 'expo-image'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { KeyboardAvoidingView, Pressable, Text, View } from 'react-native'
+import { SymbolView } from 'expo-symbols'
+import { KeyboardAvoidingView, PlatformColor, Pressable, Text, View } from 'react-native'
 import { Screen } from '@/components/Screen'
 import { useCards, useSignedImageUrl, useStudySet } from '@/features/sets/hooks'
 import { useStudySettings } from '@/features/sets/studySettings'
@@ -48,7 +49,7 @@ function ProgressBar({
         now: answered,
         text: `Card ${current} of ${total}`,
       }}
-      className="h-2 flex-1 overflow-hidden rounded-full bg-muted"
+      className="h-2 w-full overflow-hidden rounded-full bg-muted"
     >
       <View
         className="h-full rounded-full bg-primary"
@@ -209,13 +210,27 @@ export function StudyScreen({
   return (
     <Screen edges={['top', 'bottom']}>
       <KeyboardAvoidingView behavior="padding" className="flex-1">
-        <View className="h-11 flex-row items-center gap-4 px-4">
-          <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8}>
-            <Text className="text-base text-foreground">Close</Text>
+        {/* Equal-width sides keep the progress bar centred on the screen. */}
+        <View className="h-11 flex-row items-center px-2">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+            onPress={onClose}
+            className="h-11 w-11 items-center justify-center"
+          >
+            <SymbolView
+              name="chevron.left"
+              size={22}
+              weight="semibold"
+              tintColor={PlatformColor('label')}
+            />
           </Pressable>
-          {total > 0 && !finished ? (
-            <ProgressBar answered={answered} current={index + 1} total={total} />
-          ) : null}
+          <View className="mx-4 flex-1 items-center">
+            {total > 0 && !finished ? (
+              <ProgressBar answered={answered} current={index + 1} total={total} />
+            ) : null}
+          </View>
+          <View className="w-11" />
         </View>
         {body}
       </KeyboardAvoidingView>
