@@ -50,6 +50,7 @@
       "name": "@escritorio/core",
       "version": "0.0.0",
       "dependencies": {
+        "@supabase/supabase-js": "^2.116.0",
         "zod": "^4.6.5",
       },
       "devDependencies": {

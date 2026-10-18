@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { completeStudySession, createStudySession } from '@/api/studySessions'
+import { api } from '@/lib/api'
 
 /**
  * Opens a study_sessions row at the start of a session. Fire during
@@ -8,7 +8,7 @@ import { completeStudySession, createStudySession } from '@/api/studySessions'
  */
 export function useStartStudySession() {
   return useMutation({
-    mutationFn: createStudySession,
+    mutationFn: api.studySessions.createStudySession,
     onError: (error) => {
       console.error('Failed to start study session:', error)
     },
@@ -24,7 +24,10 @@ export function useStartStudySession() {
 export function useCompleteStudySession() {
   return useMutation({
     mutationFn: ({ id, cardsAnswered }: { id: string; cardsAnswered: number }) =>
-      completeStudySession(id, { completed_at: new Date().toISOString(), cards_correct: cardsAnswered }),
+      api.studySessions.completeStudySession(id, {
+        completed_at: new Date().toISOString(),
+        cards_correct: cardsAnswered,
+      }),
     onError: (error) => {
       console.error('Failed to mark study session complete:', error)
     },

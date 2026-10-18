@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { cardImagePath, deleteCardImages, uploadCardImage } from '@/api/cardImages'
-import { createCard, deleteCard, listCards, updateCard } from '@/api/cards'
+import { api } from '@/lib/api'
 import {
   REQUIRED_CONTENT_MESSAGE,
+  cardImagePath,
   hasRequiredContent,
   queryKeys,
   type Card,
@@ -12,7 +12,7 @@ import { optimizeImage } from '../optimizeImage'
 export function useCards(studySetId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.cards(studySetId ?? ''),
-    queryFn: () => listCards(studySetId!),
+    queryFn: () => api.cards.listCards(studySetId!),
     enabled: !!studySetId,
   })
 }
@@ -56,9 +56,9 @@ export function useCreateCard(studySetId: string, ownerId: string) {
 
       // Upload first, then insert the DB row -- avoids a row ever
       // referencing a missing storage object.
-      if (image && imagePath) await uploadCardImage(imagePath, image)
+      if (image && imagePath) await api.cardImages.uploadCardImage(imagePath, image)
       try {
-        return await createCard(id, studySetId, {
+        return await api.cards.createCard(id, studySetId, {
           image_path: imagePath,
           spanish_term,
           english_equivalent: english_equivalent || null,
@@ -67,7 +67,7 @@ export function useCreateCard(studySetId: string, ownerId: string) {
           position: existing.length,
         })
       } catch (err) {
-        if (imagePath) await deleteCardImages([imagePath]).catch(() => {})
+        if (imagePath) await api.cardImages.deleteCardImages([imagePath]).catch(() => {})
         throw err
       }
     },
@@ -105,18 +105,19 @@ export function useUpdateCard(studySetId: string, ownerId: string) {
         const newPath = cardImagePath(ownerId, card.id, image.name)
         if (newPath === card.image_path) {
           // Same extension: overwrite in place.
-          await uploadCardImage(newPath, image, { upsert: true })
+          await api.cardImages.uploadCardImage(newPath, image, { upsert: true })
         } else {
-          await uploadCardImage(newPath, image)
-          if (card.image_path) await deleteCardImages([card.image_path]).catch(() => {})
+          await api.cardImages.uploadCardImage(newPath, image)
+          if (card.image_path)
+            await api.cardImages.deleteCardImages([card.image_path]).catch(() => {})
           imagePath = newPath
         }
       } else if (removeImage && card.image_path) {
-        await deleteCardImages([card.image_path]).catch(() => {})
+        await api.cardImages.deleteCardImages([card.image_path]).catch(() => {})
         imagePath = null
       }
 
-      return updateCard(card.id, {
+      return api.cards.updateCard(card.id, {
         image_path: imagePath,
         hint: hint || null,
         spanish_term,
@@ -160,8 +161,8 @@ export function useDeleteCard(studySetId: string) {
       // Delete the storage object first; the DB row is the source of
       // truth for what's still referenced, so an orphaned row is safer
       // to end up with (visible, fixable) than an orphaned blob.
-      if (card.image_path) await deleteCardImages([card.image_path])
-      await deleteCard(card.id)
+      if (card.image_path) await api.cardImages.deleteCardImages([card.image_path])
+      await api.cards.deleteCard(card.id)
     },
     // Drop the card from the cache only once the backend has confirmed the
     // delete, and keep the mutation pending until the list has refreshed.

@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { createQuizAttempt } from '@/api/quizAttempts'
+import { api } from '@/lib/api'
 
 /**
  * Fire-and-forget: a failed log write shouldn't block the quiz flow, so
@@ -8,7 +8,7 @@ import { createQuizAttempt } from '@/api/quizAttempts'
  */
 export function useLogQuizAttempt() {
   return useMutation({
-    mutationFn: createQuizAttempt,
+    mutationFn: api.quizAttempts.createQuizAttempt,
     onError: (error) => {
       console.error('Failed to log quiz attempt:', error)
     },
