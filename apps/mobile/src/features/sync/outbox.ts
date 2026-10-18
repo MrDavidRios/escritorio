@@ -48,7 +48,9 @@ const STORAGE_KEY = 'escritorio-outbox'
 const BASE_RETRY_MS = 5_000
 const MAX_RETRY_MS = 5 * 60_000
 
-const AUTH_CODES = new Set(['PGRST301', 'PGRST302', 'PGRST303'])
+// 42501 is row-level security rejecting the write. With no session supabase-js
+// sends the anon key, so a rejected refresh token shows up as this, not a JWT error.
+const AUTH_CODES = new Set(['PGRST301', 'PGRST302', 'PGRST303', '42501'])
 // Connection, rollback, resource, operator-intervention, system and internal errors.
 const TRANSIENT_SQLSTATE = /^(08|40|53|57|58|XX)/
 
@@ -79,6 +81,7 @@ export function createOutbox({
   api,
   storage,
   refreshAuth,
+  canSend = async () => true,
   schedule = (fn, ms) => void setTimeout(fn, ms),
   now = () => new Date(),
   onError = (error) => console.error('Outbox storage failed:', error),
@@ -86,6 +89,11 @@ export function createOutbox({
   api: OutboxApi
   storage: KeyValueStorage
   refreshAuth: () => Promise<RefreshResult>
+  /**
+   * Whether the phone's owner is signed in. Without a session supabase-js
+   * sends the anon key and every write is rejected, so the queue waits.
+   */
+  canSend?: () => Promise<boolean>
   schedule?: (fn: () => void, ms: number) => void
   now?: () => Date
   onError?: (error: unknown) => void
@@ -122,12 +130,30 @@ export function createOutbox({
     }
   }
 
-  // Every read-modify-write runs in order on one chain, starting with load.
-  let tail: Promise<unknown> = load()
+  // Two chains, both starting after load: queue changes and their saves run
+  // in order on one, and sends on the other, so a send that hangs on a weak
+  // connection never delays saving a new answer.
+  const loaded = load()
+  let stateTail: Promise<unknown> = loaded
+  let sendTail: Promise<unknown> = loaded
   function serial<T>(task: () => Promise<T>): Promise<T> {
-    const result = tail.then(task)
-    tail = result.catch(() => {})
+    const result = stateTail.then(task)
+    stateTail = result.catch(() => {})
     return result
+  }
+
+  // Removed by identity, not position: the queue can grow (or be cleared)
+  // while a send is in flight.
+  function remove(op: OutboxOp, failure?: FailedOp) {
+    return serial(async () => {
+      if (!state.pending.includes(op)) return
+      set({
+        ...state,
+        pending: state.pending.filter((queued) => queued !== op),
+        failed: failure ? [...state.failed, failure] : state.failed,
+      })
+      await save()
+    })
   }
 
   function send(op: OutboxOp): Promise<unknown> {
@@ -156,6 +182,10 @@ export function createOutbox({
     let refreshedFor: OutboxOp | null = null
     while (!state.paused && state.pending.length > 0) {
       const op = state.pending[0]
+      if (!(await canSend())) {
+        set({ ...state, paused: true })
+        return
+      }
       try {
         await send(op)
       } catch (error) {
@@ -174,27 +204,20 @@ export function createOutbox({
           return
         }
         if (kind === 'permanent') {
-          set({
-            ...state,
-            pending: state.pending.slice(1),
-            failed: [
-              ...state.failed,
-              { op, error: messageOf(error), failedAt: now().toISOString() },
-            ],
-          })
-          await save()
+          await remove(op, { op, error: messageOf(error), failedAt: now().toISOString() })
           continue
         }
         // 'duplicate': the server already has it.
       }
       failures = 0
-      set({ ...state, pending: state.pending.slice(1) })
-      await save()
+      await remove(op)
     }
   }
 
   function flush() {
-    return serial(sendAll)
+    const result = sendTail.then(sendAll)
+    sendTail = result.catch(() => {})
+    return result
   }
 
   return {

@@ -33,10 +33,12 @@ test("a different user signing in wipes the previous user's data first", async (
   expect(data.get('escritorio-local-owner')).toBe('u2')
 })
 
-test('the first sign-in on this phone just records the owner', async () => {
+test('with no recorded owner, anything left behind is cleared before the user claims the phone', async () => {
+  // E.g. a sync still running when the last user signed out wrote data back.
   const { localData, deps, data } = setup(null)
-  expect(await localData.claim('u1')).toEqual({ discarded: 0 })
-  expect(deps.clearOutbox).not.toHaveBeenCalled()
+  await localData.claim('u1')
+  expect(deps.clearCache).toHaveBeenCalled()
+  expect(deps.clearImages).toHaveBeenCalled()
   expect(data.get('escritorio-local-owner')).toBe('u1')
 })
 
@@ -45,4 +47,11 @@ test('wipe clears everything and forgets the owner', async () => {
   expect(await localData.wipe()).toBe(2)
   expect(deps.clearCache).toHaveBeenCalled()
   expect(data.has('escritorio-local-owner')).toBe(false)
+})
+
+test("only the phone's owner counts as signed in for sending queued results", async () => {
+  const { localData } = setup('u1')
+  expect(await localData.isOwner('u1')).toBe(true)
+  expect(await localData.isOwner('u2')).toBe(false)
+  expect(await localData.isOwner(null)).toBe(false)
 })

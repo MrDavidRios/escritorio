@@ -88,13 +88,23 @@ export function createImageStore({
     }
   }
 
-  async function save() {
+  async function writeManifest() {
     try {
       await storage.setItem(MANIFEST_KEY, JSON.stringify(manifest))
     } catch (error) {
       onError(error)
     }
   }
+
+  // Saves run in order, each writing the latest manifest.
+  let saveTail: Promise<void> = Promise.resolve()
+  function save(): Promise<void> {
+    saveTail = saveTail.then(writeManifest)
+    return saveTail
+  }
+
+  // Bumped by clear(): work from a sync that started before it is dropped.
+  let generation = 0
 
   return {
     async load() {
@@ -107,7 +117,10 @@ export function createImageStore({
     },
 
     async sync(wanted, ownerId) {
+      const started = generation
+      const stale = () => generation !== started
       const remote = ownerId ? await api.listImageVersions(ownerId) : {}
+      if (stale()) return
       const { download, remove } = planImageSync(wanted, remote, manifest)
 
       if (remove.length > 0) {
@@ -121,6 +134,7 @@ export function createImageStore({
 
       if (download.length > 0) {
         const urls = await api.getSignedImageUrls(download)
+        if (stale()) return
         await forEachLimit(download, concurrency, async (path) => {
           const url = urls[path]
           if (!url) return
@@ -132,10 +146,17 @@ export function createImageStore({
             onError(error)
             return
           }
+          if (stale()) {
+            removeFile(name)
+            return
+          }
           const previous = manifest[path]
           set({ ...manifest, [path]: { updatedAt: remote[path], file: name } })
           if (previous && previous.file !== name) removeFile(previous.file)
+          // Saved per download: a sync cut short (app closed) keeps what it got.
+          await save()
         })
+        if (stale()) return
       }
 
       // Anything the manifest doesn't name (an interrupted download) goes.
@@ -156,12 +177,15 @@ export function createImageStore({
     },
 
     async clear() {
+      generation += 1
       try {
         files.removeAll()
       } catch (error) {
         onError(error)
       }
       set({})
+      // After any save already queued, so it can't write the old manifest back.
+      await saveTail
       await storage.removeItem(MANIFEST_KEY)
     },
   }

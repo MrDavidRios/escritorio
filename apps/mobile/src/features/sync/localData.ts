@@ -30,9 +30,15 @@ export function createLocalData({
     /** Resolves to how many unsent results of a previous user were discarded. */
     async claim(userId: string): Promise<{ discarded: number }> {
       const owner = await storage.getItem(OWNER_KEY)
-      const discarded = owner && owner !== userId ? await clearAll() : 0
+      // No owner recorded (first sign-in, or after a sign-out) still clears:
+      // a sync running during the sign-out may have written data back.
+      const discarded = owner !== userId ? await clearAll() : 0
       await storage.setItem(OWNER_KEY, userId)
       return { discarded }
+    },
+    /** Whether this signed-in user (null: none) is the one whose data is on the phone. */
+    async isOwner(userId: string | null): Promise<boolean> {
+      return userId != null && userId === (await storage.getItem(OWNER_KEY))
     },
     async wipe(): Promise<number> {
       const discarded = await clearAll()

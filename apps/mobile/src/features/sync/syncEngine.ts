@@ -44,14 +44,22 @@ export function createSyncEngine({
 
   // The order matters: the server gets our writes before we read, so the
   // fresh data already reflects them.
+  // Bumped by clear(): a run that started before it (a sign-out mid-sync)
+  // must not write the previous user's data back.
+  let generation = 0
+
   async function run() {
     if (!isOnline()) return
+    const started = generation
+    const stale = () => generation !== started
     set({ syncing: true })
     try {
       await flushOutbox()
       const data = await fetchData()
+      if (stale()) return
       applyData(data)
       await syncImages(data)
+      if (stale()) return
       const at = now().toISOString()
       set({ lastSyncedAt: at, failed: false })
       await storage.setItem(LAST_SYNCED_KEY, at)
@@ -95,6 +103,7 @@ export function createSyncEngine({
       return () => listeners.delete(listener)
     },
     async clear() {
+      generation += 1
       set({ lastSyncedAt: null, failed: false })
       await storage.removeItem(LAST_SYNCED_KEY)
     },

@@ -203,6 +203,48 @@ test('a second auth error after a refresh pauses instead of looping', async () =
   expect(outbox.getState().paused).toBe(true)
 })
 
+test("without the phone owner's session, nothing is sent and the queue waits", async () => {
+  let signedIn = false
+  const { outbox, sent } = setup({ canSend: async () => signedIn })
+  await outbox.enqueue(attempt('a1'))
+
+  await outbox.flush()
+  expect(sent).toEqual([])
+  expect(outbox.getState()).toMatchObject({ paused: true, pending: [attempt('a1')], failed: [] })
+
+  signedIn = true
+  await outbox.resume()
+  await outbox.flush()
+  expect(sent).toEqual(['attempt a1'])
+})
+
+test('a new answer is saved to the phone even while a send is hanging', async () => {
+  const { outbox, api, sent, storage } = setup()
+  let release: () => void = () => {}
+  api.quizAttempts.createQuizAttempt.mockImplementationOnce(
+    () =>
+      new Promise<void>((resolve) => {
+        release = () => {
+          sent.push('attempt a1')
+          resolve()
+        }
+      }),
+  )
+  await outbox.enqueue(attempt('a1'))
+  const flushing = outbox.flush()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+
+  await outbox.enqueue(attempt('a2'))
+  expect(outbox.getState().pending).toHaveLength(2)
+  expect(stored(storage).pending).toHaveLength(2)
+
+  release()
+  await flushing
+  await outbox.flush()
+  expect(sent).toEqual(['attempt a1', 'attempt a2'])
+  expect(outbox.getState().pending).toEqual([])
+})
+
 test('clear drops everything and reports how many unsent ops were discarded', async () => {
   const { outbox, storage } = setup()
   await outbox.enqueue(attempt('a1'))
@@ -232,7 +274,8 @@ test.each([
   [pgError('P0001'), 'permanent'],
   [pgError('23503'), 'permanent'],
   [pgError('PGRST116'), 'permanent'],
-  [pgError('42501'), 'permanent'],
+  // Row-level security rejecting the write: no (or the wrong) session.
+  [pgError('42501'), 'auth'],
 ])('classifies %o as %s', (error, expected) => {
   expect(classifyError(error)).toBe(expected)
 })

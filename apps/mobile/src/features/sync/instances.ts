@@ -3,7 +3,8 @@ import { isAuthRetryableFetchError } from '@supabase/supabase-js'
 import { onlineManager } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { queryClient } from '@/lib/queryClient'
-import { supabase } from '@/lib/supabase'
+import { readStoredUser } from '@/features/auth/storedUser'
+import { SESSION_STORAGE_KEY, sessionStorage, supabase } from '@/lib/supabase'
 import { applySyncedData, wantedImagePaths } from './applySyncedData'
 import { imageFiles } from './imageFiles'
 import { createImageStore } from './imageStore'
@@ -20,7 +21,18 @@ async function refreshAuth(): Promise<RefreshResult> {
   return isAuthRetryableFetchError(error) ? 'offline' : 'rejected'
 }
 
-export const outbox = createOutbox({ api, storage: AsyncStorage, refreshAuth })
+// Reads the stored session without refreshing it (offline-safe), like the
+// sign-in check. No session, or someone else's, means the queue waits.
+async function canSend(): Promise<boolean> {
+  try {
+    const user = await readStoredUser(sessionStorage, SESSION_STORAGE_KEY)
+    return await localData.isOwner(user?.id ?? null)
+  } catch {
+    return false
+  }
+}
+
+export const outbox = createOutbox({ api, storage: AsyncStorage, refreshAuth, canSend })
 
 export const imageStore = createImageStore({
   files: imageFiles,

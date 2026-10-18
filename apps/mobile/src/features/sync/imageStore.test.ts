@@ -147,6 +147,58 @@ test('files left over from an interrupted sync are cleaned up', async () => {
   expect(names.has('stray-123.png')).toBe(false)
 })
 
+test('each finished download is remembered, even if the sync never completes', async () => {
+  const names = new Set<string>()
+  let releaseSlow: () => void = () => {}
+  const files: ImageFiles = {
+    download: async (url, name) => {
+      if (url.includes('slow')) await new Promise<void>((resolve) => (releaseSlow = resolve))
+      names.add(name)
+    },
+    remove: (name) => void names.delete(name),
+    list: () => [...names],
+    uriFor: (name) => `file:///images/${name}`,
+    removeAll: () => names.clear(),
+  }
+  const storage = memoryStorage()
+  const api = fakeApi({ 'u1/fast.png': T1, 'u1/slow.png': T1 })
+  void createImageStore({ files, api, storage }).sync(['u1/fast.png', 'u1/slow.png'], 'u1')
+  await new Promise((resolve) => setTimeout(resolve, 0))
+
+  // The app is closed here; a relaunch reads what was saved.
+  const relaunched = createImageStore({ files, api, storage })
+  await relaunched.load()
+  expect(relaunched.uriFor('u1/fast.png')).not.toBeNull()
+  releaseSlow()
+})
+
+test('a sync that was in flight when the store was cleared leaves nothing behind', async () => {
+  const names = new Set<string>()
+  let release: () => void = () => {}
+  const files: ImageFiles = {
+    download: async (_url, name) => {
+      await new Promise<void>((resolve) => (release = resolve))
+      names.add(name)
+    },
+    remove: (name) => void names.delete(name),
+    list: () => [...names],
+    uriFor: (name) => `file:///images/${name}`,
+    removeAll: () => names.clear(),
+  }
+  const storage = memoryStorage()
+  const store = createImageStore({ files, api: fakeApi({ 'u1/a.png': T1 }), storage })
+  const syncing = store.sync(['u1/a.png'], 'u1')
+  await new Promise((resolve) => setTimeout(resolve, 0))
+
+  await store.clear()
+  release()
+  await syncing
+
+  expect(names.size).toBe(0)
+  expect(store.uriFor('u1/a.png')).toBeNull()
+  expect(storage.data.size).toBe(0)
+})
+
 test('clear deletes every file and forgets the manifest', async () => {
   const { files, names } = fakeFiles()
   const storage = memoryStorage()

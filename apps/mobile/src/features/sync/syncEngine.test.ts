@@ -86,6 +86,25 @@ test('a failed run keeps the last sync time and reports the failure', async () =
   expect(deps.onError).toHaveBeenCalled()
 })
 
+test('a run that was in flight when local data was cleared writes nothing back', async () => {
+  const { engine, deps, gate, release } = setup()
+  deps.fetchData.mockImplementationOnce(async () => {
+    await gate()
+    return DATA
+  })
+  const running = engine.requestSync()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+
+  await engine.clear()
+  release()
+  await running
+
+  expect(deps.applyData).not.toHaveBeenCalled()
+  expect(deps.syncImages).not.toHaveBeenCalled()
+  expect(engine.getStatus().lastSyncedAt).toBeNull()
+  expect(deps.storage.data.size).toBe(0)
+})
+
 test('the last sync time survives a restart, and clear forgets it', async () => {
   const { engine, deps } = setup()
   await engine.requestSync()
