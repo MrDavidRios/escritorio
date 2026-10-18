@@ -68,10 +68,13 @@ export function StudyScreen({
   id,
   writer,
   onClose,
+  headerRight,
 }: {
   id: string
   writer: StudyWriter
   onClose: () => void
+  /** The header's right slot (the offline icon); same width as Close, so the bar stays centred. */
+  headerRight?: ReactNode
 }) {
   const { data: studySet, isError: setFailed } = useStudySet(id)
   const { data: cards, isError: cardsFailed } = useCards(id)
@@ -232,7 +235,7 @@ export function StudyScreen({
                 <ProgressBar answered={answered} current={index + 1} total={total} />
               ) : null}
             </View>
-            <View className="w-11" />
+            <View className="h-11 w-11 items-center justify-center">{headerRight}</View>
           </View>
         </View>
         {body}
