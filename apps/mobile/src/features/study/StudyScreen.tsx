@@ -52,7 +52,7 @@ function ProgressBar({
       className="h-2 w-full overflow-hidden rounded-full bg-muted"
     >
       <View
-        className="h-full rounded-full bg-accent"
+        className="h-full rounded-full bg-brand"
         style={{ width: `${(answered / total) * 100}%` }}
       />
     </View>

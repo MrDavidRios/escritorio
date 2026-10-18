@@ -19,6 +19,8 @@ as a static site to GitHub Pages.
 - `apps/mobile` — the Expo iOS app (`@escritorio/mobile`)
 - `packages/core` — `@escritorio/core`: types, grading, study modes,
   schemas, dictionary API and query keys shared by every app
+- `packages/theme` — `@escritorio/theme`: the color tokens (light, dark and
+  the Fiery brand palette) and the Tailwind plugin both apps load them with
 - `supabase/` — migrations, seed data and local stack config
 
 ## Local development

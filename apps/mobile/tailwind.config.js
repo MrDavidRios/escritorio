@@ -1,4 +1,4 @@
-const token = (name) => `rgb(var(--${name}) / <alpha-value>)`
+const { nativewindColors, themePlugin } = require('@escritorio/theme')
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -6,16 +6,10 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
-      colors: {
-        background: token('background'),
-        foreground: token('foreground'),
-        card: token('card'),
-        muted: { DEFAULT: token('muted'), foreground: token('muted-foreground') },
-        primary: { DEFAULT: token('primary'), foreground: token('primary-foreground') },
-        border: token('border'),
-        destructive: token('destructive'),
-        accent: token('accent'),
-      },
+      colors: nativewindColors,
     },
   },
+  // Theme colors come from packages/theme, shared with web. Dark mode
+  // follows the system setting.
+  plugins: [themePlugin({ dark: 'media' })],
 }
