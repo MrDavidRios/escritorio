@@ -2,7 +2,7 @@ import { queryKeys } from '@escritorio/core'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 
-// Online-only for now; DR-15 persists this cache and mirrors images for offline use.
+// Online-only for now; DR-14 persists this cache and mirrors images for offline use.
 export function useStudySets() {
   return useQuery({ queryKey: queryKeys.studySets(), queryFn: api.studySets.listStudySets })
 }
