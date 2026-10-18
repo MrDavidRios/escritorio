@@ -1,29 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { deleteCardImages } from '@/api/cardImages'
-import { listCards } from '@/api/cards'
-import {
-  createStudySet,
-  deleteStudySet,
-  getStudySet,
-  listStudySets,
-  updateStudySet,
-} from '@/api/studySets'
-import { deleteStudySetImages, studySetImagePath, uploadStudySetImage } from '@/api/studySetImages'
+import { api } from '@/lib/api'
 import { useAuth } from '@/features/auth/AuthContext'
-import { queryKeys, type StudySet, type StudySetInput } from '@escritorio/core'
+import { queryKeys, studySetImagePath, type StudySet, type StudySetInput } from '@escritorio/core'
 import { optimizeImage } from '../optimizeImage'
 
 export function useStudySets() {
   return useQuery({
     queryKey: queryKeys.studySets(),
-    queryFn: listStudySets,
+    queryFn: api.studySets.listStudySets,
   })
 }
 
 export function useStudySet(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.studySet(id ?? ''),
-    queryFn: () => getStudySet(id!),
+    queryFn: () => api.studySets.getStudySet(id!),
     enabled: !!id,
   })
 }
@@ -33,7 +24,7 @@ export function useCreateStudySet() {
   const { user } = useAuth()
 
   return useMutation({
-    mutationFn: (input: StudySetInput) => createStudySet(user!.id, input),
+    mutationFn: (input: StudySetInput) => api.studySets.createStudySet(user!.id, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.studySets() })
     },
@@ -67,20 +58,23 @@ export function useUpdateStudySet(id: string) {
         const newPath = studySetImagePath(user!.id, id, image.name)
         if (newPath === currentImagePath) {
           // Same extension: overwrite in place.
-          await uploadStudySetImage(newPath, image, { upsert: true })
+          await api.studySetImages.uploadStudySetImage(newPath, image, {
+            contentType: image.type,
+            upsert: true,
+          })
         } else {
-          await uploadStudySetImage(newPath, image)
+          await api.studySetImages.uploadStudySetImage(newPath, image, { contentType: image.type })
           if (currentImagePath) {
-            await deleteStudySetImages([currentImagePath]).catch(() => {})
+            await api.studySetImages.deleteStudySetImages([currentImagePath]).catch(() => {})
           }
           imagePath = newPath
         }
       } else if (removeImage && currentImagePath) {
-        await deleteStudySetImages([currentImagePath]).catch(() => {})
+        await api.studySetImages.deleteStudySetImages([currentImagePath]).catch(() => {})
         imagePath = null
       }
 
-      return updateStudySet(id, { title, description, image_path: imagePath })
+      return api.studySets.updateStudySet(id, { title, description, image_path: imagePath })
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.studySets() })
@@ -93,7 +87,7 @@ export function usePatchStudySet(id: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (patch: Partial<StudySetInput>) => updateStudySet(id, patch),
+    mutationFn: (patch: Partial<StudySetInput>) => api.studySets.updateStudySet(id, patch),
     onMutate: async (patch) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.studySet(id) })
       const previous = queryClient.getQueryData<StudySet>(queryKeys.studySet(id))
@@ -120,14 +114,14 @@ export function useDeleteStudySet() {
     mutationFn: async (id: string) => {
       // The DB cascade removes card rows, but not their storage objects --
       // clean those up first, or a deleted set leaves orphaned images.
-      const studySet = await getStudySet(id)
-      const cards = await listCards(id)
+      const studySet = await api.studySets.getStudySet(id)
+      const cards = await api.cards.listCards(id)
       const imagePaths = cards.map((card) => card.image_path).filter((p): p is string => p != null)
-      if (imagePaths.length > 0) await deleteCardImages(imagePaths)
+      if (imagePaths.length > 0) await api.cardImages.deleteCardImages(imagePaths)
       if (studySet.image_path) {
-        await deleteStudySetImages([studySet.image_path])
+        await api.studySetImages.deleteStudySetImages([studySet.image_path])
       }
-      await deleteStudySet(id)
+      await api.studySets.deleteStudySet(id)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.studySets() })

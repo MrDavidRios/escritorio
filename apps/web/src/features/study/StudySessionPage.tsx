@@ -58,7 +58,9 @@ export function StudySessionPage() {
           visibility: config.mode === 'meaning' ? config.visibility : null,
           deck_size: deck.length,
         },
-        { onSuccess: (session) => setSessionId(session.id) },
+        // Null only when re-sending a session id that already exists, which
+        // web never does (it lets the database pick the id).
+        { onSuccess: (session) => session && setSessionId(session.id) },
       )
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- buildKey captures every dependency that should retrigger this
@@ -109,7 +111,8 @@ export function StudySessionPage() {
         visibility: config.mode === 'meaning' ? config.visibility : null,
         deck_size: deck.length,
       },
-      { onSuccess: (session) => setSessionId(session.id) },
+      // See the first startSession.mutate call.
+      { onSuccess: (session) => session && setSessionId(session.id) },
     )
   }
 

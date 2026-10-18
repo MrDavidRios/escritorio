@@ -25,6 +25,10 @@ describe('@escritorio/core barrel', () => {
     'REQUIRED_CONTENT_MESSAGE',
     'studySetSchema',
     'authSchema',
+    'createApi',
+    'cardImagePath',
+    'studySetImagePath',
+    'SIGNED_URL_STALE_TIME_MS',
   ])('exports %s', (name) => {
     expect(core).toHaveProperty(name)
   })
