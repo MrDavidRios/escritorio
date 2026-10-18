@@ -103,7 +103,7 @@ export function QuizCard({
                 accessibilityLabel="Card image"
               />
             ) : (
-              <Text className="text-sm text-muted-foreground">Loading image…</Text>
+              <Text className="text-sm text-muted-foreground">Image not downloaded yet</Text>
             )}
           </View>
         ) : null}

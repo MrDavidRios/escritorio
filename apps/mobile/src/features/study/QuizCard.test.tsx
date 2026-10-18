@@ -124,11 +124,11 @@ test('meaning mode shows the definition, not the word', async () => {
   expect(screen.queryByText('hablar')).not.toBeOnTheScreen()
 })
 
-test('shows a placeholder while the image URL loads', async () => {
+test('shows a placeholder until the image is downloaded', async () => {
   await setup(
     buildQuestion(makeCard({ image_path: 'u/c1.webp' }), { mode: 'meaning', visibility: 'image' }),
   )
-  expect(screen.getByText('Loading image…')).toBeOnTheScreen()
+  expect(screen.getByText('Image not downloaded yet')).toBeOnTheScreen()
 })
 
 test('two submits of a right answer in one frame count it once', async () => {

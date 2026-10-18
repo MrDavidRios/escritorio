@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { applySyncedData, wantedImagePaths } from './applySyncedData'
 import { imageFiles } from './imageFiles'
 import { createImageStore } from './imageStore'
+import { createLocalData } from './localData'
 import { createOutbox, type RefreshResult } from './outbox'
 import { createSyncEngine } from './syncEngine'
 
@@ -41,4 +42,12 @@ export const syncEngine = createSyncEngine({
   // Every set has the same owner: the signed-in user (RLS).
   syncImages: (data) => imageStore.sync(wantedImagePaths(data), data.sets[0]?.owner_id ?? null),
   storage: AsyncStorage,
+})
+
+export const localData = createLocalData({
+  storage: AsyncStorage,
+  clearCache: () => queryClient.clear(),
+  clearImages: () => imageStore.clear(),
+  clearOutbox: () => outbox.clear(),
+  clearSyncStatus: () => syncEngine.clear(),
 })

@@ -1,4 +1,5 @@
 import type { StudySetSummary } from '@escritorio/core'
+import { useState } from 'react'
 import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
 import { Screen } from '@/components/Screen'
 import { useStudySets } from './hooks'
@@ -6,11 +7,27 @@ import { useStudySets } from './hooks'
 export function SetListScreen({
   onOpenSet,
   onSignOut,
+  status,
+  onRefresh,
 }: {
   onOpenSet: (id: string) => void
   onSignOut: () => void
+  /** The sync status line, e.g. "Synced 2 min ago". */
+  status: string
+  /** Pull to refresh runs a full sync. */
+  onRefresh: () => Promise<void>
 }) {
-  const { data, error, isPending, isRefetching, refetch } = useStudySets()
+  const { data, error, isPending, refetch } = useStudySets()
+  const [refreshing, setRefreshing] = useState(false)
+
+  async function refresh() {
+    setRefreshing(true)
+    try {
+      await onRefresh()
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   return (
     <Screen>
@@ -18,8 +35,9 @@ export function SetListScreen({
         contentInsetAdjustmentBehavior="automatic"
         data={data ?? []}
         keyExtractor={(set) => set.id}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} />
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} />}
+        ListHeaderComponent={
+          <Text className="px-4 pb-2 pt-1 text-sm text-muted-foreground">{status}</Text>
         }
         renderItem={({ item }) => (
           <Pressable

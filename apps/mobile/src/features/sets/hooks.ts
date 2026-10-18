@@ -2,7 +2,8 @@ import { queryKeys } from '@escritorio/core'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 
-// Online-only for now; DR-14 persists this cache and mirrors images for offline use.
+// Reads come from the persisted cache; the sync engine (features/sync) refreshes it.
+// A query only fetches by itself when nothing is cached yet.
 export function useStudySets() {
   return useQuery({ queryKey: queryKeys.studySets(), queryFn: api.studySets.listStudySets })
 }
@@ -18,13 +19,5 @@ export function useCards(studySetId: string) {
   return useQuery({
     queryKey: queryKeys.cards(studySetId),
     queryFn: () => api.cards.listCards(studySetId),
-  })
-}
-
-export function useSignedImageUrl(path: string | null) {
-  return useQuery({
-    queryKey: queryKeys.signedImageUrl(path ?? ''),
-    queryFn: () => api.cardImages.getSignedImageUrl(path!),
-    enabled: path != null,
   })
 }

@@ -13,7 +13,6 @@ bindOnlineManager()
 
 const readUser = () => readStoredUser(sessionStorage, SESSION_STORAGE_KEY)
 const clearStoredSession = () => sessionStorage.removeItem(SESSION_STORAGE_KEY)
-const clearCache = () => queryClient.clear()
 
 function Routes() {
   const auth = useAuth()
@@ -43,7 +42,6 @@ export default function RootLayout() {
         auth={supabase.auth}
         readStoredUser={readUser}
         clearStoredSession={clearStoredSession}
-        onSignedOut={clearCache}
       >
         <Routes />
       </AuthProvider>
