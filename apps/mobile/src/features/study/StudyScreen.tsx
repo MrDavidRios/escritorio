@@ -222,7 +222,7 @@ export function StudyScreen({
               name="chevron.left"
               size={22}
               weight="semibold"
-              tintColor={PlatformColor('label')}
+              tintColor={PlatformColor('secondaryLabel')}
             />
           </Pressable>
           <View className="mx-4 flex-1 items-center">
