@@ -2,6 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { isAuthRetryableFetchError } from '@supabase/supabase-js'
 import { api } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
+import { imageFiles } from './imageFiles'
+import { createImageStore } from './imageStore'
 import { createOutbox, type RefreshResult } from './outbox'
 
 // The app's single instances of the offline machinery. Modules that need
@@ -14,3 +16,9 @@ async function refreshAuth(): Promise<RefreshResult> {
 }
 
 export const outbox = createOutbox({ api, storage: AsyncStorage, refreshAuth })
+
+export const imageStore = createImageStore({
+  files: imageFiles,
+  api: api.cardImages,
+  storage: AsyncStorage,
+})
