@@ -187,9 +187,10 @@ Infinity`, persister `maxAge: Infinity`). All queries use
     because iOS may clear the cache directory when the phone needs space.
   - The study screen only renders local `file://` URIs. It never
     fetches images over the network.
-  - **Verify during implementation:** `list()` returns `updated_at` for
-    objects in this bucket under the current storage policies, and
-    the per-call limit covers the user's file count (paginate if not).
+  - **Verified (DR-14):** `list()` returns `updated_at` for objects in
+    this bucket, and overwriting a file changes it. Sub-folders come back
+    with `id: null`, so `owner/` and `owner/sets/` are listed separately,
+    and `limit`/`offset` paginate (100 per call).
 
 ### Write path (device → server): outbox
 
@@ -207,11 +208,9 @@ Infinity`, persister `maxAge: Infinity`). All queries use
   `ignoreDuplicates` (`INSERT … ON CONFLICT DO NOTHING`), so a retry
   after a lost response is a no-op. Updates already produce the same
   result when repeated.
-- **Verify during implementation:** `ON CONFLICT DO NOTHING` upserts
-  succeed under the current RLS policies. `quiz_attempts` has insert
-  and select policies but no update policy. If PostgREST requires
-  update permission for this path, fall back to a plain insert and
-  treat a unique-violation error (`23505`) as success.
+- **Verified (DR-11 integration tests):** `ON CONFLICT DO NOTHING`
+  upserts succeed under the insert-only RLS policies, so no fallback is
+  needed. The outbox still treats a unique violation (`23505`) as sent.
 
 ### Error handling
 

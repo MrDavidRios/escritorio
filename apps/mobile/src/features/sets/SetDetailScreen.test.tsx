@@ -5,13 +5,16 @@ import { api } from '@/lib/api'
 import { makeCard, makeStudySet } from '@/test/fixtures'
 import { renderWithQuery } from '@/test/renderWithQuery'
 import { SetDetailScreen } from './SetDetailScreen'
+import { useLocalImageUri } from '@/features/sync/useLocalImageUri'
 
 jest.mock('@/lib/api', () => ({
   api: {
     studySets: { getStudySet: jest.fn(), updateStudySet: jest.fn() },
     cards: { listCards: jest.fn() },
-    cardImages: { getSignedImageUrl: jest.fn() },
   },
+}))
+jest.mock('@/features/sync/useLocalImageUri', () => ({
+  useLocalImageUri: jest.fn((path: string | null) => (path ? `file:///images/${path}` : null)),
 }))
 
 const hablar = makeCard({ id: 'c1', spanish_term: 'hablar', english_equivalent: 'to speak' })
@@ -37,7 +40,6 @@ async function setup({
 
 beforeEach(async () => {
   await AsyncStorage.clear()
-  jest.mocked(api.cardImages.getSignedImageUrl).mockResolvedValue('https://example.test/img.webp')
 })
 
 test('shows the title, card count and a read-only card preview', async () => {
@@ -47,7 +49,7 @@ test('shows the title, card count and a read-only card preview', async () => {
   expect(screen.getByText('hablar')).toBeOnTheScreen()
   expect(screen.getByText('to speak')).toBeOnTheScreen()
   expect(screen.getByText('ingerir alimentos')).toBeOnTheScreen()
-  expect(api.cardImages.getSignedImageUrl).toHaveBeenCalledWith('u/c2.webp')
+  expect(useLocalImageUri).toHaveBeenCalledWith('u/c2.webp')
 })
 
 test('uses the singular for one card', async () => {

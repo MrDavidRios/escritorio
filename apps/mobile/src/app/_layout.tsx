@@ -1,16 +1,18 @@
 import '../../global.css'
-import { QueryClientProvider } from '@tanstack/react-query'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { Stack } from 'expo-router'
 import { useEffect } from 'react'
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider'
 import { readStoredUser } from '@/features/auth/storedUser'
 import { bindAutoRefresh } from '@/lib/autoRefresh'
-import { queryClient } from '@/lib/queryClient'
+import { bindOnlineManager } from '@/lib/online'
+import { queryClient, queryPersister } from '@/lib/queryClient'
 import { SESSION_STORAGE_KEY, sessionStorage, supabase } from '@/lib/supabase'
+
+bindOnlineManager()
 
 const readUser = () => readStoredUser(sessionStorage, SESSION_STORAGE_KEY)
 const clearStoredSession = () => sessionStorage.removeItem(SESSION_STORAGE_KEY)
-const clearCache = () => queryClient.clear()
 
 function Routes() {
   const auth = useAuth()
@@ -32,15 +34,17 @@ function Routes() {
 export default function RootLayout() {
   useEffect(() => bindAutoRefresh(supabase.auth), [])
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister: queryPersister, maxAge: Infinity }}
+    >
       <AuthProvider
         auth={supabase.auth}
         readStoredUser={readUser}
         clearStoredSession={clearStoredSession}
-        onSignedOut={clearCache}
       >
         <Routes />
       </AuthProvider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   )
 }

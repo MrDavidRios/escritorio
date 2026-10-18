@@ -1,4 +1,4 @@
-import { api } from '@/lib/api'
-import { createStudyWriter } from './createStudyWriter'
+import { outbox } from '@/features/sync/instances'
+import { createOutboxWriter } from './writer'
 
-export const studyWriter = createStudyWriter(api)
+export const studyWriter = createOutboxWriter(outbox)

@@ -9,16 +9,16 @@ import {
   type StudySet,
   type StudySettings,
 } from '@escritorio/core'
-import { Image } from 'expo-image'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { SymbolView } from 'expo-symbols'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { KeyboardAvoidingView, PlatformColor, Pressable, Text, View } from 'react-native'
 import { Screen } from '@/components/Screen'
-import { useCards, useSignedImageUrl, useStudySet } from '@/features/sets/hooks'
+import { useCards, useStudySet } from '@/features/sets/hooks'
 import { useStudySettings } from '@/features/sets/studySettings'
+import { useLocalImageUri } from '@/features/sync/useLocalImageUri'
 import { newId } from '@/lib/ids'
-import type { StudyWriter } from './createStudyWriter'
+import type { StudyWriter } from './writer'
 import { QuizCard, type AnswerResult } from './QuizCard'
 
 type Run = { sessionId: string | null; config: StudyConfig; questions: Question[] }
@@ -115,11 +115,8 @@ export function StudyScreen({
   }, [studySet, cards, settings])
 
   const question = run?.questions[index]
-  const { data: imageUrl } = useSignedImageUrl(imagePathFor(question))
-  const { data: nextImageUrl } = useSignedImageUrl(imagePathFor(run?.questions[index + 1]))
-  useEffect(() => {
-    if (nextImageUrl) Image.prefetch(nextImageUrl).catch(() => {})
-  }, [nextImageUrl])
+  // Images are on the device already (image sync); nothing to prefetch.
+  const imageUrl = useLocalImageUri(imagePathFor(question))
 
   function handleAnswered(result: AnswerResult) {
     if (!run || !question) return

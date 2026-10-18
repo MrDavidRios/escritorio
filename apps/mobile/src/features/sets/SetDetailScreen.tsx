@@ -9,12 +9,13 @@ import {
 import { Image } from 'expo-image'
 import { FlatList, Pressable, Text, View } from 'react-native'
 import { Screen } from '@/components/Screen'
-import { useCards, useSignedImageUrl, useStudySet } from './hooks'
+import { useLocalImageUri } from '@/features/sync/useLocalImageUri'
+import { useCards, useStudySet } from './hooks'
 import { StudyModePicker } from './StudyModePicker'
 import { useStudySettings } from './studySettings'
 
 function CardRow({ card, config }: { card: Card; config: StudyConfig | null }) {
-  const { data: imageUrl } = useSignedImageUrl(card.image_path)
+  const imageUrl = useLocalImageUri(card.image_path)
   const meaning = card.english_equivalent ?? card.definition
   const excluded = config ? exclusionReason(card, config) : null
   return (

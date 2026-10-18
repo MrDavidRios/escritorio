@@ -6,14 +6,13 @@ import { api } from '@/lib/api'
 import { newId } from '@/lib/ids'
 import { makeCard, makeStudySet } from '@/test/fixtures'
 import { renderWithQuery } from '@/test/renderWithQuery'
-import type { StudyWriter } from './createStudyWriter'
+import type { StudyWriter } from './writer'
 import { StudyScreen } from './StudyScreen'
 
 jest.mock('@/lib/api', () => ({
   api: {
     studySets: { getStudySet: jest.fn() },
     cards: { listCards: jest.fn() },
-    cardImages: { getSignedImageUrl: jest.fn() },
   },
 }))
 jest.mock('@/lib/ids', () => ({ newId: jest.fn() }))
@@ -22,11 +21,7 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: jest.fn(() => ({ top: 0, bottom: 0, left: 0, right: 0 })),
 }))
 jest.mock('@/lib/haptics', () => ({ feedbackHaptic: jest.fn() }))
-jest.mock('expo-image', () => {
-  const actual = jest.requireActual('expo-image')
-  actual.Image.prefetch = jest.fn(() => Promise.resolve(true))
-  return actual
-})
+jest.mock('@/features/sync/useLocalImageUri', () => ({ useLocalImageUri: jest.fn(() => null) }))
 
 // Spanish prompt, English answer (conversion, es_en).
 const hablar = makeCard({ id: 'c1', spanish_term: 'hablar', english_equivalent: 'to speak' })
@@ -49,7 +44,6 @@ function fakeWriter() {
     completeSession: jest.fn((id, patch) => {
       calls.push(['completeSession', id, patch])
     }),
-    idle: jest.fn(() => Promise.resolve()),
   }
   return { writer, calls }
 }
@@ -83,7 +77,6 @@ beforeEach(async () => {
   await AsyncStorage.clear()
   let n = 0
   jest.mocked(newId).mockImplementation(() => `id-${++n}`)
-  jest.mocked(api.cardImages.getSignedImageUrl).mockResolvedValue('https://example.test/i.webp')
 })
 
 test('starts a session with a client id and the set mode before any attempt', async () => {
