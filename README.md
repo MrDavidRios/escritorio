@@ -62,10 +62,10 @@ To try a migration locally first:
 
 1. Start Docker, then `bun run db:start`. The first run downloads the
    Supabase images and prints a local API URL and anon key.
-2. Point `.env.local` at the local stack — `VITE_SUPABASE_URL=http://127.0.0.1:54321`
-   and `VITE_SUPABASE_ANON_KEY` from the output (`bun run db:status` reprints
-   it) — then `bun run dev`. Sign up with any email; local auth needs no
-   confirmation. Google sign-in isn't configured locally.
+2. Run `bun run dev:local`, which points the app at the local stack (see
+   `.env.localdb`) without touching `.env.local`; `bun run dev` still uses
+   production. Sign up with any email; local auth needs no confirmation.
+   Google sign-in isn't configured locally.
 3. Add the new migration file and run `bun run db:reset`, which replays every
    migration on a fresh database and loads `supabase/data/*.sql` as seed data.
    The local Studio at http://127.0.0.1:54323 lets you inspect the result.
