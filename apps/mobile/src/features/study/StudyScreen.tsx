@@ -12,6 +12,7 @@ import {
 import { Image } from 'expo-image'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { SymbolView } from 'expo-symbols'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { KeyboardAvoidingView, PlatformColor, Pressable, Text, View } from 'react-native'
 import { Screen } from '@/components/Screen'
 import { useCards, useSignedImageUrl, useStudySet } from '@/features/sets/hooks'
@@ -52,7 +53,7 @@ function ProgressBar({
       className="h-2 w-full overflow-hidden rounded-full bg-muted"
     >
       <View
-        className="h-full rounded-full bg-accent"
+        className="h-full rounded-full bg-brand"
         style={{ width: `${(answered / total) * 100}%` }}
       />
     </View>
@@ -75,6 +76,7 @@ export function StudyScreen({
   const { data: studySet, isError: setFailed } = useStudySet(id)
   const { data: cards, isError: cardsFailed } = useCards(id)
   const { settings } = useStudySettings(id)
+  const insets = useSafeAreaInsets()
   const [run, setRun] = useState<Run | null>(null)
   const [index, setIndex] = useState(0)
   const [correct, setCorrect] = useState(0)
@@ -208,29 +210,33 @@ export function StudyScreen({
   }
 
   return (
-    <Screen edges={['top', 'bottom']}>
+    <Screen edges={['bottom']}>
       <KeyboardAvoidingView behavior="padding" className="flex-1">
-        {/* Equal-width sides keep the progress bar centred on the screen. */}
-        <View className="h-11 flex-row items-center px-2">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-            onPress={onClose}
-            className="h-11 w-11 items-center justify-center"
-          >
-            <SymbolView
-              name="chevron.left"
-              size={22}
-              weight="semibold"
-              tintColor={PlatformColor('secondaryLabel')}
-            />
-          </Pressable>
-          <View className="mx-4 flex-1 items-center">
-            {total > 0 && !finished ? (
-              <ProgressBar answered={answered} current={index + 1} total={total} />
-            ) : null}
+        {/* The window's inset, not SafeAreaView's: inside the full-screen
+            modal SafeAreaView can measure a top inset of 0. Equal-width
+            sides keep the progress bar centred on the screen. */}
+        <View testID="study-header" style={{ paddingTop: insets.top }}>
+          <View className="h-11 flex-row items-center px-2">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+              onPress={onClose}
+              className="h-11 w-11 items-center justify-center"
+            >
+              <SymbolView
+                name="chevron.left"
+                size={22}
+                weight="semibold"
+                tintColor={PlatformColor('secondaryLabel')}
+              />
+            </Pressable>
+            <View className="mx-4 flex-1 items-center">
+              {total > 0 && !finished ? (
+                <ProgressBar answered={answered} current={index + 1} total={total} />
+              ) : null}
+            </View>
+            <View className="w-11" />
           </View>
-          <View className="w-11" />
         </View>
         {body}
       </KeyboardAvoidingView>

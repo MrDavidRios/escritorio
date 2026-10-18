@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@escritorio/core": "workspace:*",
+    "@escritorio/theme": "workspace:*",
     "@floating-ui/dom": "^1.8.0",
     "@fontsource-variable/geist": "^5.3.0",
     "@hookform/resolvers": "^5.9.1",
