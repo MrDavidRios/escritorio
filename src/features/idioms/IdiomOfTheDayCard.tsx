@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarDays, Check, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -42,6 +42,8 @@ export function IdiomOfTheDayCard({
   onSelectDate,
   onPrevious,
   onNext,
+  phraseStatus,
+  onAddToPhrases,
 }: {
   idiom: Idiom
   dateLabel: string
@@ -51,6 +53,9 @@ export function IdiomOfTheDayCard({
   onSelectDate: (date: Date) => void
   onPrevious: () => void
   onNext: () => void
+  /** null hides the control (e.g. phrases still loading). */
+  phraseStatus: 'add' | 'adding' | 'added' | null
+  onAddToPhrases: () => void
 }) {
   const [calendarOpen, setCalendarOpen] = useState(false)
   const canGoPrevious = selectedDate > minDate
@@ -127,6 +132,24 @@ export function IdiomOfTheDayCard({
               <p lang="es" className="text-muted-foreground italic">
                 {idiom.example}
               </p>
+            )}
+            {phraseStatus === 'added' && (
+              <p className="text-muted-foreground flex items-center gap-1 text-sm">
+                <Check className="size-4" aria-hidden />
+                In your phrases
+              </p>
+            )}
+            {(phraseStatus === 'add' || phraseStatus === 'adding') && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="self-start"
+                disabled={phraseStatus === 'adding'}
+                onClick={onAddToPhrases}
+              >
+                <Plus data-icon="inline-start" />
+                Add to my phrases
+              </Button>
             )}
             <Source idiom={idiom} className="lg:hidden" />
           </div>

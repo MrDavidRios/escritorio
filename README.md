@@ -39,14 +39,33 @@ checks them on every PR ("Supabase Preview") and applies them to production on
 merge to `develop` — **never run a migration by hand in the SQL editor**, or the
 integration will try to apply it again and fail.
 
+## Edge Functions
+
+`supabase/functions/` holds Supabase Edge Functions (Deno). They're deployed by
+`.github/workflows/deploy-functions.yml` on merge to `develop`, not by the Supabase
+GitHub integration (it only deploys functions declared in a committed `config.toml`,
+which we don't commit).
+
+One-time setup:
+
+- GitHub repo secrets `SUPABASE_ACCESS_TOKEN` (a Supabase personal access token) and
+  `SUPABASE_PROJECT_REF`.
+- The TypeSafe key as a function secret: `bunx supabase secrets set TYPESAFE_API_KEY=… --project-ref <ref>`
+  (or Dashboard → Edge Functions → Secrets). It never goes in GitHub, and never under a
+  `VITE_` name (Vite would bundle it into the frontend).
+
+Locally, all secrets live in the root `.env.local` (git-ignored; see `.env.local.example`).
+Add `TYPESAFE_API_KEY=…` there and run `bun run functions:serve` alongside
+`bun run db:start`. Tests: `deno test --no-lock supabase/functions/grade-phrase/`.
+
 To try a migration locally first:
 
 1. Start Docker, then `bun run db:start`. The first run downloads the
    Supabase images and prints a local API URL and anon key.
-2. Point `.env.local` at the local stack — `VITE_SUPABASE_URL=http://127.0.0.1:54321`
-   and `VITE_SUPABASE_ANON_KEY` from the output (`bun run db:status` reprints
-   it) — then `bun run dev`. Sign up with any email; local auth needs no
-   confirmation. Google sign-in isn't configured locally.
+2. Run `bun run dev:local`, which points the app at the local stack (see
+   `.env.localdb`) without touching `.env.local`; `bun run dev` still uses
+   production. Sign up with any email; local auth needs no confirmation.
+   Google sign-in isn't configured locally.
 3. Add the new migration file and run `bun run db:reset`, which replays every
    migration on a fresh database and loads `supabase/data/*.sql` as seed data.
    The local Studio at http://127.0.0.1:54323 lets you inspect the result.

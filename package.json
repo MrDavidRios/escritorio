@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:local": "vite --mode localdb",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "format": "prettier --write .",
@@ -15,7 +16,8 @@
     "db:start": "bun run db:config && supabase start",
     "db:stop": "supabase stop",
     "db:reset": "bun run db:config && supabase db reset",
-    "db:status": "supabase status"
+    "db:status": "supabase status",
+    "functions:serve": "supabase functions serve grade-phrase --env-file .env.local"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.8.0",
