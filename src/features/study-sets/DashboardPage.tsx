@@ -1,41 +1,27 @@
 import { ChevronRight, Loader2, RefreshCw } from 'lucide-react'
-import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { DEFAULT_NEW_PHRASES_PER_DAY } from '@/api/userSettings'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
+import { useFeatureFlag } from '@/features/feature-flags/useFeatureFlag'
 import { IdiomOfTheDayBanner } from '@/features/idioms/IdiomOfTheDayBanner'
-import { dueToday } from '@/features/phrases/dailyQueue'
-import { todayKey } from '@/features/phrases/dates'
-import { usePhrases } from '@/features/phrases/hooks/usePhrases'
-import { useUserSettings } from '@/features/phrases/hooks/useUserSettings'
-import { PhrasesTile } from '@/features/phrases/PhrasesTile'
+import { DashboardPhrasesTile } from '@/features/phrases/DashboardPhrasesTile'
 import { CreateStudySetDialog } from './CreateStudySetDialog'
 import { useStudySets } from './hooks/useStudySets'
 import { StudySetThumbnail } from './StudySetThumbnail'
 
 export function DashboardPage() {
   const { data: studySets, isLoading, isError, refetch, isRefetching } = useStudySets()
-  const { data: phrases, isError: phrasesError } = usePhrases()
-  const { data: settings, isError: settingsError } = useUserSettings()
-  const phrasesDue = useMemo(() => {
-    // Wait for settings (or their failure) so the count never flashes the default cap.
-    if (!phrases || (!settings && !settingsError)) return null
-    const { reviews, fresh } = dueToday(
-      phrases,
-      todayKey(),
-      settings?.new_phrases_per_day ?? DEFAULT_NEW_PHRASES_PER_DAY,
-    )
-    return reviews.length + fresh.length
-  }, [phrases, settings, settingsError])
+  const { on: phrasesOn } = useFeatureFlag('phrases')
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-4 p-4 sm:p-6 lg:gap-6 lg:p-8">
       <IdiomOfTheDayBanner />
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        <PhrasesTile dueCount={phrasesDue} error={phrasesError} />
-      </div>
+      {phrasesOn && (
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <DashboardPhrasesTile />
+        </div>
+      )}
 
       <h1 className="text-xl font-semibold">Your study sets</h1>
 
