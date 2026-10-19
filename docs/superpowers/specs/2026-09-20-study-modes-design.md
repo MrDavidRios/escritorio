@@ -74,7 +74,6 @@ create table public.study_sessions (
 ```
 
 Constraints:
-
 - `check ((mode = 'conversion') = (direction is not null))`
 - `check ((mode = 'meaning') = (visibility is not null))`
 
@@ -131,7 +130,7 @@ Eligibility rules (strict, per settled design):
 - **Meaning / both**: card needs **both** `image_path` and
   `definition` — this is the narrowest deck under meaning mode, not
   the widest. A set mixing image-only and definition-only cards can
-  produce an _empty_ deck under "both"; the set page must handle that
+  produce an *empty* deck under "both"; the set page must handle that
   explicitly (see below), not just an empty-state message deep in the
   session.
 
@@ -196,7 +195,6 @@ starts an entirely new session row (matching "one row per run").
 
 `QuizCard` becomes presentational over a `Question` instead of a raw
 `Card`:
-
 - Renders whatever the question's mode dictates (word-only prompt for
   conversion; image/definition/both for meaning — this is today's
   existing rendering, now driven by config instead of hardcoded).
