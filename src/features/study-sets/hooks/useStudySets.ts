@@ -11,6 +11,7 @@ import {
 import { deleteStudySetImages, studySetImagePath, uploadStudySetImage } from '@/api/studySetImages'
 import { useAuth } from '@/features/auth/AuthContext'
 import type { StudySet, StudySetInput } from '@/types/studySet'
+import { createStudySetFromTable, type TableStudySetInput } from '../createStudySetFromTable'
 import { optimizeImage } from '../optimizeImage'
 
 export function studySetsKey() {
@@ -42,6 +43,18 @@ export function useCreateStudySet() {
 
   return useMutation({
     mutationFn: (input: StudySetInput) => createStudySet(user!.id, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: studySetsKey() })
+    },
+  })
+}
+
+export function useCreateStudySetFromTable() {
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
+
+  return useMutation({
+    mutationFn: (input: TableStudySetInput) => createStudySetFromTable(user!.id, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: studySetsKey() })
     },

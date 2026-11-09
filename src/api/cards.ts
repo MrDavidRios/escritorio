@@ -21,6 +21,13 @@ export async function createCard(id: string, studySetId: string, input: CardInpu
   return data
 }
 
+export async function createCards(studySetId: string, inputs: CardInput[]): Promise<void> {
+  const { error } = await supabase
+    .from('cards')
+    .insert(inputs.map((input) => ({ study_set_id: studySetId, ...input })))
+  if (error) throw error
+}
+
 export async function updateCard(id: string, input: Partial<CardInput>): Promise<Card> {
   const { data, error } = await supabase
     .from('cards')
