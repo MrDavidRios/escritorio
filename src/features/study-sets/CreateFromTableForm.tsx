@@ -1,6 +1,8 @@
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import type { LowercaseField } from './lowercaseCardFields'
 import type { MissingColumn, ParsedCardTable } from './parseCardTable'
+import { TableOptionsMenu } from './TableOptionsMenu'
 
 function describeMissingColumns(missing: MissingColumn[]) {
   if (missing.length > 1) {
@@ -20,9 +22,17 @@ interface CreateFromTableFormProps {
   value: string
   onChange: (value: string) => void
   parsed: ParsedCardTable
+  lowercaseFields: LowercaseField[]
+  onLowercaseFieldsChange: (fields: LowercaseField[]) => void
 }
 
-export function CreateFromTableForm({ value, onChange, parsed }: CreateFromTableFormProps) {
+export function CreateFromTableForm({
+  value,
+  onChange,
+  parsed,
+  lowercaseFields,
+  onLowercaseFieldsChange,
+}: CreateFromTableFormProps) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor="table">Paste your table</Label>
@@ -32,6 +42,7 @@ export function CreateFromTableForm({ value, onChange, parsed }: CreateFromTable
         onChange={(event) => onChange(event.target.value)}
         className="field-sizing-fixed h-40 resize-none whitespace-pre"
       />
+      <TableOptionsMenu selected={lowercaseFields} onChange={onLowercaseFieldsChange} />
       {parsed.missingColumns.length > 0 ? (
         <p className="text-destructive text-sm">{describeMissingColumns(parsed.missingColumns)}</p>
       ) : (

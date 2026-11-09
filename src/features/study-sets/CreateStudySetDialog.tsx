@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { CreateFromTableForm } from './CreateFromTableForm'
 import { useCreateStudySet, useCreateStudySetFromTable } from './hooks/useStudySets'
+import { lowercaseCardFields, type LowercaseField } from './lowercaseCardFields'
 import { parseCardTable } from './parseCardTable'
 import { studySetSchema, type StudySetFormValues } from './studySetSchema'
 
@@ -25,6 +26,7 @@ export function CreateStudySetDialog() {
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<'details' | 'table'>('details')
   const [table, setTable] = useState('')
+  const [lowercaseFields, setLowercaseFields] = useState<LowercaseField[]>([])
   const parsed = useMemo(() => parseCardTable(table), [table])
   const navigate = useNavigate()
   const createStudySet = useCreateStudySet()
@@ -46,6 +48,7 @@ export function CreateStudySetDialog() {
     reset()
     setMode('details')
     setTable('')
+    setLowercaseFields([])
     createFromTable.reset()
   }
 
@@ -54,7 +57,10 @@ export function CreateStudySetDialog() {
     const input = { title: values.title, description: values.description || null }
     const studySet =
       mode === 'table'
-        ? await createFromTable.mutateAsync({ ...input, cards: parsed.cards })
+        ? await createFromTable.mutateAsync({
+            ...input,
+            cards: lowercaseCardFields(parsed.cards, lowercaseFields),
+          })
         : await createStudySet.mutateAsync(input)
     setOpen(false)
     resetDialog()
@@ -89,7 +95,13 @@ export function CreateStudySetDialog() {
             {errors.title && <p className="text-destructive text-sm">{errors.title.message}</p>}
           </div>
           {mode === 'table' ? (
-            <CreateFromTableForm value={table} onChange={setTable} parsed={parsed} />
+            <CreateFromTableForm
+              value={table}
+              onChange={setTable}
+              parsed={parsed}
+              lowercaseFields={lowercaseFields}
+              onLowercaseFieldsChange={setLowercaseFields}
+            />
           ) : (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="description">Description</Label>
